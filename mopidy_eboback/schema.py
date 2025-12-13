@@ -202,6 +202,10 @@ def load(c):
 def tracks(c):
     return list(map(_track, c.execute("SELECT * FROM tracks")))
 
+def count_albums(c):
+    res = c.execute("select count() as cnt from album")
+    cnt, = res.fetchone()
+    return cnt
 
 def list_distinct(c, field, query=tuple()):
     if field not in _SEARCH_FIELDS:

@@ -1,8 +1,10 @@
 import logging
 import os
 import pathlib
+import sqlite3
 
 import tornado.web
+from mopidy_eboback import schema
 
 logger = logging.getLogger(__name__)
 
@@ -32,5 +34,22 @@ class IndexHandler(tornado.web.RequestHandler):
 
 
 class DataHandler(tornado.web.RequestHandler):
+    def initialize(self, data_dir):
+        self._dbpath = data_dir / "library.db"
+        self._connection = None
+
     def get(self, data_path):
+        cnt = schema.count_albums(self._connect())
         self.write("Hello, data for: " + data_path)
+        self.write("" + str(cnt))
+
+    def _connect(self):
+        if not self._connection:
+            self._connection = sqlite3.connect(
+                self._dbpath,
+                factory=schema.Connection,
+                #todo: timeout=self._config["timeout"],
+                timeout=10,
+                check_same_thread=False,
+            )
+        return self._connection

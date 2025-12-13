@@ -53,11 +53,12 @@ class Extension(ext.Extension):
         from .web import ImageHandler, IndexHandler, DataHandler
         from mopidy_eboback.storage import IMG_URI_PREFIX
 
+        data_dir = self.get_data_dir(config)
         image_dir = self.get_image_dir(config)
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
-            (r"/data/(.+)", DataHandler, {}),
+            (r"/data/(.+)", DataHandler, {"data_dir": data_dir}),
         ]
 
     # TODO: Add *paths to Extension.get_data_dir()?
