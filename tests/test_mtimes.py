@@ -3,10 +3,11 @@ import pathlib
 import shutil
 
 import pytest
+
 from mopidy import exceptions
+from mopidy_local import mtimes
 
 import tests
-from mopidy_local import mtimes
 
 
 @pytest.fixture

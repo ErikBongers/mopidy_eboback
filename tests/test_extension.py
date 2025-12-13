@@ -1,7 +1,7 @@
 from mopidy_local import Extension
 
 
-def test_get_default_config() -> None:
+def test_get_default_config():
     ext = Extension()
 
     config = ext.get_default_config()
@@ -10,7 +10,7 @@ def test_get_default_config() -> None:
     assert "enabled = true" in config
 
 
-def test_get_config_schema() -> None:
+def test_get_config_schema():
     ext = Extension()
 
     schema = ext.get_config_schema()

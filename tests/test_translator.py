@@ -2,12 +2,11 @@ import os
 import pathlib
 
 import pytest
-
 from mopidy_local import translator
 
 
 @pytest.mark.parametrize(
-    ("local_uri", "file_uri"),
+    "local_uri,file_uri",
     [
         ("local:directory:A/B", "file:///home/alice/Music/A/B"),
         ("local:directory:A%20B", "file:///home/alice/Music/A%20B"),
@@ -40,7 +39,7 @@ def test_local_uri_to_file_uri_errors(uri):
 
 
 @pytest.mark.parametrize(
-    ("uri", "path"),
+    "uri,path",
     [
         ("local:directory:A/B", b"/home/alice/Music/A/B"),
         ("local:directory:A%20B", b"/home/alice/Music/A B"),
@@ -76,7 +75,7 @@ def test_local_uri_to_path_errors(uri):
 
 
 @pytest.mark.parametrize(
-    ("path", "uri"),
+    "path,uri",
     [
         ("/foo", "file:///foo"),
         (b"/foo", "file:///foo"),
@@ -90,7 +89,7 @@ def test_path_to_file_uri(path, uri):
 
 
 @pytest.mark.parametrize(
-    ("path", "uri"),
+    "path,uri",
     [
         (pathlib.Path("foo"), "local:track:foo"),
         (pathlib.Path("/home/alice/Music/foo"), "local:track:foo"),

@@ -1,13 +1,14 @@
 import pathlib
-from importlib.metadata import version
+
+import pkg_resources
 
 from mopidy import config, ext
 
-__version__ = version("Mopidy-Local")
+__version__ = pkg_resources.get_distribution("Mopidy-Local").version
 
 
 class Extension(ext.Extension):
-    dist_name = "mopidy-local"
+    dist_name = "Mopidy-Local"
     ext_name = "local"
     version = __version__
 
@@ -22,7 +23,9 @@ class Extension(ext.Extension):
         schema["data_dir"] = config.Deprecated()
         schema["playlists_dir"] = config.Deprecated()
         schema["tag_cache_file"] = config.Deprecated()
-        schema["scan_timeout"] = config.Integer(minimum=1000, maximum=1000 * 60 * 60)
+        schema["scan_timeout"] = config.Integer(
+            minimum=1000, maximum=1000 * 60 * 60
+        )
         schema["scan_flush_threshold"] = config.Integer(minimum=0)
         schema["scan_follow_symlinks"] = config.Boolean()
         schema["included_file_extensions"] = config.List(optional=True)
@@ -34,18 +37,20 @@ class Extension(ext.Extension):
         return schema
 
     def setup(self, registry):
-        from .actor import LocalBackend  # noqa: PLC0415
+        from .actor import LocalBackend
 
         registry.add("backend", LocalBackend)
-        registry.add("http:app", {"name": self.ext_name, "factory": self.webapp})
+        registry.add(
+            "http:app", {"name": self.ext_name, "factory": self.webapp}
+        )
 
     def get_command(self):
-        from .commands import LocalCommand  # noqa: PLC0415
+        from .commands import LocalCommand
 
         return LocalCommand()
 
-    def webapp(self, config, core):  # noqa: ARG002
-        from .web import ImageHandler, IndexHandler  # noqa: PLC0415
+    def webapp(self, config, core):
+        from .web import ImageHandler, IndexHandler
 
         image_dir = self.get_image_dir(config)
         return [

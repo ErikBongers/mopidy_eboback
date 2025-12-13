@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 def check_dirs_and_files(config):
     if not pathlib.Path(config["local"]["media_dir"]).is_dir():
         logger.warning(
-            f"Local media dir {config['local']['media_dir']} does not exist or "
-            "we lack permissions to the directory or one of its parents"
+            "Local media dir %s does not exist or we lack permissions to the "
+            "directory or one of its parents" % config["local"]["media_dir"]
         )
 
 
@@ -28,13 +28,13 @@ def get_image_size_gif(data):
     return struct.unpack("<HH", data[6:10])
 
 
-def model_uri(kind, model):
-    if kind == "album":
+def model_uri(type, model):
+    if type == "album":
         # ignore num_tracks for multi-disc albums
-        digest = hashlib.md5(str(model.replace(num_tracks=None)).encode())  # noqa: S324
+        digest = hashlib.md5(str(model.replace(num_tracks=None)).encode())
     else:
-        digest = hashlib.md5(str(model).encode())  # noqa: S324
-    return f"local:{kind}:md5:{digest.hexdigest()}"
+        digest = hashlib.md5(str(model).encode())
+    return "local:{}:md5:{}".format(type, digest.hexdigest())
 
 
 def get_image_size_jpeg(data):
@@ -42,10 +42,10 @@ def get_image_size_jpeg(data):
     index = 0
     ftype = 0
     size = 2
-    while not 0xC0 <= ftype <= 0xCF:  # noqa: PLR2004
+    while not 0xC0 <= ftype <= 0xCF:
         index += size
         ftype = data[index]
-        while ftype == 0xFF:  # noqa: PLR2004
+        while ftype == 0xFF:
             index += 1
             ftype = data[index]
         index += 1
@@ -63,20 +63,18 @@ def get_image_type_from_header(header: bytes) -> str:
     # original source: https://github.com/sphinx-doc/sphinx/commit/a502e7
 
     if len(header) < MIN_BYTES_FOR_IMAGE_TYPE:
-        msg = "Unknown image type"
-        raise ValueError(msg)
+        raise ValueError("Unknown image type")
 
-    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+    if header.startswith(b"\x89PNG\r\n\x1A\n"):
         return "png"
 
     if header.startswith((b"GIF87a", b"GIF89a")):
         return "gif"
 
-    if header.startswith(b"\xff\xd8"):
+    if header.startswith(b"\xFF\xD8"):
         return "jpeg"
 
-    msg = "Unknown image type"
-    raise ValueError(msg)
+    raise ValueError("Unknown image type")
 
 
 class LocalStorageProvider:
@@ -99,10 +97,10 @@ class LocalStorageProvider:
     def begin(self):
         return schema.tracks(self._connect())
 
-    def add(self, track, tags=None, duration=None):  # noqa: ARG002
+    def add(self, track, tags=None, duration=None):
         logger.debug("Adding track: %s", track)
         images = None
-        if track.album and track.album.name:  # TODO: album required
+        if track.album and track.album.name:  # FIXME: album required
             uri = translator.local_uri_to_file_uri(track.uri, self._media_dir)
             try:
                 images = self._extract_images(track.uri, tags)
@@ -139,16 +137,15 @@ class LocalStorageProvider:
         try:
             shutil.rmtree(self._image_dir)
             self._image_dir.mkdir()
-        except OSError as e:
+        except IOError as e:
             logger.warning("Error clearing image directory: %s", e)
         logger.info("Clearing SQLite database")
         try:
             schema.clear(self._connect())
+            return True
         except sqlite3.Error as e:
             logger.error("Error clearing SQLite database: %s", e)
             return False
-        else:
-            return True
 
     def _connect(self):
         if not self._connection:
@@ -162,28 +159,27 @@ class LocalStorageProvider:
 
     def _validate_artist(self, model):
         if not model.name:
-            msg = "Empty artist name"
-            raise ValueError(msg)
+            raise ValueError("Empty artist name")
         if not model.uri:
             model = model.replace(uri=model_uri("artist", model))
         return model
 
     def _validate_album(self, model):
         if not model.name:
-            msg = "Empty album name"
-            raise ValueError(msg)
+            raise ValueError("Empty album name")
         if not model.uri:
             model = model.replace(uri=model_uri("album", model))
-        return model.replace(artists=list(map(self._validate_artist, model.artists)))
+        return model.replace(
+            artists=list(map(self._validate_artist, model.artists))
+        )
 
     def _validate_track(self, model):
         if not model.uri:
-            msg = "Empty track URI"
-            raise ValueError(msg)
+            raise ValueError("Empty track URI")
         if model.name:
             name = model.name
         else:
-            name = translator.local_uri_to_path(model.uri, pathlib.Path()).name
+            name = translator.local_uri_to_path(model.uri, "").name
         if model.album and model.album.name:
             album = self._validate_album(model.album)
         else:
@@ -209,9 +205,9 @@ class LocalStorageProvider:
         images = set()  # filter duplicate images, e.g. embedded/external
         for image in tags.get("image", []) + tags.get("preview-image", []):
             try:
-                # TODO: Is this a gst.Buffer or plain str/bytes type?
+                # FIXME: gst.Buffer or plain str/bytes type?
                 data = getattr(image, "data", image)
-                images.add(self._image_from_embedded_data(data))
+                images.add(self._get_or_create_image_file(None, data))
             except Exception as e:
                 logger.warning("Error extracting images for %r: %r", uri, e)
         # look for external album art
@@ -220,34 +216,27 @@ class LocalStorageProvider:
         for pattern in self._patterns:
             for match_path in dir_path.glob(pattern):
                 try:
-                    images.add(self._image_from_path(match_path))
+                    images.add(self._get_or_create_image_file(match_path))
                 except Exception as e:
                     logger.warning(
-                        f"Cannot read image file {match_path.as_uri()}: {e!r}",
+                        f"Cannot read image file {match_path.as_uri()}: {e!r}"
                     )
         return images
 
-    def _image_from_path(self, path: pathlib.Path):
-        with path.open("rb") as f:
-            header = f.read(MIN_BYTES_FOR_IMAGE_TYPE)
-            data = header + f.read()
-        return self._save_image(
-            data=data,
-            source=path.as_uri(),
-            what=get_image_type_from_header(header),
-        )
+    def _get_or_create_image_file(self, path, data=None):
+        if not data:
+            with open(path, "rb") as f:
+                header = f.read(MIN_BYTES_FOR_IMAGE_TYPE)
 
-    def _image_from_embedded_data(self, data: bytes):
-        header = data[:MIN_BYTES_FOR_IMAGE_TYPE]
-        return self._save_image(
-            data=data,
-            source="embedded image",
-            what=get_image_type_from_header(header),
-        )
+                what = get_image_type_from_header(header)
+                data_source = path.as_uri()
+                data = header + f.read()
+        else:
+            header = data[:MIN_BYTES_FOR_IMAGE_TYPE]
+            what = get_image_type_from_header(header)
+            data_source = "embedded image"
 
-    def _save_image(self, *, data: bytes, source: str, what: str):
-        digest = hashlib.md5(data).hexdigest()  # noqa: S324
-        width, height = None, None
+        digest, width, height = hashlib.md5(data).hexdigest(), None, None
         try:
             if what == "png":
                 width, height = get_image_size_png(data)
@@ -256,13 +245,15 @@ class LocalStorageProvider:
             elif what == "jpeg":
                 width, height = get_image_size_jpeg(data)
         except Exception as e:
-            logger.error("Error getting image size for %r: %r", source, e)
+            logger.error("Error getting image size for %r: %r", data_source, e)
         if width and height:
-            name = f"{digest}-{width}x{height}.{what}"
+            name = "%s-%dx%d.%s" % (digest, width, height, what)
         else:
             name = f"{digest}.{what}"
         image_path = self._image_dir / name
         if not image_path.is_file():
-            logger.info(f"Creating file {image_path.as_uri()} from {source}")
+            logger.info(
+                f"Creating file {image_path.as_uri()} from {data_source}"
+            )
             image_path.write_bytes(data)
         return uritools.urijoin(self._base_uri, name)

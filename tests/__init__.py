@@ -1,31 +1,29 @@
 import functools
 import pathlib
-import warnings
 
-from mopidy.types import Uri
+from mopidy.internal import deprecation
 
 
-def path_to_data_dir(name) -> pathlib.Path:
+def path_to_data_dir(name):
     path = pathlib.Path(__file__).parent / "data" / name
     return path.resolve()
 
 
-def generate_song(i) -> Uri:
-    return Uri(f"local:track:song{i}.wav")
+def generate_song(i):
+    return "local:track:song%s.wav" % i
 
 
 def populate_tracklist(func):
     @functools.wraps(func)
     def wrapper(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
+        with deprecation.ignore("core.tracklist.add:tracks_arg"):
             self.tl_tracks = self.core.tracklist.add(self.tracks)
         return func(self)
 
     return wrapper
 
 
-class IsA:  # noqa: PLW1641
+class IsA:
     def __init__(self, klass):
         self.klass = klass
 
@@ -33,7 +31,7 @@ class IsA:  # noqa: PLW1641
         try:
             return isinstance(rhs, self.klass)
         except TypeError:
-            return type(rhs) is type(self.klass)
+            return type(rhs) == type(self.klass)  # noqa
 
     def __ne__(self, rhs):
         return not self.__eq__(rhs)

@@ -4,11 +4,9 @@ This class implements the audio API in the simplest way possible. It is used in
 tests of the core and backends.
 """
 
-from typing import override
-
 import pykka
+
 from mopidy import audio
-from mopidy.types import DurationMs, PlaybackState
 
 
 def create_proxy(config=None, mixer=None):
@@ -16,11 +14,12 @@ def create_proxy(config=None, mixer=None):
 
 
 # TODO: reset position on track change?
-class DummyAudio(audio.Audio, pykka.ThreadingActor):
+class DummyAudio(pykka.ThreadingActor):
     def __init__(self, config=None, mixer=None):
         super().__init__()
-        self.state = PlaybackState.STOPPED
-        self._position = DurationMs(0)
+        self.state = audio.PlaybackState.STOPPED
+        self._volume = 0
+        self._position = 0
         self._source_setup_callback = None
         self._about_to_finish_callback = None
         self._uri = None
@@ -29,60 +28,72 @@ class DummyAudio(audio.Audio, pykka.ThreadingActor):
         self._tags = {}
         self._bad_uris = set()
 
-    @override
     def set_uri(self, uri, live_stream=False, download=False):
         assert self._uri is None, "prepare change not called before set"
-        self._position = DurationMs(0)
+        self._position = 0
         self._uri = uri
         self._stream_changed = True
         self._live_stream = live_stream
         self._tags = {}
 
-    @override
-    def set_source_setup_callback(self, callback):
-        self._source_setup_callback = callback
+    def set_appsrc(self, *args, **kwargs):
+        pass
 
-    @override
-    def set_about_to_finish_callback(self, callback):
-        self._about_to_finish_callback = callback
+    def emit_data(self, buffer_):
+        pass
 
-    @override
     def get_position(self):
         return self._position
 
-    @override
     def set_position(self, position):
         self._position = position
         audio.AudioListener.send("position_changed", position=position)
         return True
 
-    @override
     def start_playback(self):
-        return self._change_state(PlaybackState.PLAYING)
+        return self._change_state(audio.PlaybackState.PLAYING)
 
-    @override
     def pause_playback(self):
-        return self._change_state(PlaybackState.PAUSED)
+        return self._change_state(audio.PlaybackState.PAUSED)
 
-    @override
     def prepare_change(self):
         self._uri = None
         self._source_setup_callback = None
         return True
 
-    @override
     def stop_playback(self):
-        return self._change_state(PlaybackState.STOPPED)
+        return self._change_state(audio.PlaybackState.STOPPED)
 
-    @override
+    def get_volume(self):
+        return self._volume
+
+    def set_volume(self, volume):
+        self._volume = volume
+        return True
+
+    def set_metadata(self, track):
+        pass
+
     def get_current_tags(self):
         return self._tags
+
+    def set_source_setup_callback(self, callback):
+        self._source_setup_callback = callback
+
+    def set_about_to_finish_callback(self, callback):
+        self._about_to_finish_callback = callback
+
+    def enable_sync_handler(self):
+        pass
+
+    def wait_for_state_change(self):
+        pass
 
     def _change_state(self, new_state):
         if not self._uri:
             return False
 
-        if new_state == PlaybackState.STOPPED and self._uri:
+        if new_state == audio.PlaybackState.STOPPED and self._uri:
             self._stream_changed = True
             self._uri = None
 
@@ -101,7 +112,7 @@ class DummyAudio(audio.Audio, pykka.ThreadingActor):
             target_state=None,
         )
 
-        if new_state == PlaybackState.PLAYING:
+        if new_state == audio.PlaybackState.PLAYING:
             self._tags["audio-codec"] = ["fake info..."]
             audio.AudioListener.send("tags_changed", tags=["audio-codec"])
 
@@ -113,6 +124,14 @@ class DummyAudio(audio.Audio, pykka.ThreadingActor):
     def trigger_fake_tags_changed(self, tags):
         self._tags.update(tags)
         audio.AudioListener.send("tags_changed", tags=self._tags.keys())
+
+    def get_source_setup_callback(self):
+        # This needs to be called from outside the actor or we lock up.
+        def wrapper():
+            if self._source_setup_callback:
+                self._source_setup_callback()
+
+        return wrapper
 
     def get_about_to_finish_callback(self):
         # This needs to be called from outside the actor or we lock up.
