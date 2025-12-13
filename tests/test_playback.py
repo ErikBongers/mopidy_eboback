@@ -6,7 +6,7 @@ from mopidy import core
 from mopidy.core import PlaybackState
 from mopidy.models import TlTrack, Track
 
-from mopidy_local import actor
+from mopidy_eboback import actor
 from unittest import mock
 from tests import (
     dummy_audio,
@@ -24,7 +24,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
             "data_dir": path_to_data_dir(""),
             "max_tracklist_length": 10000,
         },
-        "local": {
+        "eboback": {
             "media_dir": path_to_data_dir(""),
             "directories": [],
             "timeout": 10,
@@ -102,20 +102,20 @@ class LocalPlaybackProviderTest(unittest.TestCase):
 
     def test_uri_scheme(self):
         assert "file" not in self.core.get_uri_schemes().get()
-        assert "local" in self.core.get_uri_schemes().get()
+        assert "eboback" in self.core.get_uri_schemes().get()
 
     def test_play_mp3(self):
-        self.add_track("local:track:blank.mp3")
+        self.add_track("eboback:track:blank.mp3")
         self.playback.play().get()
         self.assert_state_is(PlaybackState.PLAYING)
 
     def test_play_ogg(self):
-        self.add_track("local:track:blank.ogg")
+        self.add_track("eboback:track:blank.ogg")
         self.playback.play().get()
         self.assert_state_is(PlaybackState.PLAYING)
 
     def test_play_flac(self):
-        self.add_track("local:track:blank.flac")
+        self.add_track("eboback:track:blank.flac")
         self.playback.play().get()
         self.assert_state_is(PlaybackState.PLAYING)
 
@@ -123,7 +123,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
         # Regression test: If trying to do .split(u':') on a bytestring, the
         # string will be decoded from ASCII to Unicode, which will crash on
         # non-ASCII strings, like the bytestring the following URI decodes to.
-        self.add_track("local:track:12%20Doin%E2%80%99%20It%20Right.flac")
+        self.add_track("eboback:track:12%20Doin%E2%80%99%20It%20Right.flac")
         self.playback.play().get()
         self.assert_state_is(PlaybackState.PLAYING)
 

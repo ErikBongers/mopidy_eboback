@@ -1,4 +1,4 @@
--- Mopidy-Local-SQLite schema upgrade v6 -> v7
+-- mopidy-eboback-SQLite schema upgrade v6 -> v7
 
 BEGIN EXCLUSIVE TRANSACTION;
 

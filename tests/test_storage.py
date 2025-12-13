@@ -1,6 +1,6 @@
 import pytest
 
-from mopidy_local import storage
+from mopidy_eboback import storage
 
 
 def test_get_image_type_from_header_png():

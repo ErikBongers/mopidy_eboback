@@ -5,14 +5,14 @@ import time
 from mopidy import commands
 from mopidy.audio import scan, tags
 
-from mopidy_local import mtimes, storage, translator
+from mopidy_eboback import mtimes, storage, translator
 
 logger = logging.getLogger(__name__)
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
 
-class LocalCommand(commands.Command):
+class EbobackCommand(commands.Command):
     def __init__(self):
         super().__init__()
         self.add_child("scan", ScanCommand())
@@ -20,7 +20,7 @@ class LocalCommand(commands.Command):
 
 
 class ClearCommand(commands.Command):
-    help = "Clear local media files from the local library."
+    help = "Clear local media files from the eboplayer library."
 
     def run(self, args, config):
         library = storage.LocalStorageProvider(config)
@@ -40,7 +40,7 @@ class ClearCommand(commands.Command):
 
 
 class ScanCommand(commands.Command):
-    help = "Scan local media files and populate the local library."
+    help = "Scan local media files and populate the eboplayer library."
 
     def __init__(self):
         super().__init__()
@@ -61,12 +61,12 @@ class ScanCommand(commands.Command):
         )
 
     def run(self, args, config):
-        media_dir = pathlib.Path(config["local"]["media_dir"]).resolve()
+        media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
         library = storage.LocalStorageProvider(config)
 
         file_mtimes = self._find_files(
             media_dir=media_dir,
-            follow_symlinks=config["local"]["scan_follow_symlinks"],
+            follow_symlinks=config["eboback"]["scan_follow_symlinks"],
         )
 
         files_to_update, files_in_library = self._check_tracks_in_library(
@@ -83,11 +83,11 @@ class ScanCommand(commands.Command):
                 files_in_library=files_in_library,
                 included_file_exts=[
                     file_ext.lower()
-                    for file_ext in config["local"]["included_file_extensions"]
+                    for file_ext in config["eboback"]["included_file_extensions"]
                 ],
                 excluded_file_exts=[
                     file_ext.lower()
-                    for file_ext in config["local"]["excluded_file_extensions"]
+                    for file_ext in config["eboback"]["excluded_file_extensions"]
                 ],
             )
         )
@@ -97,8 +97,8 @@ class ScanCommand(commands.Command):
             file_mtimes=file_mtimes,
             files=files_to_update,
             library=library,
-            timeout=config["local"]["scan_timeout"],
-            flush_threshold=config["local"]["scan_flush_threshold"],
+            timeout=config["eboback"]["scan_timeout"],
+            flush_threshold=config["eboback"]["scan_flush_threshold"],
             limit=args.limit,
         )
 

@@ -4,12 +4,12 @@ import pkg_resources
 
 from mopidy import config, ext
 
-__version__ = pkg_resources.get_distribution("Mopidy-Local").version
+__version__ = pkg_resources.get_distribution("mopidy-eboback").version
 
 
 class Extension(ext.Extension):
-    dist_name = "Mopidy-Local"
-    ext_name = "local"
+    dist_name = "mopidy-eboback"
+    ext_name = "eboback"
     version = __version__
 
     def get_default_config(self):
@@ -37,17 +37,17 @@ class Extension(ext.Extension):
         return schema
 
     def setup(self, registry):
-        from .actor import LocalBackend
+        from .actor import EbobackBackend
 
-        registry.add("backend", LocalBackend)
+        registry.add("backend", EbobackBackend)
         registry.add(
             "http:app", {"name": self.ext_name, "factory": self.webapp}
         )
 
     def get_command(self):
-        from .commands import LocalCommand
+        from .commands import EbobackCommand
 
-        return LocalCommand()
+        return EbobackCommand()
 
     def webapp(self, config, core):
         from .web import ImageHandler, IndexHandler

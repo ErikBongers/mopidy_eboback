@@ -4,15 +4,15 @@ import pykka
 
 from mopidy import backend
 
-from mopidy_local import storage
-from mopidy_local.library import LocalLibraryProvider
-from mopidy_local.playback import LocalPlaybackProvider
+from mopidy_eboback import storage
+from mopidy_eboback.library import LocalLibraryProvider
+from mopidy_eboback.playback import LocalPlaybackProvider
 
 logger = logging.getLogger(__name__)
 
 
-class LocalBackend(pykka.ThreadingActor, backend.Backend):
-    uri_schemes = ["local"]
+class EbobackBackend(pykka.ThreadingActor, backend.Backend):
+    uri_schemes = ["eboback"]
 
     def __init__(self, config, audio):
         super().__init__()

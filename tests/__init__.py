@@ -10,7 +10,7 @@ def path_to_data_dir(name):
 
 
 def generate_song(i):
-    return "local:track:song%s.wav" % i
+    return "eboback:track:song%s.wav" % i
 
 
 def populate_tracklist(func):

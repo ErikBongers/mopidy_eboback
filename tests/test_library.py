@@ -7,7 +7,7 @@ import pykka
 from mopidy import core
 from mopidy.models import SearchResult, Track
 
-from mopidy_local import actor, storage, translator
+from mopidy_eboback import actor, storage, translator
 from tests import dummy_audio, path_to_data_dir
 
 
@@ -17,7 +17,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
             "data_dir": path_to_data_dir(""),
             "max_tracklist_length": 10000,
         },
-        "local": {
+        "eboback": {
             "media_dir": path_to_data_dir(""),
             "directories": [],
             "timeout": 10,
@@ -42,7 +42,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
     def tearDown(self):  # noqa: N802
         pykka.ActorRegistry.stop_all()
         try:
-            os.remove(path_to_data_dir("local/library.db"))
+            os.remove(path_to_data_dir("eboback/library.db"))
         except OSError:
             pass
 
@@ -70,22 +70,22 @@ class LocalLibraryProviderTest(unittest.TestCase):
 
     def test_clear(self):
         self.storage.begin()
-        self.storage.add(Track(uri="local:track:track.mp3"))
+        self.storage.add(Track(uri="eboback:track:track.mp3"))
         self.storage.close()
         self.storage.clear()
         assert self.storage.load() == 0
 
     def test_search_uri(self):
         lib = self.library
-        empty = SearchResult(uri="local:search?")
+        empty = SearchResult(uri="eboback:search?")
         assert empty == lib.search(uris=None).get()
         assert empty == lib.search(uris=[]).get()
-        assert empty == lib.search(uris=["local:"]).get()
-        assert empty == lib.search(uris=["local:directory"]).get()
-        assert empty == lib.search(uris=["local:directory:"]).get()
+        assert empty == lib.search(uris=["eboback:"]).get()
+        assert empty == lib.search(uris=["eboback:directory"]).get()
+        assert empty == lib.search(uris=["eboback:directory:"]).get()
         assert empty == lib.search(uris=["foobar:"]).get()
 
-    @mock.patch("mopidy_local.schema.list_distinct")
+    @mock.patch("mopidy_eboback.schema.list_distinct")
     def test_distinct_field_track_uses_track_name(self, distinct_mock):
         distinct_mock.return_value = []
 

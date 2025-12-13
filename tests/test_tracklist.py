@@ -6,7 +6,7 @@ from mopidy import core
 from mopidy.core import PlaybackState
 from mopidy.models import Playlist, Track
 
-from mopidy_local import actor
+from mopidy_eboback import actor
 from tests import (
     dummy_audio,
     generate_song,
@@ -21,7 +21,7 @@ class LocalTracklistProviderTest(unittest.TestCase):
             "data_dir": path_to_data_dir(""),
             "max_tracklist_length": 10000,
         },
-        "local": {
+        "eboback": {
             "media_dir": path_to_data_dir(""),
             "directories": [],
             "timeout": 10,

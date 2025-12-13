@@ -3,7 +3,7 @@ import unittest
 
 from mopidy.models import Album, Artist, Ref, Track
 
-from mopidy_local import schema
+from mopidy_eboback import schema
 
 DBPATH = ":memory:"
 
@@ -11,44 +11,44 @@ DBPATH = ":memory:"
 class SchemaTest(unittest.TestCase):
     artists = [
         Artist(
-            uri="local:artist:0", name="artist #0", musicbrainz_id="1234a-987c"
+            uri="eboback:artist:0", name="artist #0", musicbrainz_id="1234a-987c"
         ),
-        Artist(uri="local:artist:1", name="artist #1"),
+        Artist(uri="eboback:artist:1", name="artist #1"),
     ]
     albums = [
         Album(
-            uri="local:album:0", name="album #0", musicbrainz_id="1234a-3421d"
+            uri="eboback:album:0", name="album #0", musicbrainz_id="1234a-3421d"
         ),
-        Album(uri="local:album:1", name="album #1", artists=[artists[0]]),
-        Album(uri="local:album:2", name="album #2", artists=[artists[1]]),
+        Album(uri="eboback:album:1", name="album #1", artists=[artists[0]]),
+        Album(uri="eboback:album:2", name="album #2", artists=[artists[1]]),
     ]
     tracks = [
         Track(
-            uri="local:track:0",
+            uri="eboback:track:0",
             name="track #0",
             date="2015-03-15",
             genre="Rock",
         ),
         Track(
-            uri="local:track:1",
+            uri="eboback:track:1",
             name="track #1",
             date="2014",
             artists=[artists[0]],
         ),
         Track(
-            uri="local:track:2",
+            uri="eboback:track:2",
             name="track #2",
             date="2020-10",
             album=albums[0],
         ),
         Track(
-            uri="local:track:3",
+            uri="eboback:track:3",
             name="track #3",
             date="2020-10-01",
             album=albums[1],
         ),
         Track(
-            uri="local:track:4",
+            uri="eboback:track:4",
             name="track #4",
             album=albums[2],
             composers=[artists[0]],
