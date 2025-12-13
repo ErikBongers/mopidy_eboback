@@ -58,7 +58,7 @@ class Extension(ext.Extension):
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
-            (r"/data/(.+)", DataHandler, {"data_dir": data_dir}),
+            (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
         ]
 
     # TODO: Add *paths to Extension.get_data_dir()?

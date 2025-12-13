@@ -5,6 +5,7 @@ import sqlite3
 
 import tornado.web
 from mopidy_eboback import schema
+from . import Extension
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +16,14 @@ class ImageHandler(tornado.web.StaticFileHandler):
 
 
 class IndexHandler(tornado.web.RequestHandler):
+    # noinspection PyAttributeOutsideInit
     def initialize(self, root):
         self.root = root
 
     def get(self, path):
         return self.render("index.html", images=self.uris())
 
+    # noinspection PyMethodMayBeStatic
     def get_template_path(self):
         return pathlib.Path(__file__).parent / "www"
 
@@ -34,9 +37,11 @@ class IndexHandler(tornado.web.RequestHandler):
 
 
 class DataHandler(tornado.web.RequestHandler):
-    def initialize(self, data_dir):
+    # noinspection PyAttributeOutsideInit
+    def initialize(self, data_dir, config):
         self._dbpath = data_dir / "library.db"
         self._connection = None
+        self._config = config[Extension.ext_name]
 
     def get(self, data_path):
         cnt = schema.count_albums(self._connect())
@@ -48,8 +53,7 @@ class DataHandler(tornado.web.RequestHandler):
             self._connection = sqlite3.connect(
                 self._dbpath,
                 factory=schema.Connection,
-                #todo: timeout=self._config["timeout"],
-                timeout=10,
+                timeout=self._config["timeout"],
                 check_same_thread=False,
             )
         return self._connection

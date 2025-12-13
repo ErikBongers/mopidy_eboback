@@ -9,3 +9,4 @@
 /dist/
 /docs/_build/
 /tests/data/
+.idea/workspace.xml
