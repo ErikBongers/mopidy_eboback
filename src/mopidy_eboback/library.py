@@ -14,20 +14,20 @@ logger = logging.getLogger(__name__)
 
 def date_ref(date):
     return Ref.directory(
-        uri=uritools.uricompose("local", None, "directory", {"date": date}),
+        uri=uritools.uricompose("eboback", None, "directory", {"date": date}),
         name=date,
     )
 
 
 def genre_ref(genre):
     return Ref.directory(
-        uri=uritools.uricompose("local", None, "directory", {"genre": genre}),
+        uri=uritools.uricompose("eboback", None, "directory", {"genre": genre}),
         name=genre,
     )
 
 
 class LocalLibraryProvider(backend.LibraryProvider):
-    ROOT_DIRECTORY_URI = Uri("local:directory")
+    ROOT_DIRECTORY_URI = Uri("eboback:directory")
 
     root_directory = models.Ref.directory(uri=ROOT_DIRECTORY_URI, name="Local media")
 
@@ -51,11 +51,11 @@ class LocalLibraryProvider(backend.LibraryProvider):
 
     def lookup(self, uri):
         try:
-            if uri.startswith("local:album"):
+            if uri.startswith("eboback:album"):
                 return list(schema.lookup(self._connect(), RefType.ALBUM, uri))
-            if uri.startswith("local:artist"):
+            if uri.startswith("eboback:artist"):
                 return list(schema.lookup(self._connect(), RefType.ARTIST, uri))
-            if uri.startswith("local:track"):
+            if uri.startswith("eboback:track"):
                 return list(schema.lookup(self._connect(), RefType.TRACK, uri))
             msg = "Invalid lookup URI"
             raise ValueError(msg)  # noqa: TRY301
@@ -67,11 +67,11 @@ class LocalLibraryProvider(backend.LibraryProvider):
         try:
             if uri == self.ROOT_DIRECTORY_URI:
                 return self._directories
-            if uri.startswith("local:directory"):
+            if uri.startswith("eboback:directory"):
                 return self._browse_directory(uri)
-            if uri.startswith("local:artist"):
+            if uri.startswith("eboback:artist"):
                 return self._browse_artist(uri)
-            if uri.startswith("local:album"):
+            if uri.startswith("eboback:album"):
                 return self._browse_album(uri)
             msg = "Invalid browse URI"
             raise ValueError(msg)  # noqa: TRY301
@@ -95,16 +95,16 @@ class LocalLibraryProvider(backend.LibraryProvider):
         filters = [f for uri in uris or [] for f in self._filters(uri) if f]
         with self._connect() as c:
             tracks = schema.search_tracks(c, q, limit, offset, exact, filters)
-        uri = uritools.uricompose("local", path="search", query=q)
+        uri = uritools.uricompose("eboback", path="search", query=q)
         return SearchResult(uri=uri, tracks=tuple(tracks))
 
     def get_images(self, uris):
         images = {}
         with self._connect() as c:
             for uri in uris:
-                if uri.startswith("local:album"):
+                if uri.startswith("eboback:album"):
                     images[uri] = schema.get_album_images(c, uri)
-                elif uri.startswith("local:track"):
+                elif uri.startswith("eboback:track"):
                     images[uri] = schema.get_track_images(c, uri)
         return images
 
@@ -139,7 +139,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 albums.append(
                     Ref.directory(
                         uri=uritools.uricompose(
-                            "local",
+                            "eboback",
                             None,
                             "directory",
                             dict(type=RefType.TRACK, album=ref.uri, artist=uri),  # noqa: C408
@@ -182,7 +182,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 refs.append(
                     Ref.directory(
                         uri=uritools.uricompose(
-                            "local",
+                            "eboback",
                             None,
                             "directory",
                             dict(query, type=RefType.TRACK, album=ref.uri),
@@ -194,7 +194,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 refs.append(
                     Ref.directory(
                         uri=uritools.uricompose(
-                            "local",
+                            "eboback",
                             None,
                             "directory",
                             dict(query, **{role: ref.uri}),
@@ -207,10 +207,10 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return refs
 
     def _filters(self, uri):
-        if uri.startswith("local:directory"):
+        if uri.startswith("eboback:directory"):
             return [dict(uritools.urisplit(uri).getquerylist())]
-        if uri.startswith("local:artist"):
+        if uri.startswith("eboback:artist"):
             return [{"artist": uri}, {"albumartist": uri}]
-        if uri.startswith("local:album"):
+        if uri.startswith("eboback:album"):
             return [{"album": uri}]
         return []

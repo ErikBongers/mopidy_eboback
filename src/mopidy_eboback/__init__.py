@@ -7,8 +7,8 @@ __version__ = version("Mopidy-Eboback")
 
 
 class Extension(ext.Extension):
-    dist_name = "mopidy-local"
-    ext_name = "local"
+    dist_name = "mopidy-eboback"
+    ext_name = "eboback"
     version = __version__
 
     def get_default_config(self):

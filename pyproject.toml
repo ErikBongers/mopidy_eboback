@@ -23,7 +23,7 @@ dependencies = [
 Homepage = "https://github.com/erikbongers/todo"
 
 [project.entry-points."mopidy.ext"]
-local = "mopidy_eboback:Extension"
+eboback = "mopidy_eboback:Extension"
 
 
 [build-system]

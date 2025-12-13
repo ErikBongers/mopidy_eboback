@@ -1,4 +1,4 @@
-from mopidy_local import Extension
+from mopidy_eboback import Extension
 
 
 def test_get_default_config() -> None:
@@ -6,7 +6,7 @@ def test_get_default_config() -> None:
 
     config = ext.get_default_config()
 
-    assert "[local]" in config
+    assert "[eboback]" in config
     assert "enabled = true" in config
 
 
@@ -25,9 +25,9 @@ def test_get_config_schema() -> None:
     assert "scan_follow_symlinks" in schema
     assert "included_file_extensions" in schema
     assert "excluded_file_extensions" in schema
-    # from mopidy-local-sqlite
+    # from mopidy-eboback-sqlite
     assert "directories" in schema
     assert "timeout" in schema
     assert "use_artist_sortname" in schema
-    # from mopidy-local-images
+    # from mopidy-eboback-images
     assert "album_art_files" in schema

@@ -22,7 +22,7 @@ class LocalTracklistProviderTest(unittest.TestCase):
             "data_dir": path_to_data_dir(""),
             "max_tracklist_length": 10000,
         },
-        "local": {
+        "eboback": {
             "media_dir": path_to_data_dir(""),
             "directories": [],
             "timeout": 10,
