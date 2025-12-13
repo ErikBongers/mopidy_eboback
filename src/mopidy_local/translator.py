@@ -18,7 +18,7 @@ def local_uri_to_file_uri(local_uri: str, media_dir: Path) -> Uri:
 
 def local_uri_to_path(local_uri: str, media_dir: Path) -> Path:
     """Convert local track or directory URI to absolute path."""
-    if not local_uri.startswith(("eboback:directory:", "eboback:track:")):
+    if not local_uri.startswith(("local:directory:", "local:track:")):
         msg = "Invalid URI."
         raise ValueError(msg)
     uri_path = urllib.parse.urlsplit(local_uri.split(":", 2)[2]).path
@@ -42,4 +42,4 @@ def path_to_local_track_uri(path: str | bytes | Path, media_dir: Path) -> str:
     if ppath.is_absolute():
         ppath = ppath.relative_to(media_dir)
     quoted_path = urllib.parse.quote(bytes(ppath))
-    return f"eboback:track:{quoted_path}"
+    return f"local:track:{quoted_path}"

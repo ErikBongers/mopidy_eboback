@@ -3,12 +3,12 @@ from importlib.metadata import version
 
 from mopidy import config, ext
 
-__version__ = version("Mopidy-Eboback")
+__version__ = version("Mopidy-Local")
 
 
 class Extension(ext.Extension):
-    dist_name = "mopidy-eboback"
-    ext_name = "eboback"
+    dist_name = "mopidy-local"
+    ext_name = "local"
     version = __version__
 
     def get_default_config(self):

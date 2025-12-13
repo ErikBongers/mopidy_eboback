@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def check_dirs_and_files(config):
-    if not pathlib.Path(config["eboback"]["media_dir"]).is_dir():
+    if not pathlib.Path(config["local"]["media_dir"]).is_dir():
         logger.warning(
-            f"Local media dir {config['eboback']['media_dir']} does not exist or "
+            f"Local media dir {config['local']['media_dir']} does not exist or "
             "we lack permissions to the directory or one of its parents"
         )
 
@@ -34,7 +34,7 @@ def model_uri(kind, model):
         digest = hashlib.md5(str(model.replace(num_tracks=None)).encode())  # noqa: S324
     else:
         digest = hashlib.md5(str(model).encode())  # noqa: S324
-    return f"eboback:{kind}:md5:{digest.hexdigest()}"
+    return f"local:{kind}:md5:{digest.hexdigest()}"
 
 
 def get_image_size_jpeg(data):

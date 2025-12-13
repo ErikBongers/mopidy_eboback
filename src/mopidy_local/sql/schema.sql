@@ -1,4 +1,4 @@
--- Mopidy-eboback-SQLite schema
+-- Mopidy-Local-SQLite schema
 
 BEGIN EXCLUSIVE TRANSACTION;
 

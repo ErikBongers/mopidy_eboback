@@ -1,10 +1,10 @@
 [project]
-name = "mopidy-eboback"
-description = "Eboplayer backend"
+name = "mopidy-local"
+description = "Mopidy extension for playing music from your local music archive"
 readme = "README.md"
 requires-python = ">= 3.13"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Erik Bongers", email = "" }]
+authors = [{ name = "Stein Magnus Jodal", email = "stein.magnus@jodal.no" }]
 classifiers = [
     "Environment :: No Input/Output (Daemon)",
     "Intended Audience :: End Users/Desktop",
@@ -20,10 +20,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/erikbongers/todo"
+Homepage = "https://github.com/mopidy/mopidy-local"
 
 [project.entry-points."mopidy.ext"]
-eboback = "mopidy_eboback:Extension"
+local = "mopidy_local:Extension"
 
 
 [build-system]
@@ -47,7 +47,7 @@ typing = ["pyright"]
 source = ["src/", "*/site-packages/"]
 
 [tool.coverage.run]
-source_pkgs = ["mopidy_eboback"]
+source_pkgs = ["mopidy_local"]
 
 [tool.coverage.report]
 show_missing = true
@@ -65,7 +65,7 @@ reportPrivateImportUsage = false
 [tool.pytest.ini_options]
 filterwarnings = [
     # By default, fail tests on warnings from our own code
-    "error:::mopidy_eboback",
+    "error:::mopidy_local",
     #
     # Add any warnings you want to ignore here
 ]
