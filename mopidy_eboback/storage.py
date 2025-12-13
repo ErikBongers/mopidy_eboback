@@ -57,7 +57,7 @@ def get_image_size_jpeg(data):
 
 
 MIN_BYTES_FOR_IMAGE_TYPE = 8
-
+IMG_URI_PREFIX = "img"
 
 def get_image_type_from_header(header: bytes) -> str:
     # original source: https://github.com/sphinx-doc/sphinx/commit/a502e7
@@ -83,7 +83,7 @@ class LocalStorageProvider:
         self._media_dir = pathlib.Path(ext_config["media_dir"])
         self._data_dir = Extension.get_data_dir(config)
         self._image_dir = Extension.get_image_dir(config)
-        self._base_uri = "/" + Extension.ext_name + "/"
+        self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
         self._patterns = list(map(str, ext_config["album_art_files"]))
         self._dbpath = self._data_dir / "library.db"
         self._connection = None

@@ -23,5 +23,8 @@ class IndexHandler(tornado.web.RequestHandler):
         return pathlib.Path(__file__).parent / "www"
 
     def uris(self):
+        from mopidy_eboback.storage import IMG_URI_PREFIX
+
         for _, _, files in os.walk(self.root):
-            yield from files
+            for file in files:
+                yield pathlib.Path(IMG_URI_PREFIX).joinpath(file)

@@ -1,0 +1,9 @@
+* Figure out how to get album info to the client(s).
+  > search for albums should ALWAYS return album refs (or uri's)
+  > options:
+    > Ref objects that are returned are NOT opaque and contain extra info.
+      > either via an extra field, but that's probably illegal in mopidy.
+      > or added to the uri field
+    > via www -> GET:
+      > after all, it doesn't require events (push messaging).
+
