@@ -28,3 +28,9 @@ class IndexHandler(tornado.web.RequestHandler):
         for _, _, files in os.walk(self.root):
             for file in files:
                 yield pathlib.Path(IMG_URI_PREFIX).joinpath(file)
+
+
+
+class DataHandler(tornado.web.RequestHandler):
+    def get(self, data_path):
+        self.write("Hello, data for: " + data_path)

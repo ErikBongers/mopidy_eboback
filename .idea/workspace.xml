@@ -7,8 +7,8 @@
     <list default="true" id="df2a00ce-0358-4cae-a5c4-bc8fe391b850" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mopidy_eboback/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mopidy_eboback/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mopidy_eboback/storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/mopidy_eboback/storage.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mopidy_eboback/web.py" beforeDir="false" afterPath="$PROJECT_DIR$/mopidy_eboback/web.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/todo.txt" beforeDir="false" afterPath="$PROJECT_DIR$/todo.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +48,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
     "settings.editor.selected.configurable": "project.propVCSSupport.CommitDialog"
   }
 }]]></component>
@@ -90,7 +91,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765657185551</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Prefix images uri">
+      <option name="closed" value="true" />
+      <created>1765660532713</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1765660532713</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -110,7 +119,8 @@
     <MESSAGE value="Initial 3 :/" />
     <MESSAGE value="Up-and-running!!!" />
     <MESSAGE value="Prefix images uri - WIP" />
-    <option name="LAST_COMMIT_MESSAGE" value="Prefix images uri - WIP" />
+    <MESSAGE value="Prefix images uri" />
+    <option name="LAST_COMMIT_MESSAGE" value="Prefix images uri" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

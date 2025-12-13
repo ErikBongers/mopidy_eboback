@@ -1,3 +1,5 @@
+* remove the deprecated stuff
+
 * Figure out how to get album info to the client(s).
   > search for albums should ALWAYS return album refs (or uri's)
   > options:
