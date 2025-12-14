@@ -123,26 +123,13 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return schema.browse(self._connect(), Ref.TRACK, order, album=uri)
 
     def _browse_artist(self, uri, order=("type", "name COLLATE NOCASE")):
-        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Generating album refs or directory refs?")
         with self._connect() as c:
             albums = schema.browse(c, Ref.ALBUM, order, albumartist=uri)
             refs = schema.browse(c, order=order, artist=uri)
         album_uris, tracks = {ref.uri for ref in albums}, []
         for ref in refs:
             if ref.type == Ref.ALBUM and ref.uri not in album_uris:
-                logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Adding dir instead of album")
                 albums.append(ref)
-                # albums.append(
-                #     Ref.directory(
-                #         uri=uritools.uricompose(
-                #             "eboback",
-                #             None,
-                #             "directory",
-                #             dict(type=Ref.TRACK, album=ref.uri, artist=uri),
-                #         ),
-                #         name=ref.name,
-                #     )
-                # )
             elif ref.type == Ref.TRACK:
                 tracks.append(ref)
             else:
@@ -151,13 +138,10 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return albums + tracks
 
     def _browse_directory(self, uri, order=("type", "name COLLATE NOCASE")):
-        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Browsing...")
-
         query = dict(uritools.urisplit(uri).getquerylist())
         type = query.pop("type", None)
         role = query.pop("role", None)
 
-        # TODO: handle these in schema (generically)?
         if type == "date":
             format = query.get("format", "%Y-%m-%d")
             return list(
@@ -174,9 +158,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
             order = ("disc_no", "track_no", "name")
         if type == Ref.ARTIST and self._config["use_artist_sortname"]:
             order = ("coalesce(sortname, name) COLLATE NOCASE",)
-        roles = role or ("artist", "albumartist")  # FIXME: re-think 'roles'...
-
-        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX type: " + type)
+        roles = role or ("artist", "albumartist")
 
         refs = []
         for ref in schema.browse(
