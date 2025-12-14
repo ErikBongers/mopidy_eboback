@@ -123,23 +123,26 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return schema.browse(self._connect(), Ref.TRACK, order, album=uri)
 
     def _browse_artist(self, uri, order=("type", "name COLLATE NOCASE")):
+        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Generating album refs or directory refs?")
         with self._connect() as c:
             albums = schema.browse(c, Ref.ALBUM, order, albumartist=uri)
             refs = schema.browse(c, order=order, artist=uri)
         album_uris, tracks = {ref.uri for ref in albums}, []
         for ref in refs:
             if ref.type == Ref.ALBUM and ref.uri not in album_uris:
-                albums.append(
-                    Ref.directory(
-                        uri=uritools.uricompose(
-                            "eboback",
-                            None,
-                            "directory",
-                            dict(type=Ref.TRACK, album=ref.uri, artist=uri),
-                        ),
-                        name=ref.name,
-                    )
-                )
+                logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Adding dir instead of album")
+                albums.append(ref)
+                # albums.append(
+                #     Ref.directory(
+                #         uri=uritools.uricompose(
+                #             "eboback",
+                #             None,
+                #             "directory",
+                #             dict(type=Ref.TRACK, album=ref.uri, artist=uri),
+                #         ),
+                #         name=ref.name,
+                #     )
+                # )
             elif ref.type == Ref.TRACK:
                 tracks.append(ref)
             else:
@@ -148,6 +151,8 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return albums + tracks
 
     def _browse_directory(self, uri, order=("type", "name COLLATE NOCASE")):
+        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Browsing...")
+
         query = dict(uritools.urisplit(uri).getquerylist())
         type = query.pop("type", None)
         role = query.pop("role", None)
@@ -170,6 +175,8 @@ class LocalLibraryProvider(backend.LibraryProvider):
         if type == Ref.ARTIST and self._config["use_artist_sortname"]:
             order = ("coalesce(sortname, name) COLLATE NOCASE",)
         roles = role or ("artist", "albumartist")  # FIXME: re-think 'roles'...
+
+        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX type: " + type)
 
         refs = []
         for ref in schema.browse(
