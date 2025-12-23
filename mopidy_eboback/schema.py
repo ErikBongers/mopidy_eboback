@@ -202,16 +202,6 @@ def load(c):
 def tracks(c):
     return list(map(_track, c.execute("SELECT * FROM tracks")))
 
-def count_albums(c):
-    res = c.execute("select count() as cnt from album")
-    cnt, = res.fetchone()
-    return cnt
-
-def get_albums_path(c, uri):
-    res = c.execute("select path from album where uri = ?", uri)
-    path, = res.fetchone()
-    return path
-
 def list_distinct(c, field, query=tuple()):
     if field not in _SEARCH_FIELDS:
         raise LookupError("Invalid search field: %s" % field)
@@ -543,6 +533,30 @@ def _track(row):
         ]
     return Track(**kwargs)
 
+def count_albums(c):
+    res = c.execute("select count() as cnt from album")
+    cnt, = res.fetchone()
+    return cnt
+
+def get_albums_path(c, uri):
+    res = c.execute("select path from album where uri = ?", uri)
+    path, = res.fetchone()
+    return path
+
+def get_album_paths(c):
+    res = c.execute(
+        """
+        select uri, path from album where path is not null;
+        """
+    )
+    return res.fetchall()
+
+def update_album_meta(c, uri, meta_data):
+    c.execute(
+        """
+        update album set alt_name = ? where uri = ?
+        """, (meta_data["albumTitle"], uri))
+
 
 def _images(field):
     images = []
@@ -555,3 +569,4 @@ def _images(field):
         else:
             images.append(Image(uri=uri))
     return images
+

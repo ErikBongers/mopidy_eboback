@@ -4,6 +4,7 @@ import pathlib
 import shutil
 import sqlite3
 import struct
+import json
 
 import uritools
 
@@ -258,3 +259,25 @@ class LocalStorageProvider:
             )
             image_path.write_bytes(data)
         return uritools.urijoin(self._base_uri, name)
+
+    def update_meta_data(self):
+        logger.info("Updating meta data...")
+        try:
+            paths = schema.get_album_paths(self._connect())
+            length = len(paths)
+            print(length)
+            for row in paths:
+                path = pathlib.Path(row.path)
+                album_uri = row.uri
+                logger.debug(f"Searching meta data at {path}")
+                meta_file_path = path / "meta.eboplayer"
+                if meta_file_path.exists():
+                    logger.info(f"Updating meta data from {str(meta_file_path)}")
+                    text = meta_file_path.read_text()
+                    meta_data = json.loads(text)
+                    schema.update_album_meta(self._connect(), album_uri, meta_data)
+            self._connect().commit() # todo: needed? Or automatically done via close()?
+            return True
+        except sqlite3.Error as e:
+            logger.error("Error updating SQLite database: %s", e)
+            return False

@@ -17,6 +17,7 @@ class EbobackCommand(commands.Command):
         super().__init__()
         self.add_child("scan", ScanCommand())
         self.add_child("clear", ClearCommand())
+        self.add_child("update_meta", UpdateMetaCommand())
 
 
 class ClearCommand(commands.Command):
@@ -297,3 +298,19 @@ class _ScanProgress:
                 f"Scanned {self.count} of {self.total} files "
                 f"in {duration:.3f}s, ~{remainder:.0f}s left"
             )
+
+
+class UpdateMetaCommand(commands.Command):
+    help = "Update album data based on the metadata of the eboplayer.meta files that are found in the same directory."
+
+    def run(self, args, config):
+        library = storage.LocalStorageProvider(config)
+
+        prompt = "Are you sure you want to clear the library? [y/N] "
+
+        if library.update_meta_data():
+            print("Meta data updated successfully.")
+            return 0
+
+        print("Unable to clear library")
+        return 1
