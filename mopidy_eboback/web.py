@@ -54,17 +54,27 @@ class DataHandler(tornado.web.RequestHandler):
 
     def get(self, data_path):
         if data_path == "get_album_meta":
-            uri = self.get_argument("uri", "nada...")
-            meta_file_path = self.uri_to_meta_path(uri)
-            self.set_header("Content-Type", 'application/json')
-            self.write(meta_file_path.read_text())
+            self.get_album_meta()
             return
 
         cnt = schema.count_albums(self._connect())
-        self.write("Hello, data for: " + data_path)
+        self.write("Oops...no valid data request: " + data_path)
         self.write("" + str(cnt))
 
+    def get_album_meta(self):
+        uri = self.get_argument("uri", "nada...")
+        meta_file_path = self.uri_to_meta_path(uri)
+        self.set_header("Content-Type", 'application/json')
+        self.write(meta_file_path.read_text())
+
     def post(self, data_path):
+        if data_path == "set_album_meta":
+            self.set_album_meta()
+            return
+
+        self.write("Oops...no valid data request: " + data_path)
+
+    def set_album_meta(self):
         uri = self.get_argument("uri", "nada...")
         meta_file_path = self.uri_to_meta_path(uri)
         meta_file_path.write_text(self.request.body.decode("utf-8"))
