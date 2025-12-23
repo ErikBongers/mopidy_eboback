@@ -53,13 +53,29 @@ class DataHandler(tornado.web.RequestHandler):
         self.finish()
 
     def get(self, data_path):
-        if data_path == "path":
-            self.write("Hello, data for: " + data_path)
+        if data_path == "get_album_meta":
+            uri = self.get_argument("uri", "nada...")
+            meta_file_path = self.uri_to_meta_path(uri)
+            self.set_header("Content-Type", 'application/json')
+            self.write(meta_file_path.read_text())
             return
 
         cnt = schema.count_albums(self._connect())
         self.write("Hello, data for: " + data_path)
         self.write("" + str(cnt))
+
+    def post(self, data_path):
+        uri = self.get_argument("uri", "nada...")
+        meta_file_path = self.uri_to_meta_path(uri)
+        meta_file_path.write_text(self.request.body.decode("utf-8"))
+        self.write("written:")
+        self.write(self.request.body)
+
+    def uri_to_meta_path(self, uri) -> pathlib.Path:
+        path_string = schema.get_albums_path(self._connect(), (uri,))
+        path = pathlib.Path(path_string)
+        meta_file_path = path / "meta.eboplayer"
+        return meta_file_path
 
     def _connect(self):
         if not self._connection:

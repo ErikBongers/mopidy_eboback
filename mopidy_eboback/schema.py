@@ -207,6 +207,11 @@ def count_albums(c):
     cnt, = res.fetchone()
     return cnt
 
+def get_albums_path(c, uri):
+    res = c.execute("select path from album where uri = ?", uri)
+    path, = res.fetchone()
+    return path
+
 def list_distinct(c, field, query=tuple()):
     if field not in _SEARCH_FIELDS:
         raise LookupError("Invalid search field: %s" % field)
