@@ -23,7 +23,7 @@ _BROWSE_QUERIES = {
     None: """
     SELECT CASE WHEN album.uri IS NULL THEN '%s' ELSE '%s' END AS type,
            coalesce(album.uri, track.uri) AS uri,
-           coalesce(album.name, track.name) AS name
+           coalesce(album.alt_name, album.name, track.name) AS name
       FROM track LEFT OUTER JOIN album ON track.album = album.uri
      WHERE %%s
      GROUP BY coalesce(album.uri, track.uri)
@@ -31,7 +31,7 @@ _BROWSE_QUERIES = {
     """
     % (Ref.TRACK, Ref.ALBUM),
     Ref.ALBUM: """
-    SELECT '%s' AS type, uri AS uri, name AS name
+    SELECT '%s' AS type, uri AS uri, coalesce(alt_name, name) AS name
       FROM album
      WHERE %%s
      ORDER BY %%s
