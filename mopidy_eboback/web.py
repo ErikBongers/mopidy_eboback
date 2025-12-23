@@ -65,7 +65,8 @@ class DataHandler(tornado.web.RequestHandler):
         uri = self.get_argument("uri", "nada...")
         meta_file_path = self.uri_to_meta_path(uri)
         self.set_header("Content-Type", 'application/json')
-        self.write(meta_file_path.read_text())
+        if meta_file_path.exists():
+            self.write(meta_file_path.read_text())
 
     def post(self, data_path):
         if data_path == "set_album_meta":
