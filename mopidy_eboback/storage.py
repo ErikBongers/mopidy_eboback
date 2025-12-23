@@ -100,16 +100,17 @@ class LocalStorageProvider:
     def add(self, track, tags=None, duration=None):
         logger.debug("Adding track: %s", track)
         images = None
+        file_path = translator.local_uri_to_path(track.uri, self._media_dir)
+        file_dir = str(file_path.parent)
         if track.album and track.album.name:  # FIXME: album required
-            uri = translator.local_uri_to_file_uri(track.uri, self._media_dir)
             try:
                 images = self._extract_images(track.uri, tags)
                 logger.debug("%s images: %s", track.uri, images)
             except Exception as e:
-                logger.warning("Error extracting images for %s: %s", uri, e)
+                logger.warning("Error extracting images for %s: %s", file_path.as_uri(), e)
         try:
             track = self._validate_track(track)
-            schema.insert_track(self._connect(), track, images)
+            schema.insert_track(self._connect(), track, images, file_dir)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 

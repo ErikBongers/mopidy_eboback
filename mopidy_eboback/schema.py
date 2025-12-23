@@ -165,7 +165,7 @@ _SEARCH_FIELDS = {
     "musicbrainz_artistid",
 }
 
-schema_version = 7
+schema_version = 8
 
 logger = logging.getLogger(__name__)
 
@@ -332,7 +332,7 @@ def insert_artists(c, artists):
     return artist.uri
 
 
-def insert_album(c, album, images=None):
+def insert_album(c, album, images=None, file_path=None):
     if not album or not album.name:
         return None
     _insert(
@@ -347,19 +347,20 @@ def insert_album(c, album, images=None):
             "date": album.date,
             "musicbrainz_id": album.musicbrainz_id,
             "images": " ".join(images) if images else None,
+            "path": file_path
         },
     )
     return album.uri
 
 
-def insert_track(c, track, images=None):
+def insert_track(c, track, images=None, file_path=None):
     _insert(
         c,
         "track",
         {
             "uri": track.uri,
             "name": track.name,
-            "album": insert_album(c, track.album, images),
+            "album": insert_album(c, track.album, images, file_path),
             "artists": insert_artists(c, track.artists),
             "composers": insert_artists(c, track.composers),
             "performers": insert_artists(c, track.performers),

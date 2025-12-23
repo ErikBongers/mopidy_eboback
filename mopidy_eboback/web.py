@@ -43,7 +43,20 @@ class DataHandler(tornado.web.RequestHandler):
         self._connection = None
         self._config = config[Extension.ext_name]
 
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*") #todo: use allowed origins from config.
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+    def options(self, *args):
+        self.set_status(204)
+        self.finish()
+
     def get(self, data_path):
+        if data_path == "path":
+            self.write("Hello, data for: " + data_path)
+            return
+
         cnt = schema.count_albums(self._connect())
         self.write("Hello, data for: " + data_path)
         self.write("" + str(cnt))
