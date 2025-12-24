@@ -24,4 +24,4 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend):
 
         self.playback = LocalPlaybackProvider(audio=audio, backend=self)
         self.library = LocalLibraryProvider(backend=self, config=config)
-        self.playlists = EbobackPlaylists(backend=self)
+        self.playlists = EbobackPlaylists(backend=self, config=config)
