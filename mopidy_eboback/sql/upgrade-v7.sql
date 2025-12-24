@@ -14,6 +14,15 @@ alter table album
  alter table album
     add image_file text;
 
+create table playlists (
+    name      text not null
+        constraint playlists_pk
+            primary key,
+    file_path TEXT not null
+);
+
+
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
