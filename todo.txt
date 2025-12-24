@@ -1,3 +1,6 @@
+* create complex playlists
+  - nested
+  - filter based
 * create web url GET for albuminfo.
 
 * Figure out how to get album info to the client(s).
