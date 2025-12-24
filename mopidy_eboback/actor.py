@@ -7,6 +7,7 @@ from mopidy import backend
 from mopidy_eboback import storage
 from mopidy_eboback.library import LocalLibraryProvider
 from mopidy_eboback.playback import LocalPlaybackProvider
+from mopidy_eboback.playlists import EbobackPlaylists
 
 logger = logging.getLogger(__name__)
 
@@ -23,3 +24,4 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend):
 
         self.playback = LocalPlaybackProvider(audio=audio, backend=self)
         self.library = LocalLibraryProvider(backend=self, config=config)
+        self.playlists = EbobackPlaylists(backend=self)
