@@ -260,7 +260,7 @@ class LocalStorageProvider:
             image_path.write_bytes(data)
         return uritools.urijoin(self._base_uri, name)
 
-    def update_meta_data(self):
+    def update_meta_data(self, media_dir):
         logger.info("Updating meta data...")
         try:
             paths = schema.get_album_paths(self._connect())

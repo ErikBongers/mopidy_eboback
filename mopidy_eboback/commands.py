@@ -77,8 +77,7 @@ class ScanCommand(commands.Command):
             force_rescan=args.force,
         )
 
-        files_to_update.update(
-            self._find_files_to_scan(
+        files_to_scan, playlist_files = self._find_files_to_scan(
                 media_dir=media_dir,
                 file_mtimes=file_mtimes,
                 files_in_library=files_in_library,
@@ -91,7 +90,7 @@ class ScanCommand(commands.Command):
                     for file_ext in config["eboback"]["excluded_file_extensions"]
                 ],
             )
-        )
+        files_to_update.update(files_to_scan)
 
         self._scan_metadata(
             media_dir=media_dir,
@@ -102,6 +101,11 @@ class ScanCommand(commands.Command):
             flush_threshold=config["eboback"]["scan_flush_threshold"],
             limit=args.limit,
         )
+
+
+        logger.info("Number of playlist files found:" + str(len(playlist_files)))
+        for playlist_file in playlist_files:
+            logger.info("playlist: " + playlist_file.as_uri())
 
         library.close()
         return 0
@@ -123,9 +127,7 @@ class ScanCommand(commands.Command):
 
         return file_mtimes
 
-    def _check_tracks_in_library(
-        self, *, media_dir, file_mtimes, library, force_rescan
-    ):
+    def _check_tracks_in_library(self, *, media_dir, file_mtimes, library, force_rescan):
         num_tracks = library.load()
         logger.info(f"Checking {num_tracks} tracks from library")
 
@@ -157,8 +159,9 @@ class ScanCommand(commands.Command):
         files_in_library,
         included_file_exts,
         excluded_file_exts,
-    ):
+    ) -> tuple[set[pathlib.Path], set[pathlib.Path]]:
         files_to_update = set()
+        meta_files = set()
 
         def _is_hidden_file(relative_path, file_uri):
             if any(p.startswith(".") for p in relative_path.parts):
@@ -167,44 +170,29 @@ class ScanCommand(commands.Command):
             else:
                 return False
 
-        def _extension_filters(
-            relative_path, file_uri, included_file_exts, excluded_file_exts
-        ):
+        def match_filters(relative_path):
             if included_file_exts:
                 if relative_path.suffix.lower() in included_file_exts:
-                    logger.debug(
-                        f"Added {file_uri}: File extension on included list"
-                    )
                     return True
                 else:
-                    logger.debug(
-                        f"Skipped {file_uri}: File extension not on included list"
-                    )
                     return False
             else:
                 if relative_path.suffix.lower() in excluded_file_exts:
-                    logger.debug(
-                        f"Skipped {file_uri}: File extension on excluded list"
-                    )
                     return False
                 else:
-                    logger.debug(
-                        f"Included {file_uri}: File extension not on excluded list"
-                    )
                     return True
 
         for absolute_path in file_mtimes:
             relative_path = absolute_path.relative_to(media_dir)
             file_uri = absolute_path.as_uri()
 
+            if is_playlist_file(relative_path):
+                meta_files.add(absolute_path)
+                continue
+
             if (
                 not _is_hidden_file(relative_path, file_uri)
-                and _extension_filters(
-                    relative_path,
-                    file_uri,
-                    included_file_exts,
-                    excluded_file_exts,
-                )
+                and match_filters(relative_path)
                 and absolute_path not in files_in_library
             ):
                 files_to_update.add(absolute_path)
@@ -212,7 +200,7 @@ class ScanCommand(commands.Command):
         logger.info(
             f"Found {len(files_to_update)} tracks which need to be updated"
         )
-        return files_to_update
+        return files_to_update, meta_files
 
     def _scan_metadata(
         self,
@@ -307,10 +295,18 @@ class UpdateMetaCommand(commands.Command):
         library = storage.LocalStorageProvider(config)
 
         prompt = "Are you sure you want to clear the library? [y/N] "
+        media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
 
-        if library.update_meta_data():
+        if library.update_meta_data(media_dir):
             print("Meta data updated successfully.")
             return 0
 
         print("Unable to clear library")
         return 1
+
+def is_playlist_file(relative_path):
+    if relative_path.suffix.lower() == ".wpl":
+        return True
+    if relative_path.suffixes == [".eboplayer", ".playlist"]:
+        return True
+    return False

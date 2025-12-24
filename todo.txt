@@ -1,7 +1,35 @@
+* list all the meta files.
+
+
+ROOT META
+===========
+whole of setup should be able to be recreated from files.
+Thus the root meta should contain:
+  - general settings for this media library.
+    > assume that eboplayer will be able to have multiple media libraries (disks,...)
+    - Genre aliasses
+    - ...
+  - playlists (overview) ?
+  - ...
+  > load root meta at startup
+    > no need for sql storage.
+    > load playlists into sql
+      > load the actual playlists from file (on demand...or stored in mem?)
+
+PLAYLISTS
+=========
+* harvest wpl files.
+  > part of meta command or separate playlists command?
+  > mark them as wpl playlists?
+* create a playlists table(s)
+  - name
+  - filename
+  - retrieve them 'live' for now.
+
+
 * create complex playlists
   - nested
   - filter based
-* create web url GET for albuminfo.
 
 * Figure out how to get album info to the client(s).
   > search for albums should ALWAYS return album refs (or uri's)
