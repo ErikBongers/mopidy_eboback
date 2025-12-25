@@ -22,6 +22,12 @@ create table playlists (
     file_path TEXT not null
 );
 
+create table images (
+    uri TEXT,
+    file_path TEXT
+);
+
+create index images_uri_index on images (uri);
 
 PRAGMA user_version = 8;  -- update schema version
 
