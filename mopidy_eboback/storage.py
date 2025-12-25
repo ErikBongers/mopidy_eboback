@@ -238,7 +238,9 @@ class LocalStorageProvider:
             what = get_image_type_from_header(header)
             data_source = "embedded image"
 
-        digest, width, height = hashlib.md5(data).hexdigest(), None, None
+        digest = hashlib.md5(data).hexdigest()
+        width = None
+        height = None
         try:
             if what == "png":
                 width, height = get_image_size_png(data)
