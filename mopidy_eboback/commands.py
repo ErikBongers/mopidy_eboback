@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 import time
@@ -89,9 +90,25 @@ class ScanCommand(commands.Command):
 
         logger.info("Number of playlist files found:" + str(len(playlist_files)))
         for playlist_file in playlist_files:
-            logger.info("playlist: " + playlist_file.as_uri())
+            playlist_text = playlist_file.read_text()
+            if playlist_file.suffixes == [".eboplayer", ".playlist"]:
+                playlist = json.loads(playlist_text)
+                self.library.add_playlist(playlist['name'], playlist_file, playlist_text)
+                for item in playlist['items']:
+                    if item['type'] == 'stream':
+                        track = tags.convert_tags_to_track({}).replace(
+                            name=item['name'],
+                            uri="eboback:stream:"+item['uri'],
+                            genre=item['genre']
+                        )
+                        self.library.add_stream_track(track, item['image'])
+
+            else:
+                if playlist_file.suffix == ".wpl":
+                    pass #todo
 
         self.library.close()
+
         return 0
 
     def _find_files(self, *, follow_symlinks):
@@ -120,14 +137,17 @@ class ScanCommand(commands.Command):
         files_in_library = set()
 
         for track in self.library.begin():
-            absolute_path = translator.local_uri_to_path(track.uri, self.media_dir)
-            mtime = file_mtimes.get(absolute_path)
-            if mtime is None:
-                logger.debug(f"Removing {track.uri}: File not found")
-                uris_to_remove.add(track.uri)
-            elif mtime > track.last_modified or force_rescan:
-                files_to_update.add(absolute_path)
-            files_in_library.add(absolute_path)
+            if track.uri.startswith("eboback:stream:"):
+                pass #todo?
+            else:
+                absolute_path = translator.local_uri_to_path(track.uri, self.media_dir)
+                mtime = file_mtimes.get(absolute_path)
+                if mtime is None:
+                    logger.debug(f"Removing {track.uri}: File not found")
+                    uris_to_remove.add(track.uri)
+                elif mtime > track.last_modified or force_rescan:
+                    files_to_update.add(absolute_path)
+                files_in_library.add(absolute_path)
 
         logger.info(f"Removing {len(uris_to_remove)} missing tracks")
         for local_uri in uris_to_remove:

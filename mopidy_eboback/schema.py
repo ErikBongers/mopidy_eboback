@@ -372,6 +372,46 @@ def insert_track(c, track, images=None, file_path=None):
     )
     return track.uri
 
+def insert_stream_track(c, track):
+    _insert(
+        c,
+        "track",
+        {
+            "uri": track.uri,
+            "name": track.name,
+            "album": None,
+            "artists": None,
+            "composers": None,
+            "performers": None,
+            "genre": track.genre,
+            "track_no": None,
+            "disc_no": None,
+            "date": None,
+            "length": 0,
+            "bitrate": None,
+            "comment": None,
+            "musicbrainz_id": None,
+            "last_modified": None,
+        },
+    )
+    return track.uri
+
+def insert_playlist(c, uri, name, file_path):
+    _insert(
+        c,
+        "playlists",
+        {
+            "uri": uri,
+            "name": name,
+            "file_path": file_path,
+        },
+    )
+
+def insert_image(c, uri, file_path):
+    _insert(c, "images", {
+        "uri": uri,
+        "file_path": file_path,
+    })
 
 def delete_track(c, uri):
     c.execute("DELETE FROM track WHERE uri = ?", (uri,))
@@ -411,6 +451,7 @@ def clear(c):
     DELETE FROM track;
     DELETE FROM album;
     DELETE FROM artist;
+    DELETE FROM playlists;
     VACUUM;
     """
     )

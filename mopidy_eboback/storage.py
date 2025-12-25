@@ -115,8 +115,20 @@ class LocalStorageProvider:
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
+    def add_stream_track(self, track, image):
+        logger.debug("Adding stream track: %s", track)
+        try:
+            schema.insert_stream_track(self._connect(), track)
+            schema.insert_image(self._connect(), track.uri, image)
+        except Exception as e:
+            logger.warning("Skipped %s: %s", track.uri, e)
+
     def remove(self, uri):
         schema.delete_track(self._connect(), uri)
+
+    def add_playlist(self, name: str, file_path: pathlib.Path, data: str):
+        digest = hashlib.md5(data. encode(encoding="utf-8")).hexdigest()
+        schema.insert_playlist(self._connect(), "eboback:album:md5:"+digest, name, file_path.as_uri())
 
     def flush(self):
         if not self._connection:

@@ -58,6 +58,8 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 return list(schema.lookup(self._connect(), Ref.ARTIST, uri))
             elif uri.startswith("eboback:track"):
                 return list(schema.lookup(self._connect(), Ref.TRACK, uri))
+            elif uri.startswith("eboback:stream"):
+                return list(schema.lookup(self._connect(), Ref.TRACK, uri))
             else:
                 raise ValueError("Invalid lookup URI")
         except Exception as e:

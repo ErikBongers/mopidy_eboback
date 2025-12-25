@@ -1,3 +1,4 @@
+* Scan: load playlists in table
 * get image for stream
   > mopidy.get_images(uris) returns {[string: string]: Image[]}
   > backend should return the radio stream's image
