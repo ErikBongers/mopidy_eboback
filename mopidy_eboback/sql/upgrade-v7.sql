@@ -15,7 +15,8 @@ alter table album
     add image_file text;
 
 create table playlists (
-    name      text not null
+    uri       TEXT not null,
+    name      TEXT not null
         constraint playlists_pk
             primary key,
     file_path TEXT not null
