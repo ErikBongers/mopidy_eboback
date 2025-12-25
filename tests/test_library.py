@@ -7,7 +7,7 @@ import pykka
 from mopidy import core
 from mopidy.models import SearchResult, Track
 
-from mopidy_eboback import actor, storage, translator
+from mopidy_eboback import backend, storage, translator
 from tests import dummy_audio, path_to_data_dir
 
 

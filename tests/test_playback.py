@@ -6,7 +6,7 @@ from mopidy import core
 from mopidy.core import PlaybackState
 from mopidy.models import TlTrack, Track
 
-from mopidy_eboback import actor
+from mopidy_eboback import backend
 from unittest import mock
 from tests import (
     dummy_audio,

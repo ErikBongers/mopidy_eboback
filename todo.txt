@@ -1,4 +1,13 @@
-* list all the meta files.
+* get image for stream
+  > mopidy.get_images(uris) returns {[string: string]: Image[]}
+  > backend should return the radio stream's image
+    > stored in root.eboplayer -> "streams_folder" -> streams.eboplayer.playlist
+
+* list all the playlist files
+   > add them to the playlists table.
+
+* Scan: check for new image files
+  > this implies that the original file names are stored in the DB.
 
 
 ROOT META

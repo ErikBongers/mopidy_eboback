@@ -45,6 +45,11 @@ class ScanCommand(commands.Command):
 
     def __init__(self):
         super().__init__()
+        self.excluded_exts = None
+        self.included_exts = None
+        self.library = None
+        self.timeout = "1000"
+        self.media_dir = None
         self.add_argument(
             "--limit",
             action="store",
@@ -62,42 +67,21 @@ class ScanCommand(commands.Command):
         )
 
     def run(self, args, config):
-        media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
-        library = storage.LocalStorageProvider(config)
+        self.media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
+        self.timeout = config["eboback"]["scan_timeout"]
 
-        file_mtimes = self._find_files(
-            media_dir=media_dir,
-            follow_symlinks=config["eboback"]["scan_follow_symlinks"],
-        )
+        self.library = storage.LocalStorageProvider(config)
+        file_mtimes = self._find_files(follow_symlinks=config["eboback"]["scan_follow_symlinks"])
+        files_to_update, files_in_library = self._check_tracks_in_library( file_mtimes=file_mtimes, force_rescan=args.force)
 
-        files_to_update, files_in_library = self._check_tracks_in_library(
-            media_dir=media_dir,
-            file_mtimes=file_mtimes,
-            library=library,
-            force_rescan=args.force,
-        )
-
-        files_to_scan, playlist_files = self._find_files_to_scan(
-                media_dir=media_dir,
-                file_mtimes=file_mtimes,
-                files_in_library=files_in_library,
-                included_file_exts=[
-                    file_ext.lower()
-                    for file_ext in config["eboback"]["included_file_extensions"]
-                ],
-                excluded_file_exts=[
-                    file_ext.lower()
-                    for file_ext in config["eboback"]["excluded_file_extensions"]
-                ],
-            )
+        self.included_exts = [ext.lower() for ext in config["eboback"]["included_file_extensions"]]
+        self.excluded_exts = [ext.lower() for ext in config["eboback"]["excluded_file_extensions"]]
+        files_to_scan, playlist_files = self._find_files_to_scan(file_mtimes=file_mtimes, files_in_library=files_in_library)
         files_to_update.update(files_to_scan)
 
         self._scan_metadata(
-            media_dir=media_dir,
             file_mtimes=file_mtimes,
             files=files_to_update,
-            library=library,
-            timeout=config["eboback"]["scan_timeout"],
             flush_threshold=config["eboback"]["scan_flush_threshold"],
             limit=args.limit,
         )
@@ -107,36 +91,36 @@ class ScanCommand(commands.Command):
         for playlist_file in playlist_files:
             logger.info("playlist: " + playlist_file.as_uri())
 
-        library.close()
+        self.library.close()
         return 0
 
-    def _find_files(self, *, media_dir, follow_symlinks):
-        logger.info(f"Finding files in {media_dir.as_uri()} ...")
+    def _find_files(self, *, follow_symlinks):
+        logger.info(f"Finding files in {self.media_dir.as_uri()} ...")
         file_mtimes, file_errors = mtimes.find_mtimes(
-            media_dir, follow=follow_symlinks
+            self.media_dir, follow=follow_symlinks
         )
-        logger.info(f"Found {len(file_mtimes)} files in {media_dir.as_uri()}")
+        logger.info(f"Found {len(file_mtimes)} files in {self.media_dir.as_uri()}")
 
         if file_errors:
             logger.warning(
                 f"Encountered {len(file_errors)} errors "
-                f"while finding files in {media_dir.as_uri()}"
+                f"while finding files in {self.media_dir.as_uri()}"
             )
         for path in file_errors:
             logger.warning(f"Error for {path.as_uri()}: {file_errors[path]}")
 
         return file_mtimes
 
-    def _check_tracks_in_library(self, *, media_dir, file_mtimes, library, force_rescan):
-        num_tracks = library.load()
+    def _check_tracks_in_library(self, *, file_mtimes, force_rescan):
+        num_tracks = self.library.load()
         logger.info(f"Checking {num_tracks} tracks from library")
 
         uris_to_remove = set()
         files_to_update = set()
         files_in_library = set()
 
-        for track in library.begin():
-            absolute_path = translator.local_uri_to_path(track.uri, media_dir)
+        for track in self.library.begin():
+            absolute_path = translator.local_uri_to_path(track.uri, self.media_dir)
             mtime = file_mtimes.get(absolute_path)
             if mtime is None:
                 logger.debug(f"Removing {track.uri}: File not found")
@@ -147,51 +131,37 @@ class ScanCommand(commands.Command):
 
         logger.info(f"Removing {len(uris_to_remove)} missing tracks")
         for local_uri in uris_to_remove:
-            library.remove(local_uri)
+            self.library.remove(local_uri)
 
         return files_to_update, files_in_library
 
     def _find_files_to_scan(
         self,
         *,
-        media_dir,
         file_mtimes,
         files_in_library,
-        included_file_exts,
-        excluded_file_exts,
     ) -> tuple[set[pathlib.Path], set[pathlib.Path]]:
         files_to_update = set()
         meta_files = set()
 
-        def _is_hidden_file(relative_path, file_uri):
-            if any(p.startswith(".") for p in relative_path.parts):
-                logger.debug(f"Skipped {file_uri}: Hidden directory/file")
-                return True
-            else:
-                return False
+        def _is_hidden_file(rel_path):
+            return any(p.startswith(".") for p in rel_path.parts)
 
-        def match_filters(relative_path):
-            if included_file_exts:
-                if relative_path.suffix.lower() in included_file_exts:
-                    return True
-                else:
-                    return False
+        def match_filters(rel_path):
+            if self.included_exts:
+                return rel_path.suffix.lower() in self.included_exts
             else:
-                if relative_path.suffix.lower() in excluded_file_exts:
-                    return False
-                else:
-                    return True
+                return not (rel_path.suffix.lower() in self.excluded_exts)
 
         for absolute_path in file_mtimes:
-            relative_path = absolute_path.relative_to(media_dir)
-            file_uri = absolute_path.as_uri()
+            relative_path = absolute_path.relative_to(self.media_dir)
 
             if is_playlist_file(relative_path):
                 meta_files.add(absolute_path)
                 continue
 
             if (
-                not _is_hidden_file(relative_path, file_uri)
+                not _is_hidden_file(relative_path)
                 and match_filters(relative_path)
                 and absolute_path not in files_in_library
             ):
@@ -205,11 +175,8 @@ class ScanCommand(commands.Command):
     def _scan_metadata(
         self,
         *,
-        media_dir,
         file_mtimes,
         files,
-        library,
-        timeout,
         flush_threshold,
         limit,
     ):
@@ -217,7 +184,8 @@ class ScanCommand(commands.Command):
 
         files = sorted(files)[:limit]
 
-        scanner = scan.Scanner(timeout)
+        logger.info(f"Timeoout: {self.timeout} ")
+        scanner = scan.Scanner(self.timeout)
         progress = _ScanProgress(batch_size=flush_threshold, total=len(files))
 
         for absolute_path in files:
@@ -241,7 +209,7 @@ class ScanCommand(commands.Command):
                     )
                 else:
                     local_uri = translator.path_to_local_track_uri(
-                        absolute_path, media_dir
+                        absolute_path, self.media_dir
                     )
                     mtime = file_mtimes.get(absolute_path)
                     track = tags.convert_tags_to_track(result.tags).replace(
@@ -249,14 +217,14 @@ class ScanCommand(commands.Command):
                         length=result.duration,
                         last_modified=mtime,
                     )
-                    library.add(track, result.tags, result.duration)
+                    self.library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
-                logger.warning(f"Failed scanning {file_uri}: {error}")
+                logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
 
             if progress.increment():
                 progress.log()
-                if library.flush():
+                if self.library.flush():
                     logger.debug("Progress flushed")
 
         progress.log()

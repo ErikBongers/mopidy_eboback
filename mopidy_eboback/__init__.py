@@ -33,7 +33,7 @@ class Extension(ext.Extension):
         return schema
 
     def setup(self, registry):
-        from .actor import EbobackBackend
+        from .backend import EbobackBackend
 
         registry.add("backend", EbobackBackend)
         registry.add(
