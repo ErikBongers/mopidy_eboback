@@ -4,7 +4,7 @@ import sqlite3
 
 import uritools
 from mopidy import backend, models
-from mopidy.models import Ref, SearchResult
+from mopidy.models import Ref, SearchResult, Image
 
 from . import Extension, schema
 
@@ -94,13 +94,19 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return SearchResult(uri=uri, tracks=tracks)
 
     def get_images(self, uris):
+        def to_image(row):
+            return Image(uri=row["file_path"], width=999, height=999)
         images = {}
         with self._connect() as c:
             for uri in uris:
+                images[uri] = []
+                sql_images = schema.get_images(c, uri)
+                imz = list(map(to_image, sql_images))
+                images[uri].extend(imz)
                 if uri.startswith("eboback:album"):
-                    images[uri] = schema.get_album_images(c, uri)
+                    images[uri].extend(schema.get_album_images(c, uri))
                 elif uri.startswith("eboback:track"):
-                    images[uri] = schema.get_track_images(c, uri)
+                    images[uri].extend(schema.get_track_images(c, uri))
         return images
 
     def get_distinct(self, field, query=None):
