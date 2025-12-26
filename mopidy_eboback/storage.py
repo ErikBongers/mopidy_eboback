@@ -59,6 +59,7 @@ def get_image_size_jpeg(data):
 
 MIN_BYTES_FOR_IMAGE_TYPE = 8
 IMG_URI_PREFIX = "img"
+MEDIA_URI_PREFIX = "media"
 
 def get_image_type_from_header(header: bytes) -> str:
     # original source: https://github.com/sphinx-doc/sphinx/commit/a502e7

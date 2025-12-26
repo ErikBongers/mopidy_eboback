@@ -47,13 +47,15 @@ class Extension(ext.Extension):
 
     def webapp(self, config, core):
         from .web import ImageHandler, IndexHandler, DataHandler
-        from mopidy_eboback.storage import IMG_URI_PREFIX
+        from mopidy_eboback.storage import IMG_URI_PREFIX, MEDIA_URI_PREFIX
 
         data_dir = self.get_data_dir(config)
         image_dir = self.get_image_dir(config)
+        media_dir = config["eboback"]["media_dir"]
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
+            (r"/" + MEDIA_URI_PREFIX + r"/(.+)", ImageHandler, {"path": media_dir}),
             (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
         ]
 
