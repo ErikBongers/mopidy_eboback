@@ -1,3 +1,10 @@
+* Write manual
+  > about root meta file
+  > about playlist files
+  > ...
+
+* Stream definitions: add stream lines to exclude ("VRT Klara")
+
 * Scan: load playlists in table
 * get image for stream
   > mopidy.get_images(uris) returns {[string: string]: Image[]}

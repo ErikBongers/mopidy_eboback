@@ -116,11 +116,10 @@ class LocalStorageProvider:
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
-    def add_stream_track(self, track, image):
-        logger.debug("Adding stream track: %s", track)
+    def add_stream_track(self, track, image_path: str):
         try:
             schema.insert_stream_track(self._connect(), track)
-            schema.insert_image(self._connect(), track.uri, image)
+            schema.insert_image(self._connect(), track.uri, "eboback/media" + image_path)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
