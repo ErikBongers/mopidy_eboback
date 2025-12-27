@@ -2,12 +2,14 @@
 
 This is a backend extension for the mopidy-eboplayer frontend extension.
 It is based on the mopidy-local extension.
+However, mopidy-eboback allows for metadata files within the media library, which facilitates easy copying and sharing of libraries.
+The philosophy is that the specifications for the library are owned by the library and not the software. 
 
 > This extension is still in early development.
 
 ## These are main features
 
-* Maps audio files in a local media storage to mopidy albums and tracks.
+* Maps audio files in a specified local media storage to mopidy albums and tracks.
     > TODO: allow for multiple media storages to allow multiple people to share their music drives.
 * Extracts images from the audio files, if present.
 * Extracts images from the local media storage.
@@ -43,11 +45,17 @@ In the `mopidy.conf` file under `[eboback]` you specify the root of the drive:
 	"name": "My media player library",
 	"//streams_folder": "Relative path to folder where stream images, etc are stored",
 	"streams_folder": "/RadioStreams",
-    "//genre_synonyms": "Dictionary of genre synonyms. Key is the genre name, value is a list of synonyms.",
-    "genre_synonyms": {
+    "//genre_groups": "You can also use this to create aliases",
+    "genre_groups": {
        "rock": ["metal", "hard rock"],
-       "..." : ["..."]
-    }
+       "Classical" : ["Baroque", "Romantic"]
+    },
+    "//genre_replacements": "These HIDE the original genre. Usefull to reduce clutter",
+    "genre_replacements": {
+       "Classical" : ["Classical music", "Classical Period"]
+    },
+    "//excluded_ext": "List of file extensions to exclude from the library",
+    "excluded_ext": ["jpeg", "jpg", "txt"]
 }
 ```
 
