@@ -144,7 +144,6 @@ class LocalStorageProvider:
             self._connection = None
         else:
             logger.error("Attempting to close while not connected")
-        self._cleanup_images()
 
     def clear(self):
         logger.info("Clearing image directory")

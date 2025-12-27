@@ -78,6 +78,7 @@ class ScanCommand(commands.Command):
                 if playlist_file.suffix == ".wpl":
                     pass #todo
 
+        self.library.cleanup_images()
         self.library.close()
 
         return 0
