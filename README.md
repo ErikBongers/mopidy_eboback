@@ -38,5 +38,51 @@ For more information on where to find this config file, Google "Mopidy Configura
 ### root.eboplayer
 In the `mopidy.conf` file under `[eboback]` you specify the root of the drive:
 ```json
-
+{
+	"//name": "A name for this media source",
+	"name": "My media player library",
+	"//streams_folder": "Relative path to folder where stream images, etc are stored",
+	"streams_folder": "/RadioStreams",
+    "//genre_synonyms": "Dictionary of genre synonyms. Key is the genre name, value is a list of synonyms.",
+    "genre_synonyms": {
+       "rock": ["metal", "hard rock"],
+       "..." : ["..."]
+    }
+}
 ```
+
+## Meta data for directories and albums
+Eboplater will look for a `.eboplayer` file in each directory.
+A directory may contain tracks for a single or multiple albums.
+Eboplayer determines the album name for a track from it's metadata tags within the file.
+Depending on whether a directory contains tracks for multiple albums or a single album, 
+eboplayer will look for different versions of the `.eboplayer` file.
+
+### Single album directory
+
+In case a directory contains tracks for a single album, eboplayer will 
+look for a `.eboplayer` or a `meta.eboplayer` file in the directory.
+
+### Multiple album directory
+
+In case a directory contains tracks for multiple albums, eboplayer will 
+look for `ALBUM_NAME.eboplayer` files in the directory, where `ALBUM_NAME` is the name of the album.
+You can therefor have multiple `ALBUM_NAME.eboplayer` files in one directory.
+If there are no tracks for a given album, eboplayer will ignore the related `ALBUM_NAME.eboplayer` file.
+
+### Virtual albums
+
+If you want to create virtual albums, you can do so by creating a `album.eboplayer` file in the directory.
+Note that virtual albums are not the same as playlists.
+If you want to create multiple virtual albums, you can create multiple `ALBUM_NAME.album.eboplayer` files.
+
+## Playlists
+
+Playlists are retrieved from `.wpl`, `.m3u` and `playlist.eboplayer` files in the media directory.
+Eboplayer playlists allow for nesting of playlists and queries.
+
+## Scanning
+
+Changes to configuration files are not picked up automatically.
+You need run the command `sudo mopidyctl eboback update_meta` to scan the media directory.
+  > TODO: this probably needs to be integraded in the `scan` command.
