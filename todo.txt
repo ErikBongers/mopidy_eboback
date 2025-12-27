@@ -1,3 +1,45 @@
+Multiple albums in one folder
+=============================
+* If I want to rename a specific album?
+  > album_title.eboplayer?
+    > Would have to match the exact title.
+      > `Scan` will issue a warning/error if the meta file does not match any tracks.
+      > Do a forgiving match
+        - LEVEL 1: PERFECT MATCH
+           a. really perfect
+           b. trim begin and end
+           c. trim double spaces and nbsp and such
+        - LEVEL 2: INVALID FILENAME CHARS
+           a. replace with space
+           b. replace with underscore
+           c. replace with dash
+           d. combination of the above
+             > replace all spaces/dashes/underscores with a # or somthing.
+        - LEVEL 3: WARNING: INTERNATIONAL:  Remove accents
+        - LEVEL 4: WARNING: Case incensitive match
+        - LEVEL 5: ERROR: did you mean ...?
+        - LEVEL 6: ERROR: no match
+  > if only a meta.eboplayer file is found:
+    > issue error:ignoring meta: if multiple albums are in that folder.
+  > Add a command "diagnosics" or "check"
+    > this will simply report meta errors.
+
+* Virtual albums?
+  > perhaps allow users to create virtual albums
+    > similar to playlists, but internally stored as an album.
+
+* allow meta file names:
+  - meta.eboplayer: if only tracks of one album
+  - .eboplater: same
+  - AlbumName.eboplayer: if at least on track matches the AlbumName.
+  > don't allow multiple files.
+
+
+
+
+
+Z:/Music/root.eboplayer
+file:///Z:/Music/root.eboplayer
 * Write manual
   > about root meta file
   > about playlist files
