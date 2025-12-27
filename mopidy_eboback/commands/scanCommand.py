@@ -1,45 +1,16 @@
-import json
 import logging
+import json
 import pathlib
 import time
 
 from mopidy import commands
-from mopidy.audio import scan, tags
+from mopidy.audio import tags, scan
 
-from mopidy_eboback import mtimes, storage, translator
-
-logger = logging.getLogger(__name__)
+from mopidy_eboback import storage, mtimes, translator
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
-
-class EbobackCommand(commands.Command):
-    def __init__(self):
-        super().__init__()
-        self.add_child("scan", ScanCommand())
-        self.add_child("clear", ClearCommand())
-        self.add_child("update_meta", UpdateMetaCommand())
-
-
-class ClearCommand(commands.Command):
-    help = "Clear local media files from the eboplayer library."
-
-    def run(self, args, config):
-        library = storage.LocalStorageProvider(config)
-
-        prompt = "Are you sure you want to clear the library? [y/N] "
-
-        if input(prompt).lower() != "y":
-            print("Clearing library aborted")
-            return 0
-
-        if library.clear():
-            print("Library successfully cleared")
-            return 0
-
-        print("Unable to clear library")
-        return 1
-
+logger = logging.getLogger(__name__)
 
 class ScanCommand(commands.Command):
     help = "Scan local media files and populate the eboplayer library."
@@ -276,25 +247,11 @@ class _ScanProgress:
             )
 
 
-class UpdateMetaCommand(commands.Command):
-    help = "Update album data based on the metadata of the eboplayer.meta files that are found in the same directory."
-
-    def run(self, args, config):
-        library = storage.LocalStorageProvider(config)
-
-        prompt = "Are you sure you want to clear the library? [y/N] "
-        media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
-
-        if library.update_meta_data(media_dir):
-            print("Meta data updated successfully.")
-            return 0
-
-        print("Unable to clear library")
-        return 1
-
 def is_playlist_file(relative_path):
     if relative_path.suffix.lower() == ".wpl":
         return True
     if relative_path.suffixes == [".eboplayer", ".playlist"]:
         return True
     return False
+
+
