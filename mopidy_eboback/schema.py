@@ -3,6 +3,7 @@ import operator
 import pathlib
 import re
 import sqlite3
+from sqlite3 import Row
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
@@ -584,10 +585,16 @@ def get_albums_path(c, uri):
     path, = res.fetchone()
     return path
 
-def get_album_paths(c):
+def get_album_paths_and_path_counts(c) -> list[Row] :
     res = c.execute(
         """
-        select uri, path from album where path is not null;
+        select uri, name, album.path, counts.cnt as albums_in_dir
+        from album,
+            (select path, count(name) cnt
+            from album
+            group by path
+            ) as counts
+        where album.path = counts.path;
         """
     )
     return res.fetchall()

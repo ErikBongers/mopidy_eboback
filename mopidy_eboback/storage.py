@@ -205,7 +205,7 @@ class LocalStorageProvider:
             performers=list(map(self._validate_artist, model.performers)),
         )
 
-    def _cleanup_images(self):
+    def cleanup_images(self):
         logger.info("Cleaning up image directory")
         with self._connect() as c:
             uris = set(schema.get_image_uris(c))
@@ -273,24 +273,8 @@ class LocalStorageProvider:
             image_path.write_bytes(data)
         return uritools.urijoin(self._base_uri, name)
 
-    def update_meta_data(self, media_dir):
-        logger.info("Updating meta data...")
-        try:
-            paths = schema.get_album_paths(self._connect())
-            length = len(paths)
-            print(length)
-            for row in paths:
-                path = pathlib.Path(row.path)
-                album_uri = row.uri
-                logger.debug(f"Searching meta data at {path}")
-                meta_file_path = path / "meta.eboplayer"
-                if meta_file_path.exists():
-                    logger.info(f"Updating meta data from {str(meta_file_path)}")
-                    text = meta_file_path.read_text()
-                    meta_data = json.loads(text)
-                    schema.update_album_meta(self._connect(), album_uri, meta_data)
-            self._connect().commit() # todo: needed? Or automatically done via close()?
-            return True
-        except sqlite3.Error as e:
-            logger.error("Error updating SQLite database: %s", e)
-            return False
+    def get_album_path_and_path_counts(self):
+        return schema.get_album_paths_and_path_counts(self._connect())
+
+    def update_album_meta(self, album_uri: str, meta_data):
+        schema.update_album_meta(self._connect(), album_uri, meta_data)
