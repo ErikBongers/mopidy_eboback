@@ -1,5 +1,16 @@
-* Meta command:
-  > loop all
+* (re-)scan: search for new images as well.
+  > implies we know what the old images are...
+  > keep images in original folder
+  > only keep link to the biggest image?
+
+Rust !!!
+========
+* create a wpl parser lib.
+  > ...which uses the text_scanner lib.
+    > ...which is stored in github
+      > as a separate repo!
+      > and get's included in Cargo.toml as a git reference with a specifig tag (version no).
+      
 
 
 

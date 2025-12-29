@@ -24,6 +24,11 @@ class UpdateMetaCommand(commands.Command):
 
         if self.update_meta_data():
             print("Meta data updated successfully.")
+            from mopidy_eboback.lib import text_scanner_py
+            res = text_scanner_py.scan_wpl("/media/DATA1/Music/My Playlists/Religioso.wpl")
+            for line in res:
+                print(line)
+
             return 0
 
         print("Unable to update meta data")
