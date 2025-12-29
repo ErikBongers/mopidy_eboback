@@ -29,6 +29,21 @@ create table images (
 
 create index images_uri_index on images (uri);
 
+create table playlist_refs
+(
+    uri          TEXT not null,
+    playlist_uri TEXT not null
+        constraint playlist_refs_playlists_fk
+            references playlists
+);
+
+create index playlist_refs_playlist_uri_index
+    on playlist_refs (playlist_uri);
+
+create index playlist_refs_uri_index
+    on playlist_refs (uri);
+
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
