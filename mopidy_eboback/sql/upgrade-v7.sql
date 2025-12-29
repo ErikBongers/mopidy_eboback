@@ -34,7 +34,7 @@ create table playlist_refs
     uri          TEXT not null,
     playlist_uri TEXT not null
         constraint playlist_refs_playlists_fk
-            references playlists
+            references playlists ON DELETE CASCADE
 );
 
 create index playlist_refs_playlist_uri_index
