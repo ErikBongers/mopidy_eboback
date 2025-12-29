@@ -9,6 +9,7 @@ from mopidy_eboback.storage import LocalStorageProvider
 logger = logging.getLogger(__name__)
 
 class UpdateMetaCommand(commands.Command):
+
     help = "Update album data based on the metadata of the eboplayer.meta files that are found in the same directory."
 
     def __init__(self):
@@ -24,10 +25,6 @@ class UpdateMetaCommand(commands.Command):
 
         if self.update_meta_data():
             print("Meta data updated successfully.")
-            from mopidy_eboback.lib import text_scanner_py
-            res = text_scanner_py.scan_wpl("/media/DATA1/Music/My Playlists/Religioso.wpl")
-            for line in res:
-                print(line)
 
             return 0
 

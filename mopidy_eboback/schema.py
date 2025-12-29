@@ -315,7 +315,7 @@ def insert_artists(c, artists):
     if len(artists) != 1:
         logger.warning("Ignoring multiple artists: %r", artists)
     artist = next(iter(artists))
-    _insert(
+    _insert_or_replace(
         c,
         "artist",
         {
@@ -331,7 +331,7 @@ def insert_artists(c, artists):
 def insert_album(c, album, images=None, file_path=None):
     if not album or not album.name:
         return None
-    _insert(
+    _insert_or_replace(
         c,
         "album",
         {
@@ -350,7 +350,7 @@ def insert_album(c, album, images=None, file_path=None):
 
 
 def insert_track(c, track, images=None, file_path=None):
-    _insert(
+    _insert_or_replace(
         c,
         "track",
         {
@@ -374,7 +374,7 @@ def insert_track(c, track, images=None, file_path=None):
     return track.uri
 
 def insert_stream_track(c, track):
-    _insert(
+    _insert_or_replace(
         c,
         "track",
         {
@@ -397,8 +397,12 @@ def insert_stream_track(c, track):
     )
     return track.uri
 
+
+def delete_file_playlists(c):
+    c.execute("DELETE FROM playlists where file_path IS NOT NULL")
+
 def insert_playlist(c, uri, name, file_path):
-    _insert(
+    _insert_or_replace(
         c,
         "playlists",
         {
@@ -408,8 +412,14 @@ def insert_playlist(c, uri, name, file_path):
         },
     )
 
+def add_playlist_ref(c: Connection, playlist_uri: str, uri: str) -> None:
+    _insert_or_replace(c, "playlist_refs", {
+        "playlist_uri": playlist_uri,
+        "uri": uri
+    })
+
 def insert_image(c, uri, file_path):
-    _insert(c, "images", {
+    _insert_or_replace(c, "images", {
         "uri": uri,
         "file_path": file_path,
     })
@@ -458,7 +468,7 @@ def clear(c):
     )
 
 
-def _insert(c, table, params):
+def _insert_or_replace(c, table, params):
     sql = "INSERT OR REPLACE INTO {} ({}) VALUES ({})".format(
         table, ", ".join(params.keys()), ", ".join(["?"] * len(params))
     )
@@ -622,3 +632,4 @@ def _images(field):
 def get_images(c, uri):
     logger.info("Getting images for %s", uri)
     return c.execute("select * from images where uri = ?", (uri,)).fetchall()
+

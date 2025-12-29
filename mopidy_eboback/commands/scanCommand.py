@@ -1,16 +1,28 @@
 import logging
 import json
 import pathlib
+import string
 import time
+from typing import Any
 
 from mopidy import commands
 from mopidy.audio import tags, scan
 
 from mopidy_eboback import storage, mtimes, translator
+from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.translator import path_to_track_uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
 logger = logging.getLogger(__name__)
+
+class WplItem:
+    path: str
+    item_type: str
+
+class Wpl:
+    name: str
+    items: list[WplItem]
 
 class ScanCommand(commands.Command):
     help = "Scan local media files and populate the eboplayer library."
@@ -19,7 +31,7 @@ class ScanCommand(commands.Command):
         super().__init__()
         self.excluded_exts = None
         self.included_exts = None
-        self.library = None
+        self.library: LocalStorageProvider
         self.timeout = "1000"
         self.media_dir = None
         self.add_argument(
@@ -58,30 +70,58 @@ class ScanCommand(commands.Command):
             limit=args.limit,
         )
 
+        self.update_playlists(args, config, file_mtimes, playlist_files)
+        self.library.cleanup_images()
+        self.library.close()
 
+        return 0
+
+    def update_playlists(self, args: tuple[str, ...], config, file_mtimes: dict[Any, int], playlist_files: set[pathlib.Path]):
+        from mopidy_eboback.lib import text_scanner_py
+
+        self.library.delete_file_playlists()
         logger.info("Number of playlist files found:" + str(len(playlist_files)))
         for playlist_file in playlist_files:
             playlist_text = playlist_file.read_text()
             if playlist_file.suffixes == [".eboplayer", ".playlist"]:
                 playlist = json.loads(playlist_text)
-                self.library.add_playlist(playlist['name'], playlist_file, playlist_text)
-                for item in playlist['items']:
+                name: str = playlist['name']
+                items: list[dict[str, str]] = playlist['items']
+                hashdata: str = playlist_text
+                playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
+                for item in items:
                     if item['type'] == 'stream':
                         track = tags.convert_tags_to_track({}).replace(
                             name=item['name'],
-                            uri="eboback:stream:"+item['uri'],
+                            uri="eboback:stream:" + item['uri'],
                             genre=item['genre']
                         )
-                        self.library.add_stream_track(track, item['image'])
+                        self.library.add_stream_track(track, item['image']) #todo: this may already exist. Ok to overwrite?
+                        self.library.add_playlist_ref(playlist_uri, track.uri)
 
             else:
                 if playlist_file.suffix == ".wpl":
-                    pass #todo
+                    full_path = playlist_file.resolve().as_posix()
+                    logger.info("Parsing playlist file: " + full_path)
+                    wpl: Wpl = text_scanner_py.scan_wpl(full_path)
+                    name: str = wpl.name
+                    items2 = wpl.items
+                    hashdata: str = full_path
+                    playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
+                    for line in items2:
+                        uri = path_to_track_uri(line.path, self.media_dir)
+                        # Assuming the track will already be added during the scan, so just add the playlist ref.
+                        self.library.add_playlist_ref(playlist_uri, uri)
 
-        self.library.cleanup_images()
-        self.library.close()
 
-        return 0
+        # tracks = self.just_scan_metadata(
+        #     file_mtimes=file_mtimes,
+        #     files=[pathlib.Path("/media/DATA1/Music/Johann Sebastian Bach/Matthäus Passion Disc 1/Erbarme dich.mp3")],
+        #     flush_threshold=config["eboback"]["scan_flush_threshold"],
+        #     limit=args.limit,
+        # )
+        # for track in tracks:
+        #     print(f"{track.name}::{track.uri}")
 
     def _find_files(self, *, follow_symlinks):
         logger.info(f"Finding files in {self.media_dir.as_uri()} ...")
@@ -200,7 +240,7 @@ class ScanCommand(commands.Command):
                         f"Track shorter than {MIN_DURATION_MS}ms"
                     )
                 else:
-                    local_uri = translator.path_to_local_track_uri(
+                    local_uri = translator.path_to_track_uri(
                         absolute_path, self.media_dir
                     )
                     mtime = file_mtimes.get(absolute_path)
@@ -222,6 +262,64 @@ class ScanCommand(commands.Command):
         progress.log()
         logger.info("Done scanning")
 
+    def just_scan_metadata(
+        self,
+        *,
+        file_mtimes,
+        files,
+        flush_threshold,
+        limit,
+    ):
+        logger.info("Scanning...")
+
+        files = sorted(files)[:limit]
+
+        logger.info(f"Timeout: {self.timeout} ")
+        scanner = scan.Scanner(self.timeout)
+        progress = _ScanProgress(batch_size=flush_threshold, total=len(files))
+
+        audio_files = []
+        for absolute_path in files:
+            try:
+                file_uri = absolute_path.as_uri()
+                result = scanner.scan(file_uri)
+
+                if not result.playable:
+                    logger.warning(
+                        f"Failed scanning {file_uri}: No audio found in file"
+                    )
+                elif result.duration is None:
+                    logger.warning(
+                        f"Failed scanning {file_uri}: "
+                        "No duration information found in file"
+                    )
+                elif result.duration < MIN_DURATION_MS:
+                    logger.warning(
+                        f"Failed scanning {file_uri}: "
+                        f"Track shorter than {MIN_DURATION_MS}ms"
+                    )
+                else:
+                    local_uri = translator.path_to_track_uri(
+                        absolute_path, self.media_dir
+                    )
+                    mtime = file_mtimes.get(absolute_path)
+                    track = tags.convert_tags_to_track(result.tags).replace(
+                        uri=local_uri,
+                        length=result.duration,
+                        last_modified=mtime,
+                    )
+                    audio_files.append(track)
+            except Exception as error:
+                logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
+
+            if progress.increment():
+                progress.log()
+                if self.library.flush():
+                    logger.debug("Progress flushed")
+
+        progress.log()
+        logger.info("Done scanning")
+        return audio_files
 
 class _ScanProgress:
     def __init__(self, *, batch_size, total):

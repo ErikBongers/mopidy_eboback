@@ -5,6 +5,7 @@ import shutil
 import sqlite3
 import struct
 import json
+from sqlite3 import Connection
 
 import uritools
 
@@ -88,7 +89,7 @@ class LocalStorageProvider:
         self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
         self._patterns = list(map(str, ext_config["album_art_files"]))
         self._dbpath = self._data_dir / "library.db"
-        self._connection = None
+        self._connection: Connection | None = None
 
     def load(self):
         with self._connect() as connection:
@@ -119,16 +120,22 @@ class LocalStorageProvider:
     def add_stream_track(self, track, image_path: str):
         try:
             schema.insert_stream_track(self._connect(), track)
-            schema.insert_image(self._connect(), track.uri, "eboback/media" + image_path)
+            if image_path:
+                schema.insert_image(self._connect(), track.uri, "eboback/media" + image_path)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
     def remove(self, uri):
         schema.delete_track(self._connect(), uri)
 
-    def add_playlist(self, name: str, file_path: pathlib.Path, data: str):
-        digest = hashlib.md5(data. encode(encoding="utf-8")).hexdigest()
-        schema.insert_playlist(self._connect(), "eboback:album:md5:"+digest, name, file_path.as_uri())
+    def delete_file_playlists(self):
+        schema.delete_file_playlists(self._connect())
+
+    def add_playlist(self, name: str, file_path: pathlib.Path, hash_data: str):
+        digest = hashlib.md5(hash_data. encode(encoding="utf-8")).hexdigest()
+        uri = "eboback:playlist:md5:"+digest
+        schema.insert_playlist(self._connect(), uri, name, file_path.as_uri())
+        return uri
 
     def flush(self):
         if not self._connection:
@@ -160,7 +167,7 @@ class LocalStorageProvider:
             logger.error("Error clearing SQLite database: %s", e)
             return False
 
-    def _connect(self):
+    def _connect(self) -> Connection:
         if not self._connection:
             self._connection = sqlite3.connect(
                 self._dbpath,
@@ -278,3 +285,6 @@ class LocalStorageProvider:
 
     def update_album_meta(self, album_uri: str, meta_data):
         schema.update_album_meta(self._connect(), album_uri, meta_data)
+
+    def add_playlist_ref(self, playlist_uri, uri):
+        schema.add_playlist_ref(self._connect(), playlist_uri, uri)

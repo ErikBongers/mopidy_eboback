@@ -1,3 +1,10 @@
+Playlists
+=============
+- Always completely delete and overwrite
+  > playlists created in frontend must therefor have a file storage.
+    > or...make 2 types of playlist: file based and web based.
+      > then only delete the file based ones.
+
 * (re-)scan: search for new images as well.
   > implies we know what the old images are...
   > keep images in original folder
