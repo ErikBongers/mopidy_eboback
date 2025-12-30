@@ -7,6 +7,8 @@ from sqlite3 import Row
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
+Uri = str
+
 _IMAGE_SIZE_RE = re.compile(r".*-(\d+)x(\d+)\.(?:png|gif|jpeg)$")
 
 _IMAGES_QUERY = "SELECT images FROM album WHERE images IS NOT NULL"
@@ -397,6 +399,8 @@ def insert_stream_track(c, track):
     )
     return track.uri
 
+def get_playlists(c):
+    return c.execute("SELECT * FROM playlists").fetchall()
 
 def delete_file_playlists(c):
     c.execute("DELETE FROM playlists where file_path IS NOT NULL")
@@ -417,6 +421,16 @@ def add_playlist_ref(c: Connection, playlist_uri: str, uri: str) -> None:
         "playlist_uri": playlist_uri,
         "uri": uri
     })
+
+
+def get_playlist_refs(c, uri: Uri):
+    return c.execute("""
+        SELECT refs.uri, track.name
+        FROM playlist_refs as refs
+            INNER JOIN track ON track.uri = refs.uri
+        WHERE playlist_uri = ?
+    """,
+    (uri,)).fetchall()
 
 def insert_image(c, uri, file_path):
     _insert_or_replace(c, "images", {
@@ -632,4 +646,3 @@ def _images(field):
 def get_images(c, uri):
     logger.info("Getting images for %s", uri)
     return c.execute("select * from images where uri = ?", (uri,)).fetchall()
-
