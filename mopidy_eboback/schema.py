@@ -477,6 +477,7 @@ def clear(c):
     DELETE FROM album;
     DELETE FROM artist;
     DELETE FROM playlists;
+    DELETE FROM images;
     VACUUM;
     """
     )

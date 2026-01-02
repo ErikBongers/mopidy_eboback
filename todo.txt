@@ -1,3 +1,5 @@
+* Avoid duplicate images.
+
 Playlists
 =============
 - Always completely delete and overwrite
