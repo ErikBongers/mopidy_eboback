@@ -121,7 +121,7 @@ class LocalStorageProvider:
         try:
             schema.insert_stream_track(self._connect(), track)
             if image_path:
-                schema.insert_image(self._connect(), track.uri, "eboback/media" + image_path)
+                schema.insert_image(self._connect(), track.uri, "/eboback/media" + image_path)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
