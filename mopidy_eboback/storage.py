@@ -285,5 +285,5 @@ class LocalStorageProvider:
     def update_album_meta(self, album_uri: str, meta_data):
         schema.update_album_meta(self._connect(), album_uri, meta_data)
 
-    def add_playlist_ref(self, playlist_uri, uri):
-        schema.add_playlist_ref(self._connect(), playlist_uri, uri)
+    def add_playlist_ref(self, playlist_uri: str, uri: str, ref_type: str, sequence: int):
+        schema.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)

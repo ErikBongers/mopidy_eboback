@@ -416,10 +416,12 @@ def insert_playlist(c, uri, name, file_path):
         },
     )
 
-def add_playlist_ref(c: Connection, playlist_uri: str, uri: str) -> None:
+def add_playlist_ref(c: Connection, playlist_uri: str, uri: str, ref_type: str, sequence: int) -> None:
     _insert_or_replace(c, "playlist_refs", {
         "playlist_uri": playlist_uri,
-        "uri": uri
+        "uri": uri,
+        "ref_type": ref_type,
+        "sequence": sequence
     })
 
 
@@ -429,6 +431,8 @@ def get_playlist_refs(c, uri: Uri):
         FROM playlist_refs as refs
             INNER JOIN track ON track.uri = refs.uri
         WHERE playlist_uri = ?
+        AND refs.ref_type = 'track'
+        ORDER BY sequence ASC
     """,
     (uri,)).fetchall()
 

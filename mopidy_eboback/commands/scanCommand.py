@@ -89,7 +89,7 @@ class ScanCommand(commands.Command):
                 items: list[dict[str, str]] = playlist['items']
                 hashdata: str = playlist_text
                 playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
-                for item in items:
+                for idx, item in enumerate(items):
                     if item['type'] == 'stream':
                         track = tags.convert_tags_to_track({}).replace(
                             name=item['name'],
@@ -97,7 +97,7 @@ class ScanCommand(commands.Command):
                             genre=item['genre']
                         )
                         self.library.add_stream_track(track, item['image']) #todo: this may already exist. Ok to overwrite?
-                        self.library.add_playlist_ref(playlist_uri, track.uri)
+                        self.library.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
 
             else:
                 if playlist_file.suffix == ".wpl":
@@ -108,10 +108,10 @@ class ScanCommand(commands.Command):
                     items2 = wpl.items
                     hashdata: str = full_path
                     playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
-                    for line in items2:
+                    for idx, line in enumerate(items2):
                         uri = path_to_track_uri(line.path, self.media_dir)
                         # Assuming the track will already be added during the scan, so just add the playlist ref.
-                        self.library.add_playlist_ref(playlist_uri, uri)
+                        self.library.add_playlist_ref(playlist_uri, uri, "track", idx)
 
 
         # tracks = self.just_scan_metadata(

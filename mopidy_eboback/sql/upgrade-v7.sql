@@ -32,13 +32,18 @@ create index images_uri_index on images (uri);
 create table playlist_refs
 (
     uri          TEXT not null,
+    sequence     INTEGER not null,
     playlist_uri TEXT not null
         constraint playlist_refs_playlists_fk
-            references playlists ON DELETE CASCADE
+            references playlists ON DELETE CASCADE,
+    ref_type     TEXT not null
 );
 
 create index playlist_refs_playlist_uri_index
     on playlist_refs (playlist_uri);
+
+create index playlist_refs_uri_ref_type_index
+  on playlist_refs (playlist_uri, ref_type);
 
 create index playlist_refs_uri_index
     on playlist_refs (uri);
