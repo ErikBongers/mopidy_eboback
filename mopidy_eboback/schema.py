@@ -649,5 +649,4 @@ def _images(field):
 
 
 def get_images(c, uri):
-    logger.info("Getting images for %s", uri)
     return c.execute("select * from images where uri = ?", (uri,)).fetchall()
