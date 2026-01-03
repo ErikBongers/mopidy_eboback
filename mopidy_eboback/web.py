@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import pathlib
@@ -61,19 +62,28 @@ class DataHandler(tornado.web.RequestHandler):
         self.write("Oops...no valid data request: " + data_path)
         self.write("" + str(cnt))
 
+    def post(self, data_path):
+        if data_path == "set_album_meta":
+            self.set_album_meta()
+            return
+        if data_path == "add_ref_to_playlist":
+            self.add_ref_to_playlist()
+            self.write(json.dumps({
+                "status": "ok"
+            }))
+            return
+
+        self.write("Oops...no valid data request: " + data_path)
+
+
+
+
     def get_album_meta(self):
         uri = self.get_argument("uri", "nada...")
         meta_file_path = self.uri_to_meta_path(uri)
         self.set_header("Content-Type", 'application/json')
         if meta_file_path.exists():
             self.write(meta_file_path.read_text())
-
-    def post(self, data_path):
-        if data_path == "set_album_meta":
-            self.set_album_meta()
-            return
-
-        self.write("Oops...no valid data request: " + data_path)
 
     def set_album_meta(self):
         uri = self.get_argument("uri", "nada...")
@@ -97,3 +107,18 @@ class DataHandler(tornado.web.RequestHandler):
                 check_same_thread=False,
             )
         return self._connection
+
+    def add_ref_to_playlist(self):
+        logger.info("add_ref_to_playlist")
+        logger.info(self.get_argument("item_uri"))
+        logger.info(self.get_argument("playlist_uri"))
+        logger.info(self.get_argument("ref_type"))
+        logger.info(self.get_argument("sequence"))
+        with self._connect() as c:
+            schema.add_playlist_ref(
+                c,
+                self.get_argument("playlist_uri"),
+                self.get_argument("item_uri"),
+                self.get_argument("ref_type"),
+                int(self.get_argument("sequence"))
+            )
