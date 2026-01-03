@@ -4,7 +4,6 @@ import pathlib
 import shutil
 import sqlite3
 import struct
-import json
 from sqlite3 import Connection
 
 import uritools
