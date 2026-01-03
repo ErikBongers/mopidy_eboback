@@ -1,13 +1,13 @@
+import hashlib
 import logging
 import pathlib
 import sqlite3
 from typing import Optional, List
-
 from mopidy.backend import PlaylistsProvider
-from mopidy.models import Ref
-
-from mopidy_eboback import Extension, schema
+from mopidy.models import Ref, Playlist
+from mopidy_eboback import Extension, schema, storage
 from mopidy_eboback.schema import Connection
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +43,11 @@ class EbobackPlaylists(PlaylistsProvider):
             )
         return self._connection
 
+    def create(self, name: str) -> Optional[Playlist]:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        digest = hashlib.md5(timestamp.encode("utf-8")).hexdigest()
+        uri = f"eboback:playlist:md5:{digest}"
+        with self._connect() as c:
+            schema.insert_playlist(c, uri, name, "")
+        playlist = Playlist(uri=uri, name=name)
+        return playlist
