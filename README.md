@@ -38,7 +38,7 @@ media_dir=path/to/your/music/storage
 ```
 For more information on where to find this config file, Google "Mopidy Configuration file location".
 ### root.eboplayer
-In the `mopidy.conf` file under `[eboback]` you specify the root of the drive:
+In the `root.eboplayer` you specify general settings for the library:
 ```json
 {
 	"//name": "A name for this media source",
@@ -60,7 +60,7 @@ In the `mopidy.conf` file under `[eboback]` you specify the root of the drive:
 ```
 
 ## Meta data for directories and albums
-Eboplater will look for a `.eboplayer` file in each directory.
+Eboplayer will look for a `.eboplayer` file in each directory.
 A directory may contain tracks for a single or multiple albums.
 Eboplayer determines the album name for a track from it's metadata tags within the file.
 Depending on whether a directory contains tracks for multiple albums or a single album, 

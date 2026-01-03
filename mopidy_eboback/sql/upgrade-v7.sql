@@ -43,6 +43,33 @@ create index playlist_refs_playlist_uri_index
 create index playlist_refs_uri_index
     on playlist_refs (uri);
 
+create table playlist_filters
+(
+    playlist_uri TEXT not null
+        constraint playlist_filters_playlists_fk
+            references playlists ON DELETE CASCADE,
+    sequence INTEGER not null,
+    search_text TEXT not null,
+    album BOOLEAN not null,
+    artist BOOLEAN not null,
+    track BOOLEAN not null,
+    genre BOOLEAN not null
+);
+
+create index playlist_filters_playlist_uri_index
+    on playlist_filters (playlist_uri);
+
+create table playlist_excludes
+(
+    playlist_uri TEXT not null
+        constraint playlist_excludes_playlists_fk
+            references playlists ON DELETE CASCADE,
+    sequence INTEGER not null,
+    uri TEXT not null
+);
+
+create index playlist_excludes_playlist_uri_index
+    on playlist_excludes (playlist_uri);
 
 PRAGMA user_version = 8;  -- update schema version
 
