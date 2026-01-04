@@ -30,7 +30,7 @@ class EbobackPlaylists(PlaylistsProvider):
 
     def get_items(self, uri: Uri) -> Optional[List[Ref]]:
         with self._connect() as c:
-            items = schema.get_playlist_refs(c, uri)
+            items = schema.get_playlist_tracks(c, uri)
             return list(map(lambda i: Ref.track(name=i["name"], uri=i["uri"]), items))
 
     def _connect(self):

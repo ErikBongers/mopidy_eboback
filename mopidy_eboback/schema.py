@@ -425,16 +425,22 @@ def add_playlist_ref(c: Connection, playlist_uri: str, uri: str, ref_type: str, 
     })
 
 
-def get_playlist_refs(c, uri: Uri):
+def get_playlist_tracks(c, uri: Uri):
     return c.execute("""
-        SELECT refs.uri, track.name
+        SELECT refs.uri, track.name, refs.sequence
         FROM playlist_refs as refs
-            INNER JOIN track ON track.uri = refs.uri
+                 INNER JOIN track ON track.uri = refs.uri
         WHERE playlist_uri = ?
-        AND refs.ref_type = 'track'
-        ORDER BY sequence ASC
+          AND refs.ref_type = 'track'
+        UNION
+        SELECT track.uri, track.name, album_refs.sequence
+        FROM playlist_refs as album_refs
+                 INNER JOIN track ON track.album = album_refs.uri
+        WHERE playlist_uri = ?
+          AND album_refs.ref_type = 'album'
+        ORDER BY sequence;
     """,
-    (uri,)).fetchall()
+    (uri,uri)).fetchall()
 
 def insert_image(c, uri, file_path):
     _insert_or_replace(c, "images", {
