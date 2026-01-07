@@ -176,14 +176,9 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 refs.append(ref)
             elif ref.type == Ref.ALBUM:
                 refs.append(
-                    Ref.directory(
-                        uri=uritools.uricompose(
-                            "eboback",
-                            None,
-                            "directory",
-                            dict(query, type=Ref.TRACK, album=ref.uri),  # noqa
-                        ),
-                        name=ref.name,
+                    Ref.album(
+                        uri=ref.uri,  # noqa
+                        name=ref.name
                     )
                 )
             elif ref.type == Ref.ARTIST:
