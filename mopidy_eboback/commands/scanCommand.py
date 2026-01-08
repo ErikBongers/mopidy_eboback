@@ -4,6 +4,7 @@ import pathlib
 import string
 import time
 from typing import Any
+import mutagen
 
 from mopidy import commands
 from mopidy.audio import tags, scan
@@ -249,6 +250,12 @@ class ScanCommand(commands.Command):
                         length=result.duration,
                         last_modified=mtime,
                     )
+                    if absolute_path.suffix.lower() == ".wma":
+                        mutable_tags = mutagen.File(absolute_path)
+                        genres = [str(genre) for genre in mutable_tags.get("WM/Genre")]
+                        genre = "; ".join(genres)
+                        track = track.replace(genre=genre)
+
                     self.library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
