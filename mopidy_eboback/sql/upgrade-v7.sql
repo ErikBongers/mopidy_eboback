@@ -76,6 +76,12 @@ create table playlist_excludes
 create index playlist_excludes_playlist_uri_index
     on playlist_excludes (playlist_uri);
 
+create table GENRE_REPLACE
+(
+    org_name TEXT not null primary key,
+    new_name TEXT
+);
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
