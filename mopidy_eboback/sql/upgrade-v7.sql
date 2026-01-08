@@ -76,7 +76,7 @@ create table playlist_excludes
 create index playlist_excludes_playlist_uri_index
     on playlist_excludes (playlist_uri);
 
-create table GENRE_REPLACE
+create table genre_replace
 (
     org_name TEXT not null primary key,
     new_name TEXT
