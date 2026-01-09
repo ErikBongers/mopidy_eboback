@@ -4,6 +4,7 @@ import pathlib
 import re
 import sqlite3
 from sqlite3 import Row
+from typing import TypedDict
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
@@ -656,3 +657,18 @@ def _images(field):
 
 def get_images(c, uri):
     return c.execute("select * from images where uri = ?", (uri,)).fetchall()
+
+GenreDef = TypedDict('GenreDef', {'genre': str, 'replacement': str})
+
+def get_genres(c) -> list[GenreDef]:
+    rows = c.execute("""
+        select distinct 
+            genre, 
+            genre_replace.new_name as replacement
+        from track
+        LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name
+        where genre is not null
+    """).fetchall()
+    def to_genre_def(row) -> GenreDef:
+        return {'genre': row[0], 'replacement': row[1]}
+    return list(map(to_genre_def, rows))

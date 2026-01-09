@@ -7,6 +7,7 @@ import sqlite3
 import tornado.web
 from mopidy_eboback import schema
 from . import Extension
+from .schema import GenreDef
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,9 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "get_album_meta":
             self.get_album_meta()
             return
+        if data_path == "get_genres":
+            self.get_genres()
+            return
 
         cnt = schema.count_albums(self._connect())
         self.write("Oops...no valid data request: " + data_path)
@@ -74,9 +78,6 @@ class DataHandler(tornado.web.RequestHandler):
             return
 
         self.write("Oops...no valid data request: " + data_path)
-
-
-
 
     def get_album_meta(self):
         uri = self.get_argument("uri", "nada...")
@@ -122,3 +123,15 @@ class DataHandler(tornado.web.RequestHandler):
                 self.get_argument("ref_type"),
                 int(self.get_argument("sequence"))
             )
+
+    def get_genres(self):
+        self.set_header("Content-Type", 'application/json')
+        with self._connect() as c:
+            genres: list[GenreDef] = schema.get_genres(c)
+            # add uri
+            genres_with_uri = []
+            for genre in genres:
+                genre_with_uri = genre.copy()
+                genre_with_uri["uri"] = "eboback:directory?genre=" + genre['genre']
+                genres_with_uri.append(genre_with_uri)
+            self.write(json.dumps(genres_with_uri))
