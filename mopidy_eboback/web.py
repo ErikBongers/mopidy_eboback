@@ -5,9 +5,11 @@ import pathlib
 import sqlite3
 
 import tornado.web
+from mopidy.models import Ref
+
 from mopidy_eboback import schema
 from . import Extension
-from .schema import GenreDef
+from .schema import GenreDefRow
 
 logger = logging.getLogger(__name__)
 
@@ -127,11 +129,19 @@ class DataHandler(tornado.web.RequestHandler):
     def get_genres(self):
         self.set_header("Content-Type", 'application/json')
         with self._connect() as c:
-            genres: list[GenreDef] = schema.get_genres(c)
+            genres: list[GenreDefRow] = schema.get_genres(c)
             # add uri
-            genres_with_uri = []
+            genre_defs = []
             for genre in genres:
-                genre_with_uri = genre.copy()
-                genre_with_uri["uri"] = "eboback:directory?genre=" + genre['genre']
-                genres_with_uri.append(genre_with_uri)
-            self.write(json.dumps(genres_with_uri))
+                uri = "eboback:directory?genre=" + genre['genre']
+                ref = Ref.directory(name=genre['genre'], uri=uri)
+                genre_def = {
+                    'ref': {
+                        'name': ref.name,
+                        'uri': ref.uri,
+                        'type': ref.type
+                    },
+                    'replacement': genre['replacement']
+                }
+                genre_defs.append(genre_def)
+            self.write(json.dumps(genre_defs))

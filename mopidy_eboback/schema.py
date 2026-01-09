@@ -658,9 +658,9 @@ def _images(field):
 def get_images(c, uri):
     return c.execute("select * from images where uri = ?", (uri,)).fetchall()
 
-GenreDef = TypedDict('GenreDef', {'genre': str, 'replacement': str})
+GenreDefRow = TypedDict('GenreDefRow', {'genre': str, 'replacement': str})
 
-def get_genres(c) -> list[GenreDef]:
+def get_genres(c) -> list[GenreDefRow]:
     rows = c.execute("""
         select distinct 
             genre, 
@@ -669,6 +669,6 @@ def get_genres(c) -> list[GenreDef]:
         LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name
         where genre is not null
     """).fetchall()
-    def to_genre_def(row) -> GenreDef:
+    def to_genre_def(row) -> GenreDefRow:
         return {'genre': row[0], 'replacement': row[1]}
     return list(map(to_genre_def, rows))
