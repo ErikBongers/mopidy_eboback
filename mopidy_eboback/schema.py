@@ -64,7 +64,7 @@ _BROWSE_FILTERS = {
         "artist": "track.artists = ?",
         "composer": "track.composers = ?",
         "date": "track.date LIKE ? || '%'",
-        "genre": "track.genre = ?",
+        "genre": "track.genre IN ( select org_name from (select new_name, org_name from genre_replace UNION select genre, genre from tracks) where new_name = ?)",
         "performer": "track.performers = ?",
         "max-age": "track.last_modified >= (strftime('%s', 'now') - ?) * 1000",
     },
@@ -96,7 +96,10 @@ _BROWSE_FILTERS = {
             SELECT * FROM track WHERE album = album.uri AND date LIKE ? || '%'
         )""",
         "genre": """? IN (
-            SELECT genre FROM track WHERE album = album.uri
+            SELECT coalesce(new_name, genre) genre 
+            FROM track 
+            LEFT OUTER JOIN genre_replace on org_name = genre 
+            WHERE album = album.uri
         )""",
         "performer": """? IN (
             SELECT performers FROM track WHERE album = album.uri
@@ -116,7 +119,7 @@ _BROWSE_FILTERS = {
         "artist": "artists = ?",
         "composer": "composers = ?",
         "date": "date LIKE ? || '%'",
-        "genre": "genre = ?",
+        "genre": "genre IN ( select org_name from (select new_name, org_name from genre_replace UNION select genre, genre from tracks) where new_name = ?)",
         "performer": "performers = ?",
         "max-age": "last_modified >= (strftime('%s', 'now') - ?) * 1000",
     },
