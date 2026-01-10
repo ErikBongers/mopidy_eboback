@@ -6,12 +6,39 @@ import shutil
 import sqlite3
 import struct
 from sqlite3 import Connection
+from typing import TypedDict
 
 import uritools
 
 from . import Extension, schema, translator
+from .json_encoder import CompactJSONEncoder
+from .schema import GenreDefRow
 
 logger = logging.getLogger(__name__)
+
+
+class GenreDefClass():
+    __slots__ = ["genre", "replacement"]
+    def __init__(self, genre: str, replacement: str):
+        self.genre = genre
+        self.replacement = replacement
+
+    def toJSON(self):
+        return json.dumps(
+            self,
+            default=lambda o: o.__dict__,
+            sort_keys=True,
+            indent=4)
+
+RootMetaDef = TypedDict( "RootMetaDef", {
+    "//name": str,
+    "name": str,
+    "//streams_folder": str,
+    "streams_folder": str,
+    "//genre_replacements": str,
+    "genre_replacements": list[GenreDefRow]
+    }
+)
 
 
 def check_dirs_and_files(config):
@@ -298,3 +325,18 @@ class LocalStorageProvider:
             text = path.read_text()
             return json.loads(text)
         return {}
+
+    def write_root_meta(self):
+        root_meta = self.get_root_meta()
+        genre_defs = schema.get_genre_defs(self._connect())
+        meta_data: RootMetaDef = {
+            "//name": "A name for this media source",
+            "name": root_meta.get("name", "Eboplayer mediaXXX"),
+            "//streams_folder": "Path to folder where stream images, etc are stored",
+            "streams_folder": root_meta.get("streams_folder", "/RadioStreamsXXX"),
+            "//genre_replacements": "List of genre replacements",
+            "genre_replacements": genre_defs
+        }
+        path = pathlib.Path(self._media_dir) / "root.eboplayerx"
+        text = json.dumps(meta_data, indent=4, cls=CompactJSONEncoder)
+        path.write_text(text)

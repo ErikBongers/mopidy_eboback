@@ -685,3 +685,11 @@ def get_genres(c) -> list[GenreDefRow]:
     def to_genre_def(row) -> GenreDefRow:
         return {'genre': row[0], 'replacement': row[1]}
     return list(map(to_genre_def, rows))
+
+def get_genre_defs(c) -> list[GenreDefRow]:
+    rows = c.execute("""
+        select * from genre_replace
+    """).fetchall()
+    def to_genre_def(row) -> GenreDefRow:
+        return {'genre': row[0], 'replacement': row[1]}
+    return list(map(to_genre_def, rows))

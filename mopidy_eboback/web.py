@@ -10,6 +10,7 @@ from mopidy.models import Ref
 from mopidy_eboback import schema
 from . import Extension
 from .schema import GenreDefRow
+from .storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,8 @@ class DataHandler(tornado.web.RequestHandler):
         self._dbpath = data_dir / "library.db"
         self._connection = None
         self._config = config[Extension.ext_name]
+        self.storage = LocalStorageProvider(config)
+
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*") #todo: use allowed origins from config.
@@ -62,6 +65,9 @@ class DataHandler(tornado.web.RequestHandler):
             return
         if data_path == "get_genres":
             self.get_genres()
+            return
+        if data_path == "write_root_meta":
+            self.write_root_meta()
             return
 
         cnt = schema.count_albums(self._connect())
@@ -145,3 +151,6 @@ class DataHandler(tornado.web.RequestHandler):
                 }
                 genre_defs.append(genre_def)
             self.write(json.dumps(genre_defs))
+
+    def write_root_meta(self):
+        self.storage.write_root_meta()
