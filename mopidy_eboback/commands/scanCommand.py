@@ -8,6 +8,7 @@ import mutagen
 
 from mopidy import commands
 from mopidy.audio import tags, scan
+from mopidy.models import Track, Artist
 
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
@@ -74,6 +75,9 @@ class ScanCommand(commands.Command):
         self.update_playlists(args, config, file_mtimes, playlist_files)
         self.library.cleanup_images()
         self.library.close()
+
+        # mutable_tags = mutagen.File("/media/DATA1/Music/Ebo/Unknown album (11-09-2015 13-11-20)/06 Track 6.wma")
+        # print(mutable_tags)
 
         return 0
 
@@ -245,16 +249,13 @@ class ScanCommand(commands.Command):
                         absolute_path, self.media_dir
                     )
                     mtime = file_mtimes.get(absolute_path)
-                    track = tags.convert_tags_to_track(result.tags).replace(
+                    track: Track = tags.convert_tags_to_track(result.tags).replace(
                         uri=local_uri,
                         length=result.duration,
                         last_modified=mtime,
                     )
                     if absolute_path.suffix.lower() == ".wma":
-                        mutable_tags = mutagen.File(absolute_path)
-                        genres = [str(genre) for genre in mutable_tags.get("WM/Genre")]
-                        genre = "; ".join(genres)
-                        track = track.replace(genre=genre)
+                        track = self.scan_mutagen_meta(absolute_path, track)
 
                     self.library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
@@ -268,6 +269,46 @@ class ScanCommand(commands.Command):
 
         progress.log()
         logger.info("Done scanning")
+
+    @staticmethod
+    def scan_mutagen_meta(absolute_path: pathlib.Path, track: Track) -> Track:
+        def not_empty(s: str) -> bool:
+            return s and s.strip() != ""
+        mutable_tags = mutagen.File(absolute_path)
+        genres = mutable_tags.get("WM/Genre")
+        if genres:
+            genres = [str(genre) for genre in genres]
+            genre = "; ".join(genres)
+            track = track.replace(genre=genre)
+
+        artists = mutable_tags.get("WM/AlbumArtist")
+        if artists:
+            if len(artists) > 0:
+                artists = [str(artist) for artist in artists]
+                artists = filter(not_empty, artists)
+                artists = [Artist(name=str(artist)) for artist in artists]
+                track = track.replace(artists=artists)
+
+        composers = mutable_tags.get("WM/Composer")
+        if composers:
+            if len(composers) > 0:
+                composers = [str(composer) for composer in composers]
+                composers = filter(not_empty, composers)
+                composers = [Artist(name=str(composer)) for composer in composers]
+                track = track.replace(composers=composers)
+
+        track_numbers = mutable_tags.get("WM/TrackNumber")
+        if track_numbers:
+            track_numbers = [str(track_no) for track_no in track_numbers]
+            if len(track_numbers) > 0:
+                track = track.replace(track_no=int(track_numbers[0]))
+
+        years = mutable_tags.get("WM/Year")
+        if years:
+            years = [str(artist) for artist in years]
+            if len(years) > 0:
+                track = track.replace(date=years[0])
+        return track
 
     def just_scan_metadata(
         self,
@@ -359,5 +400,3 @@ def is_playlist_file(relative_path):
     if relative_path.suffixes == [".eboplayer", ".playlist"]:
         return True
     return False
-
-
