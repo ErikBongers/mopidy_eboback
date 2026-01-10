@@ -1,4 +1,5 @@
 import hashlib
+import json
 import logging
 import pathlib
 import shutil
@@ -290,3 +291,10 @@ class LocalStorageProvider:
 
     def add_genre_replacement(self, org_name, new_name):
         schema.insert_genre_replacement(self._connect(), org_name, new_name)
+
+    def get_root_meta(self):
+        path = pathlib.Path(self._media_dir) / "root.eboplayer"
+        if path.exists():
+            text = path.read_text()
+            return json.loads(text)
+        return {}

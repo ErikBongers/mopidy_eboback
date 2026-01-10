@@ -73,9 +73,8 @@ class UpdateMetaCommand(commands.Command):
         return False
 
     def load_root_meta(self):
-        path = Path(self.media_dir) / "root.eboplayer"
-        if path.exists():
-            text = path.read_text()
-            meta_data = json.loads(text)
-            for replacement in meta_data["genre_replacements"]:
-                self.storage.add_genre_replacement(replacement["org_name"], replacement["new_name"])
+        root_meta = self.storage.get_root_meta()
+        if root_meta.get("genre_replacements") is None:
+            return
+        for replacement in root_meta["genre_replacements"]:
+            self.storage.add_genre_replacement(replacement["org_name"], replacement["new_name"])
