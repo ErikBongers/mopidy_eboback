@@ -141,9 +141,12 @@ class DataHandler(tornado.web.RequestHandler):
             for genre in genres:
                 uri = "eboback:directory?genre=" + genre['genre']
                 ref = Ref.directory(name=genre['genre'], uri=uri)
+                name = genre['genre']
+                if name == "null":
+                    name = "-- no genre --"
                 genre_def = {
                     'ref': {
-                        'name': ref.name,
+                        'name': name,
                         'uri': ref.uri,
                         'type': ref.type
                     },

@@ -64,7 +64,20 @@ _BROWSE_FILTERS = {
         "artist": "track.artists = ?",
         "composer": "track.composers = ?",
         "date": "track.date LIKE ? || '%'",
-        "genre": "track.genre IN ( select org_name from (select new_name, org_name from genre_replace UNION select genre, genre from tracks) where new_name = ?)",
+        "genre": """
+                coalesce(track.genre, 'null') IN
+                   (
+                   select coalesce(org_name, 'null')
+                   from (
+                        select new_name, org_name
+                        from genre_replace
+                        UNION
+                        select genre, genre
+                        from tracks
+                        )
+                   where coalesce(new_name, 'null') = ?
+                   )
+                """,
         "performer": "track.performers = ?",
         "max-age": "track.last_modified >= (strftime('%s', 'now') - ?) * 1000",
     },
@@ -96,7 +109,7 @@ _BROWSE_FILTERS = {
             SELECT * FROM track WHERE album = album.uri AND date LIKE ? || '%'
         )""",
         "genre": """? IN (
-            SELECT coalesce(new_name, genre) genre 
+            SELECT coalesce(new_name, genre, 'null') genre
             FROM track 
             LEFT OUTER JOIN genre_replace on org_name = genre 
             WHERE album = album.uri
@@ -676,11 +689,10 @@ GenreDefRow = TypedDict('GenreDefRow', {'genre': str, 'replacement': str})
 def get_genres(c) -> list[GenreDefRow]:
     rows = c.execute("""
         select distinct 
-            genre, 
+            coalesce(genre, 'null') as genre, 
             genre_replace.new_name as replacement
         from track
         LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name
-        where genre is not null
     """).fetchall()
     def to_genre_def(row) -> GenreDefRow:
         return {'genre': row[0], 'replacement': row[1]}
