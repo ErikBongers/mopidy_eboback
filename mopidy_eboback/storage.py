@@ -331,9 +331,9 @@ class LocalStorageProvider:
         genre_defs = schema.get_genre_defs(self._connect())
         meta_data: RootMetaDef = {
             "//name": "A name for this media source",
-            "name": root_meta.get("name", "Eboplayer mediaXXX"),
+            "name": root_meta.get("name", "Eboplayer media"),
             "//streams_folder": "Path to folder where stream images, etc are stored",
-            "streams_folder": root_meta.get("streams_folder", "/RadioStreamsXXX"),
+            "streams_folder": root_meta.get("streams_folder", "/RadioStreams"),
             "//genre_replacements": "List of genre replacements",
             "genre_replacements": genre_defs
         }
