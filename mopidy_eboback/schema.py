@@ -420,6 +420,16 @@ def insert_playlist(c, uri, name, file_path):
         },
     )
 
+def insert_genre_replacement(c, org_name, new_name):
+    _insert_or_replace(
+        c,
+        "genre_replace",
+        {
+            "org_name": org_name,
+            "new_name": new_name,
+        },
+    )
+
 def add_playlist_ref(c: Connection, playlist_uri: str, uri: str, ref_type: str, sequence: int) -> None:
     _insert_or_replace(c, "playlist_refs", {
         "playlist_uri": playlist_uri,

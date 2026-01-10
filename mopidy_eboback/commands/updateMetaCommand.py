@@ -23,16 +23,17 @@ class UpdateMetaCommand(commands.Command):
 
         self.media_dir = Path(config["eboback"]["media_dir"]).resolve()
 
-        if self.update_meta_data():
-            print("Meta data updated successfully.")
+        self.load_root_meta()
 
+        if self.update_albums_meta_data():
+            print("Meta data updated successfully.")
             return 0
 
         print("Unable to update meta data")
         return 1
 
 
-    def update_meta_data(self):
+    def update_albums_meta_data(self):
         paths = self.storage.get_album_path_and_path_counts() #todo: try to use a class as a type annotation, even though Row isn't of that type...the Row class could be used as a base class though...
         for album in paths:
             meta_file_used: Path | None = None
@@ -70,3 +71,11 @@ class UpdateMetaCommand(commands.Command):
             self.storage.update_album_meta(album.uri, meta_data)
             return True
         return False
+
+    def load_root_meta(self):
+        path = Path(self.media_dir) / "root.eboplayer"
+        if path.exists():
+            text = path.read_text()
+            meta_data = json.loads(text)
+            for replacement in meta_data["genre_replacements"]:
+                self.storage.add_genre_replacement(replacement["org_name"], replacement["new_name"])

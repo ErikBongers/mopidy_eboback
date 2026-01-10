@@ -287,3 +287,6 @@ class LocalStorageProvider:
 
     def add_playlist_ref(self, playlist_uri: str, uri: str, ref_type: str, sequence: int):
         schema.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)
+
+    def add_genre_replacement(self, org_name, new_name):
+        schema.insert_genre_replacement(self._connect(), org_name, new_name)
