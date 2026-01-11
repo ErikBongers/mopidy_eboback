@@ -8,8 +8,9 @@ import mutagen
 
 from mopidy import commands
 from mopidy.audio import tags, scan
-from mopidy.models import Track, Artist
-from mutagen.id3 import Encoding
+from mopidy.models import Track, Artist, Album
+from mutagen import FileType
+from wavinfo import WavInfoReader
 
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
@@ -77,8 +78,13 @@ class ScanCommand(commands.Command):
         self.library.cleanup_images()
         self.library.close()
 
-        # mutable_tags = mutagen.File("/media/DATA1/Music/Jordi Savall- Le Concert Des Nations/Terpsichore- L'Apothéose De La Danse Baroque/22 Telemann- Ouverture-Suite In G, “La Bizarre”, TWV 55-G2 - 1. Ouverture.mp3")
-        # print(mutable_tags)
+        mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
+        print(mutagen_tags)
+
+        wav_tags = WavInfoReader("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
+        print(wav_tags)
+        info_metadata = wav_tags.info
+        print(info_metadata)
 
         return 0
 
@@ -131,14 +137,6 @@ class ScanCommand(commands.Command):
                         self.library.add_playlist_ref(playlist_uri, uri, "track", idx)
 
 
-        # tracks = self.just_scan_metadata(
-        #     file_mtimes=file_mtimes,
-        #     files=[pathlib.Path("/media/DATA1/Music/Johann Sebastian Bach/Matthäus Passion Disc 1/Erbarme dich.mp3")],
-        #     flush_threshold=config["eboback"]["scan_flush_threshold"],
-        #     limit=args.limit,
-        # )
-        # for track in tracks:
-        #     print(f"{track.name}::{track.uri}")
 
     def _find_files(self, *, follow_symlinks):
         logger.info(f"Finding files in {self.media_dir.as_uri()} ...")
@@ -257,9 +255,7 @@ class ScanCommand(commands.Command):
                         f"Track shorter than {MIN_DURATION_MS}ms"
                     )
                 else:
-                    local_uri = translator.path_to_track_uri(
-                        absolute_path, self.media_dir
-                    )
+                    local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                     mtime = file_mtimes.get(absolute_path)
                     track: Track = tags.convert_tags_to_track(result.tags).replace(
                         uri=local_uri,
@@ -275,7 +271,23 @@ class ScanCommand(commands.Command):
                     self.library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
-                logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
+                try:
+                    mtime = file_mtimes.get(absolute_path)
+                    local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
+                    track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
+                    self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
+                    logger.debug(f"Added {track.uri}")
+                except Exception as error:
+                    if absolute_path.suffix.lower() == ".wav":
+                        track = self.scan_wavinfo(absolute_path)
+                        if track:
+                            mtime = file_mtimes.get(absolute_path)
+                            local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
+                            track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
+                            self.library.add(track, None, None)
+                            logger.debug(f"Added {track.uri}")
+                    else:
+                        logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
 
             if progress.increment():
                 progress.log()
@@ -286,17 +298,66 @@ class ScanCommand(commands.Command):
         logger.info("Done scanning")
 
     @staticmethod
+    def scan_wavinfo(absolute_path: pathlib.Path):
+        wav_tags = WavInfoReader(absolute_path)
+        if wav_tags.info:
+            name = ""
+            artist = None
+            genre = ""
+            encoding = ""
+            album = None
+            if wav_tags.info.title:
+                name = wav_tags.info.title
+            if wav_tags.info.artist:
+                artist = wav_tags.info.artist
+                if artist:
+                    artist = Artist(name=artist)
+            if wav_tags.info.genre:
+                genre = wav_tags.info.genre
+            if wav_tags.info.album:
+                album = wav_tags.info.album
+                if album:
+                    album = Album(name=album, artists=[artist])
+
+            # todo: re-encode everything to utf-8?
+            # if wav_tags.info.encoding:
+            #     encoding = wav_tags.info.encoding
+            return Track(name=name, artists=[artist], genre=genre, album=album)
+        else:
+            return None
+
+    @staticmethod
+    def scan_mutagen_full(absolute_path: pathlib.Path, track: Track) -> Track:
+        mutagen_tags = mutagen.File(absolute_path)
+
+        if not mutagen_tags:
+            return track
+
+        names = mutagen_tags.get("TIT2") # todo: only works for mp3 !!! wma has a different tag name for the track title.
+        if names:
+            names = [str(name) for name in names]
+            name = "; ".join(names)
+            track = track.replace(name=name)
+
+        return ScanCommand.scan_mutagen_extra(mutagen_tags, track)
+
+
+    @staticmethod
     def scan_mutagen_meta(absolute_path: pathlib.Path, track: Track) -> Track:
+        mutagen_tags = mutagen.File(absolute_path)
+        return ScanCommand.scan_mutagen_extra(mutagen_tags, track)
+
+    @staticmethod
+    def scan_mutagen_extra(mutagen_tags: FileType, track: Track) -> Track:
         def not_empty(s: str) -> bool:
             return s and s.strip() != ""
-        mutable_tags = mutagen.File(absolute_path)
-        genres = mutable_tags.get("WM/Genre")
+        genres = mutagen_tags.get("WM/Genre")
         if genres:
             genres = [str(genre) for genre in genres]
             genre = "; ".join(genres)
             track = track.replace(genre=genre)
 
-        artists = mutable_tags.get("WM/AlbumArtist")
+        artists = mutagen_tags.get("WM/AlbumArtist")
         if artists:
             if len(artists) > 0:
                 artists = [str(artist) for artist in artists]
@@ -304,7 +365,7 @@ class ScanCommand(commands.Command):
                 artists = [Artist(name=str(artist)) for artist in artists]
                 track = track.replace(artists=artists)
 
-        composers = mutable_tags.get("WM/Composer")
+        composers = mutagen_tags.get("WM/Composer")
         if composers:
             if len(composers) > 0:
                 composers = [str(composer) for composer in composers]
@@ -312,77 +373,18 @@ class ScanCommand(commands.Command):
                 composers = [Artist(name=str(composer)) for composer in composers]
                 track = track.replace(composers=composers)
 
-        track_numbers = mutable_tags.get("WM/TrackNumber")
+        track_numbers = mutagen_tags.get("WM/TrackNumber")
         if track_numbers:
             track_numbers = [str(track_no) for track_no in track_numbers]
             if len(track_numbers) > 0:
                 track = track.replace(track_no=int(track_numbers[0]))
 
-        years = mutable_tags.get("WM/Year")
+        years = mutagen_tags.get("WM/Year")
         if years:
             years = [str(artist) for artist in years]
             if len(years) > 0:
                 track = track.replace(date=years[0])
         return track
-
-    def just_scan_metadata(
-        self,
-        *,
-        file_mtimes,
-        files,
-        flush_threshold,
-        limit,
-    ):
-        logger.info("Scanning...")
-
-        files = sorted(files)[:limit]
-
-        logger.info(f"Timeout: {self.timeout} ")
-        scanner = scan.Scanner(self.timeout)
-        progress = _ScanProgress(batch_size=flush_threshold, total=len(files))
-
-        audio_files = []
-        for absolute_path in files:
-            try:
-                file_uri = absolute_path.as_uri()
-                result = scanner.scan(file_uri)
-
-                if not result.playable:
-                    logger.warning(
-                        f"Failed scanning {file_uri}: No audio found in file"
-                    )
-                elif result.duration is None:
-                    logger.warning(
-                        f"Failed scanning {file_uri}: "
-                        "No duration information found in file"
-                    )
-                elif result.duration < MIN_DURATION_MS:
-                    logger.warning(
-                        f"Failed scanning {file_uri}: "
-                        f"Track shorter than {MIN_DURATION_MS}ms"
-                    )
-                else:
-                    local_uri = translator.path_to_track_uri(
-                        absolute_path, self.media_dir
-                    )
-                    mtime = file_mtimes.get(absolute_path)
-                    track = tags.convert_tags_to_track(result.tags).replace(
-                        uri=local_uri,
-                        length=result.duration,
-                        last_modified=mtime,
-                    )
-                    audio_files.append(track)
-            except Exception as error:
-                logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
-
-            if progress.increment():
-                progress.log()
-                if self.library.flush():
-                    logger.debug("Progress flushed")
-
-        progress.log()
-        logger.info("Done scanning")
-        return audio_files
 
 class _ScanProgress:
     def __init__(self, *, batch_size, total):
