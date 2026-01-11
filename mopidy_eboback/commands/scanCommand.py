@@ -9,6 +9,7 @@ import mutagen
 from mopidy import commands
 from mopidy.audio import tags, scan
 from mopidy.models import Track, Artist
+from mutagen.id3 import Encoding
 
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
@@ -76,10 +77,21 @@ class ScanCommand(commands.Command):
         self.library.cleanup_images()
         self.library.close()
 
-        # mutable_tags = mutagen.File("/media/DATA1/Music/Ebo/Unknown album (11-09-2015 13-11-20)/06 Track 6.wma")
+        # mutable_tags = mutagen.File("/media/DATA1/Music/Jordi Savall- Le Concert Des Nations/Terpsichore- L'Apothéose De La Danse Baroque/22 Telemann- Ouverture-Suite In G, “La Bizarre”, TWV 55-G2 - 1. Ouverture.mp3")
         # print(mutable_tags)
 
         return 0
+
+    def fix_encoding(self, title: str) -> str:
+        try:
+            title = title.encode('latin1').decode('utf-8')
+        except UnicodeDecodeError:
+            # encoding probably isn't latin1 but windows-1252
+            # # Source - https://stackoverflow.com/a/33579343
+            title = title.encode('latin1').decode('windows-1252')
+        return title
+
+
 
     def update_playlists(self, args: tuple[str, ...], config, file_mtimes: dict[Any, int], playlist_files: set[pathlib.Path]):
         from mopidy_eboback.lib import text_scanner_py
@@ -256,6 +268,9 @@ class ScanCommand(commands.Command):
                     )
                     if absolute_path.suffix.lower() == ".wma":
                         track = self.scan_mutagen_meta(absolute_path, track)
+
+                    name = self.fix_encoding(track.name)
+                    track = track.replace(name=name)
 
                     self.library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
