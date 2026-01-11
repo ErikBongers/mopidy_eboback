@@ -272,22 +272,23 @@ class ScanCommand(commands.Command):
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
                 try:
-                    mtime = file_mtimes.get(absolute_path)
-                    local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
-                    track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
-                    self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
-                    logger.debug(f"Added {track.uri}")
-                except Exception as error:
                     if absolute_path.suffix.lower() == ".wav":
                         track = self.scan_wavinfo(absolute_path)
                         if track:
                             mtime = file_mtimes.get(absolute_path)
                             local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
-                            track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
+                            track = track.replace(uri=local_uri)
+                            track = track.replace(last_modified=mtime)
                             self.library.add(track, None, None)
                             logger.debug(f"Added {track.uri}")
                     else:
-                        logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
+                        mtime = file_mtimes.get(absolute_path)
+                        local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
+                        track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
+                        self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
+                        logger.debug(f"Added {track.uri}")
+                except Exception as error:
+                    logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
 
             if progress.increment():
                 progress.log()
