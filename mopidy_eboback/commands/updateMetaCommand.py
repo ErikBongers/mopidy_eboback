@@ -15,7 +15,7 @@ class UpdateMetaCommand(commands.Command):
     def __init__(self):
         super().__init__()
         self.media_dir = None
-        self.storage = None
+        self.storage: LocalStorageProvider | None = None
         self.warning_buffer: list[str] = []
 
     def run(self, args, config):
@@ -73,8 +73,8 @@ class UpdateMetaCommand(commands.Command):
         return False
 
     def load_root_meta(self):
-        root_meta = self.storage.get_root_meta()
+        root_meta = self.storage.get_root_meta_or_default()
         if root_meta.get("genre_replacements") is None:
             return
         for replacement in root_meta["genre_replacements"]:
-            self.storage.add_genre_replacement(replacement["org_name"], replacement["new_name"])
+            self.storage.add_genre_replacement(replacement["genre"], replacement["replacement"])

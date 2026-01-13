@@ -40,6 +40,15 @@ RootMetaDef = TypedDict( "RootMetaDef", {
     }
 )
 
+empty_root_meta: RootMetaDef = {
+    "//name": "A name for this media source",
+    "name": "",
+    "//streams_folder": "Path to folder where stream images, etc are stored",
+    "streams_folder": "",
+    "//genre_replacements": "List of genre replacements",
+    "genre_replacements": []
+}
+
 
 def check_dirs_and_files(config):
     if not pathlib.Path(config["eboback"]["media_dir"]).is_dir():
@@ -325,7 +334,13 @@ class LocalStorageProvider:
         if path.exists():
             text = path.read_text()
             return json.loads(text)
-        return {}
+        return None
+
+    def get_root_meta_or_default(self) -> RootMetaDef:
+        root_meta = self.get_root_meta()
+        if not root_meta:
+            return empty_root_meta
+        return root_meta
 
     def write_root_meta(self):
         root_meta = self.get_root_meta()
