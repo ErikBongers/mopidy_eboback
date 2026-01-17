@@ -3,7 +3,7 @@ import json
 import pathlib
 import string
 import time
-from typing import Any
+from typing import Any, TypedDict
 import mutagen
 
 from mopidy import commands
@@ -27,6 +27,20 @@ class WplItem:
 class Wpl:
     name: str
     items: list[WplItem]
+
+RadioStreamDef = TypedDict('RadioStreamDef', {
+    'name': str,
+    'type': str,
+    'image': str,
+    'uri': str,
+    'genre': str,
+    'exclude_streamlines': list[str]
+})
+
+PlaylistDef = TypedDict('PlaylistDef', {
+    'name': str,
+    'items': list[RadioStreamDef]
+})
 
 class ScanCommand(commands.Command):
     help = "Scan local media files and populate the eboplayer library."
@@ -74,7 +88,7 @@ class ScanCommand(commands.Command):
             limit=args.limit,
         )
 
-        self.update_playlists(args, config, file_mtimes, playlist_files)
+        self.scan_eboplayer_files(playlist_files)
         self.library.cleanup_images()
         self.library.close()
 
@@ -98,8 +112,7 @@ class ScanCommand(commands.Command):
         return title
 
 
-
-    def update_playlists(self, args: tuple[str, ...], config, file_mtimes: dict[Any, int], playlist_files: set[pathlib.Path]):
+    def scan_eboplayer_files(self, playlist_files: set[pathlib.Path]):
         from mopidy_eboback.lib import text_scanner_py
 
         self.library.delete_file_playlists()
@@ -107,9 +120,9 @@ class ScanCommand(commands.Command):
         for playlist_file in playlist_files:
             playlist_text = playlist_file.read_text()
             if playlist_file.suffixes == [".eboplayer", ".playlist"]:
-                playlist = json.loads(playlist_text)
+                playlist: PlaylistDef = json.loads(playlist_text)
                 name: str = playlist['name']
-                items: list[dict[str, str]] = playlist['items']
+                items = playlist['items']
                 hashdata: str = playlist_text
                 playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
                 for idx, item in enumerate(items):
@@ -119,7 +132,7 @@ class ScanCommand(commands.Command):
                             uri="eboback:stream:" + item['uri'],
                             genre=item['genre']
                         )
-                        self.library.add_stream_track(track, item['image']) #todo: this may already exist. Ok to overwrite?
+                        self.library.add_stream_track(track, item['image'], item['exclude_streamlines']) #todo: this may already exist. Ok to overwrite?
                         self.library.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
 
             else:

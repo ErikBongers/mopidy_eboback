@@ -82,6 +82,8 @@ create table genre_replace
     new_name TEXT
 );
 
+alter table track add column exclude_streamlines text;
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;

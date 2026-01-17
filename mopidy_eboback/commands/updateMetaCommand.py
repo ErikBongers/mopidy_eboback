@@ -73,7 +73,7 @@ class UpdateMetaCommand(commands.Command):
         return False
 
     def load_root_meta(self):
-        root_meta = self.storage.get_root_meta_or_default()
+        root_meta = self.storage.get_root_meta()
         if root_meta.get("genre_replacements") is None:
             return
         for replacement in root_meta["genre_replacements"]:

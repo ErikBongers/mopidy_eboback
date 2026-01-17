@@ -158,9 +158,10 @@ class LocalStorageProvider:
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
-    def add_stream_track(self, track, image_path: str):
+    def add_stream_track(self, track, image_path: str, exclude_streamlines: list[str]):
         try:
-            schema.insert_stream_track(self._connect(), track)
+            exclude_str = "\n".join(exclude_streamlines)
+            schema.insert_stream_track(self._connect(), track, exclude_str)
             if image_path:
                 schema.insert_image(self._connect(), track.uri, "/eboback/media" + image_path)
         except Exception as e:
@@ -333,20 +334,15 @@ class LocalStorageProvider:
     def add_genre_replacement(self, org_name, new_name):
         schema.insert_genre_replacement(self._connect(), org_name, new_name)
 
-    def get_root_meta(self):
+    def get_root_meta(self) -> RootMetaDef:
         path = pathlib.Path(self._media_dir) / "root.eboplayer"
         if path.exists():
             text = path.read_text()
             loaded_meta = json.loads(text)
             full_meta = RootMetaDef(**empty_root_meta) # ensure a full (recent) definition.
-            full_meta = full_meta(**loaded_meta)
-        return None
-
-    def get_root_meta_or_default(self) -> RootMetaDef:
-        root_meta = self.get_root_meta()
-        if not root_meta:
-            return empty_root_meta
-        return root_meta
+            full_meta.update(loaded_meta)
+            return full_meta
+        return empty_root_meta.copy()
 
     def write_root_meta(self):
         root_meta = self.get_root_meta()

@@ -392,7 +392,7 @@ def insert_track(c, track, images=None, file_path=None):
     )
     return track.uri
 
-def insert_stream_track(c, track):
+def insert_stream_track(c, track, exclude_streamlines: str):
     _insert_or_replace(
         c,
         "track",
@@ -412,6 +412,7 @@ def insert_stream_track(c, track):
             "comment": None,
             "musicbrainz_id": None,
             "last_modified": None,
+            "exclude_streamlines": exclude_streamlines,
         },
     )
     return track.uri
@@ -705,3 +706,8 @@ def get_genre_defs(c) -> list[GenreDefRow]:
     def to_genre_def(row) -> GenreDefRow:
         return {'genre': row[0], 'replacement': row[1]}
     return list(map(to_genre_def, rows))
+
+
+def get_excluded_streamlines(c, uri: str):
+    row = c.execute("select exclude_streamlines from track where uri = ?", (uri,)).fetchone()
+    return row[0] if row else None

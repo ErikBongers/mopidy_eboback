@@ -41,6 +41,9 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "write_root_meta":
             self.write_root_meta()
             return
+        if data_path == "get_excluded_streamlines":
+            self.get_excluded_streamlines()
+            return
 
         cnt = schema.count_albums(self._connect())
         self.write("Oops...no valid data request: " + data_path)
@@ -129,3 +132,9 @@ class DataHandler(tornado.web.RequestHandler):
 
     def write_root_meta(self):
         self.storage.write_root_meta()
+
+    def get_excluded_streamlines(self):
+        uri = self.get_argument("uri", "nada...")
+        with self._connect() as c:
+            lines = schema.get_excluded_streamlines(c, uri)
+            self.write(lines)
