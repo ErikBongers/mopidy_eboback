@@ -34,7 +34,8 @@ RadioStreamDef = TypedDict('RadioStreamDef', {
     'image': str,
     'uri': str,
     'genre': str,
-    'exclude_streamlines': list[str]
+    'exclude_streamlines': list[str],
+    'program_titles': list[str],
 })
 
 PlaylistDef = TypedDict('PlaylistDef', {
@@ -132,7 +133,7 @@ class ScanCommand(commands.Command):
                             uri="eboback:stream:" + item['uri'],
                             genre=item['genre']
                         )
-                        self.library.add_stream_track(track, item['image'], item['exclude_streamlines']) #todo: this may already exist. Ok to overwrite?
+                        self.library.add_stream_track(track, item['image'], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
                         self.library.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
 
             else:

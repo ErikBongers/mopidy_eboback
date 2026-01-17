@@ -83,6 +83,7 @@ create table genre_replace
 );
 
 alter table track add column exclude_streamlines text;
+alter table track add column program_titles text;
 
 PRAGMA user_version = 8;  -- update schema version
 

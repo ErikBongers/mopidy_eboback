@@ -44,6 +44,9 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "get_excluded_streamlines":
             self.get_excluded_streamlines()
             return
+        if data_path == "get_program_titles":
+            self.get_excluded_streamlines()
+            return
 
         cnt = schema.count_albums(self._connect())
         self.write("Oops...no valid data request: " + data_path)
@@ -137,4 +140,10 @@ class DataHandler(tornado.web.RequestHandler):
         uri = self.get_argument("uri", "nada...")
         with self._connect() as c:
             lines = schema.get_excluded_streamlines(c, uri)
+            self.write(lines)
+
+    def get_program_titles(self):
+        uri = self.get_argument("uri", "nada...")
+        with self._connect() as c:
+            lines = schema.get_program_titles(c, uri)
             self.write(lines)
