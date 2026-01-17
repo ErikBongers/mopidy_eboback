@@ -26,7 +26,6 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
                 requests_session=self.backend._session,
             )
 
-            logger.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXunwrapped uri: {unwrapped_uri}")
 
             return stripped_uri
 
@@ -35,7 +34,6 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
         )
 
     def is_live(self, uri: Uri) -> bool:
-        logger.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXis_live({uri})")
         return uri.startswith(STREAM_PREFIX)
 
     def change_track(self, track: Track) -> bool:
@@ -57,7 +55,6 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
         """
         live = self.is_live(track.uri)
         uri = self.translate_uri(track.uri)
-        logger.info(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXchange_track({uri}, live={live})")
         if uri != track.uri:
             logger.debug("Backend translated URI from %s to %s", track.uri, uri)
         if not uri:
@@ -71,7 +68,6 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
         return True
 
     def play(self) -> bool:
-        logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXplay()")
         return self.audio.start_playback().get()
 
 
