@@ -46,7 +46,7 @@ class Extension(ext.Extension):
         return EbobackCommand()
 
     def webapp(self, config, core):
-        from .web import ImageHandler, IndexHandler, DataHandler
+        from mopidy_eboback.web.file_handlers import ImageHandler, IndexHandler, DataHandler
         from mopidy_eboback.storage import IMG_URI_PREFIX, MEDIA_URI_PREFIX
 
         data_dir = self.get_data_dir(config)
