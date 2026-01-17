@@ -6,7 +6,7 @@ import shutil
 import sqlite3
 import struct
 from sqlite3 import Connection
-from typing import TypedDict
+from typing import TypedDict, cast
 
 import uritools
 
@@ -36,7 +36,9 @@ RootMetaDef = TypedDict( "RootMetaDef", {
     "//streams_folder": str,
     "streams_folder": str,
     "//genre_replacements": str,
-    "genre_replacements": list[GenreDefRow]
+    "genre_replacements": list[GenreDefRow],
+    "//saved_stream_lines": str,
+    "saved_stream_lines": list[str]
     }
 )
 
@@ -46,7 +48,9 @@ empty_root_meta: RootMetaDef = {
     "//streams_folder": "Path to folder where stream images, etc are stored",
     "streams_folder": "",
     "//genre_replacements": "List of genre replacements",
-    "genre_replacements": []
+    "genre_replacements": [],
+    "//saved_stream_lines": "List of stream info lines that are saved for later reference. These are not cleared when the stream lines history is cleared.",
+    "saved_stream_lines": []
 }
 
 
@@ -333,7 +337,9 @@ class LocalStorageProvider:
         path = pathlib.Path(self._media_dir) / "root.eboplayer"
         if path.exists():
             text = path.read_text()
-            return json.loads(text)
+            loaded_meta = json.loads(text)
+            full_meta = RootMetaDef(**empty_root_meta) # ensure a full (recent) definition.
+            full_meta = full_meta(**loaded_meta)
         return None
 
     def get_root_meta_or_default(self) -> RootMetaDef:
@@ -345,14 +351,11 @@ class LocalStorageProvider:
     def write_root_meta(self):
         root_meta = self.get_root_meta()
         genre_defs = schema.get_genre_defs(self._connect())
-        meta_data: RootMetaDef = {
-            "//name": "A name for this media source",
-            "name": root_meta.get("name", "Eboplayer media"),
-            "//streams_folder": "Path to folder where stream images, etc are stored",
-            "streams_folder": root_meta.get("streams_folder", "/RadioStreams"),
-            "//genre_replacements": "List of genre replacements",
-            "genre_replacements": genre_defs
-        }
+        meta_data: RootMetaDef = RootMetaDef(**empty_root_meta) # ensure a full (recent) definition.
+        meta_data.name= root_meta.get("name", "Eboplayer media"),
+        meta_data.streams_folder = root_meta.get("streams_folder", "/RadioStreams"),
+        meta_data.genre_replacements = genre_defs,
+        meta_data.saved_stream_lines =  root_meta.get("saved_stream_lines", [])
         path = pathlib.Path(self._media_dir) / "root.eboplayerx"
         text = json.dumps(meta_data, indent=4, cls=CompactJSONEncoder)
         path.write_text(text)
