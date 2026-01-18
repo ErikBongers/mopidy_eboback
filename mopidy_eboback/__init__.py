@@ -49,6 +49,7 @@ class Extension(ext.Extension):
         from mopidy_eboback.web.file_handlers import ImageHandler, IndexHandler
         from mopidy_eboback.web.action_handlers import DataHandler
         from mopidy_eboback.storage import IMG_URI_PREFIX, MEDIA_URI_PREFIX
+        from .webSocketHandler import WebsocketHandler
 
         data_dir = self.get_data_dir(config)
         image_dir = self.get_image_dir(config)
@@ -58,6 +59,8 @@ class Extension(ext.Extension):
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
             (r"/" + MEDIA_URI_PREFIX + r"/(.+)", ImageHandler, {"path": media_dir}),
             (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
+            (r"/ws2/?", WebsocketHandler, {"config": config}),  # Why this pattern??? I know it's in mopidy http somewhere, but still...
+
         ]
 
     # TODO: Add *paths to Extension.get_data_dir()?
