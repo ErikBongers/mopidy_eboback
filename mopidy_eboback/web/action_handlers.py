@@ -45,7 +45,7 @@ class DataHandler(tornado.web.RequestHandler):
             self.get_excluded_streamlines()
             return
         if data_path == "get_program_titles":
-            self.get_excluded_streamlines()
+            self.get_program_titles()
             return
         if data_path == "get_remembers":
             self.get_remembers()
