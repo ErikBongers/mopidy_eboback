@@ -62,6 +62,10 @@ class DataHandler(tornado.web.RequestHandler):
                 "status": "ok"
             }))
             return
+        if data_path == "save_remember":
+            self.save_remember()
+            self.write(json.dumps({"status": "ok"}))
+            return
 
         self.write("Oops...no valid data request: " + data_path)
 
@@ -147,3 +151,7 @@ class DataHandler(tornado.web.RequestHandler):
         with self._connect() as c:
             lines = schema.get_program_titles(c, uri)
             self.write(lines)
+
+    def save_remember(self):
+        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + self.request.body.decode("utf-8"))
+        self.storage.write_remember(self.request.body.decode("utf-8"))

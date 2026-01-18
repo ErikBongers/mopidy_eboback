@@ -356,3 +356,14 @@ class LocalStorageProvider:
         path = pathlib.Path(self._media_dir) / "root.eboplayerx"
         text = json.dumps(meta_data, indent=4, cls=CompactJSONEncoder)
         path.write_text(text)
+
+    def write_remember(self, remember: str):
+        path = pathlib.Path(self._media_dir) / "remember.eboplayer"
+        if path.exists():
+            text = path.read_text()
+            loaded_meta: list[str] = json.loads(text)
+        else:
+            loaded_meta = []
+        loaded_meta.append(remember)
+        text = json.dumps(loaded_meta, indent=4, cls=CompactJSONEncoder)
+        path.write_text(text)
