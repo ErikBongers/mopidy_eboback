@@ -47,6 +47,9 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "get_program_titles":
             self.get_excluded_streamlines()
             return
+        if data_path == "get_remembers":
+            self.get_remembers()
+            return
 
         cnt = schema.count_albums(self._connect())
         self.write("Oops...no valid data request: " + data_path)
@@ -155,3 +158,7 @@ class DataHandler(tornado.web.RequestHandler):
     def save_remember(self):
         logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + self.request.body.decode("utf-8"))
         self.storage.write_remember(self.request.body.decode("utf-8"))
+
+    def get_remembers(self):
+        lines = self.storage.read_remembers()
+        self.write(json.dumps(lines))
