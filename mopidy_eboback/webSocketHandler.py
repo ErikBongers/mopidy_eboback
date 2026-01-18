@@ -3,6 +3,8 @@ import json
 import tornado.websocket
 import logging
 
+from mopidy_eboback.commands import ScanCommand
+
 logger = logging.getLogger(__name__)
 active_clients = set() #todo: make class variable.
 
@@ -17,6 +19,7 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         logger.info("eboplayer websocket initializedxxx")
         self.config = config
         self.ioloop = tornado.ioloop.IOLoop.current()
+        logger.info(config)
 
     def check_origin(self, origin):
         return True #allows cross-domain requests
@@ -28,13 +31,30 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         logger.info("eboplayer websocket message received: " + message)
         obj = json.loads(message)
         if obj["method"] == "start_scan":
-            logger.info("eboplayer websocket start_scan received")
-            the_event = {
-                "event" : "scan_started",
-                "some_data" : "nada..."
-            }
-            broadcast(json.dumps(the_event))
+            self.scan()
+            return
 
     def on_close(self):
         active_clients.remove(self)
 
+    def scan(self):
+        from threading import Thread
+        logger.info("eboplayer websocket start_scan received")
+        the_event = {
+            "event": "scan_started",
+            "message": "nada..."
+        }
+        broadcast(json.dumps(the_event))
+
+        thread = Thread(target=threaded_scan, args=(self.config,))
+        thread.start()
+
+
+def threaded_scan(config):
+    scan_cmd = ScanCommand()
+    scan_cmd.just_run_it(config)
+    the_event = {
+        "event": "scan_finished",
+        "message": "nada..."
+    }
+    broadcast(json.dumps(the_event))

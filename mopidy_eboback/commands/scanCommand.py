@@ -70,12 +70,15 @@ class ScanCommand(commands.Command):
         )
 
     def run(self, args, config):
+        return self.just_run_it(config, args.force, args.limit)
+
+    def just_run_it(self, config, force: bool = False, limit: int = None):
         self.media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
         self.timeout = config["eboback"]["scan_timeout"]
 
         self.library = storage.LocalStorageProvider(config)
         file_mtimes = self._find_files(follow_symlinks=config["eboback"]["scan_follow_symlinks"])
-        files_to_update, files_in_library = self._check_tracks_in_library( file_mtimes=file_mtimes, force_rescan=args.force)
+        files_to_update, files_in_library = self._check_tracks_in_library( file_mtimes=file_mtimes, force_rescan=force)
 
         self.included_exts = [ext.lower() for ext in config["eboback"]["included_file_extensions"]]
         self.excluded_exts = [ext.lower() for ext in config["eboback"]["excluded_file_extensions"]]
@@ -86,7 +89,7 @@ class ScanCommand(commands.Command):
             file_mtimes=file_mtimes,
             files=files_to_update,
             flush_threshold=config["eboback"]["scan_flush_threshold"],
-            limit=args.limit,
+            limit=limit,
         )
 
         self.scan_eboplayer_files(playlist_files)
@@ -102,6 +105,7 @@ class ScanCommand(commands.Command):
         print(info_metadata)
 
         return 0
+
 
     def fix_encoding(self, title: str) -> str:
         try:
