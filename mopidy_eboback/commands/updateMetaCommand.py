@@ -19,6 +19,9 @@ class UpdateMetaCommand(commands.Command):
         self.warning_buffer: list[str] = []
 
     def run(self, args, config):
+        return self.just_run_it(config)
+
+    def just_run_it(self, config):
         self.storage = LocalStorageProvider(config)
 
         self.media_dir = Path(config["eboback"]["media_dir"]).resolve()
@@ -26,12 +29,11 @@ class UpdateMetaCommand(commands.Command):
         self.load_root_meta()
 
         if self.update_albums_meta_data():
-            print("Meta data updated successfully.")
+            logger.info("Meta data updated successfully.")
             return 0
 
-        print("Unable to update meta data")
+        logger.error("Unable to update meta data")
         return 1
-
 
     def update_albums_meta_data(self):
         paths = self.storage.get_album_path_and_path_counts() #todo: try to use a class as a type annotation, even though Row isn't of that type...the Row class could be used as a base class though...

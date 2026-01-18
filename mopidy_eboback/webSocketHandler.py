@@ -3,7 +3,7 @@ import json
 import tornado.websocket
 import logging
 
-from mopidy_eboback.commands import ScanCommand
+from mopidy_eboback.commands import ScanCommand, UpdateMetaCommand
 
 logger = logging.getLogger(__name__)
 active_clients = set() #todo: make class variable.
@@ -53,6 +53,15 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
 def threaded_scan(config):
     scan_cmd = ScanCommand()
     scan_cmd.just_run_it(config)
+
+    the_event = {
+        "event": "scan_status",
+        "message": "Updating meta..."
+    }
+    meta_cmd = UpdateMetaCommand()
+    broadcast(json.dumps(the_event))
+    meta_cmd.just_run_it(config)
+
     the_event = {
         "event": "scan_finished",
         "message": "nada..."
