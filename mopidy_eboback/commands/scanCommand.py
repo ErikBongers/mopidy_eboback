@@ -303,8 +303,9 @@ class ScanCommand(commands.Command):
                         mtime = file_mtimes.get(absolute_path)
                         local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                         track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
-                        self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
-                        logger.debug(f"Added {track.uri}")
+                        if track:
+                            self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
+                            logger.debug(f"Added {track.uri}")
                 except Exception as error:
                     logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
 
@@ -350,7 +351,7 @@ class ScanCommand(commands.Command):
         mutagen_tags = mutagen.File(absolute_path)
 
         if not mutagen_tags:
-            return track
+            return None
 
         names = mutagen_tags.get("TIT2") # todo: only works for mp3 !!! wma has a different tag name for the track title.
         if names:
