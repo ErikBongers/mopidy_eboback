@@ -156,7 +156,6 @@ class DataHandler(tornado.web.RequestHandler):
             self.write(lines)
 
     def save_remember(self):
-        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + self.request.body.decode("utf-8"))
         self.storage.write_remember(self.request.body.decode("utf-8"))
 
     def get_remembers(self):
