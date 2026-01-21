@@ -85,6 +85,18 @@ create table genre_replace
 alter table track add column exclude_streamlines text;
 alter table track add column program_titles text;
 
+create table history
+(
+    moment timestamp default current_timestamp,
+    type text,
+    uri text,
+    name text
+    ref_count integer default 1
+);
+
+create index history_moment_idx on history (moment);
+create index history_moment_uri_idx on history (moment, uri);
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;

@@ -375,3 +375,7 @@ class LocalStorageProvider:
             return json.loads(text)
         else:
             return []
+
+    def insert_history_line(self, name: str, uri: str, ref_type: str):
+        with self._connect() as c:
+            schema.insert_history_line(c, name, uri, ref_type)

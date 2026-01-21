@@ -716,3 +716,6 @@ def get_excluded_streamlines(c, uri: str):
 def get_program_titles(c, uri: str):
     row = c.execute("select program_titles from track where uri = ?", (uri,)).fetchone()
     return row[0] if row else None
+
+def insert_history_line(c: Connection, name: str, uri: str, ref_type: str):
+    _insert_or_replace(c, "history", {"name": name, "uri": uri, "type": ref_type})
