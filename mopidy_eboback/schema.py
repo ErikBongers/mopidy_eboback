@@ -723,6 +723,13 @@ def insert_history_line(c: Connection, moment: int, name: str, uri: str, ref_typ
 
 def get_history(c):
     def to_hist_def(row):
-        return {'moment': row[0], 'type': row[1], 'uri': row[2], 'name': row[3], 'ref_count': row[4]}
-    rows = c.execute("select * from history order by moment").fetchall()
+        return {'moment': row[0], 'type': row[1], 'uri': row[2], 'name': row[3], 'ref_count': row[4], 'album': row[5], 'artist': row[6]}
+    rows = c.execute("""
+        select history.moment, history.type, history.uri, coalesce(track.name, history.name) as name, history.ref_count, album.name as album, artist.name as artist
+        from history
+        left outer join track on history.uri = track.uri
+        left outer join album on track.album = album.uri
+        left outer join artist on track.artists = artist.uri
+        order by moment
+    """).fetchall()
     return list(map(to_hist_def, rows))
