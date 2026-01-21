@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import hashlib
 import json
 import logging
@@ -378,4 +379,9 @@ class LocalStorageProvider:
 
     def insert_history_line(self, name: str, uri: str, ref_type: str):
         with self._connect() as c:
-            schema.insert_history_line(c, name, uri, ref_type)
+            moment = int(datetime.now(timezone.utc).timestamp())
+            schema.insert_history_line(c, moment, name, uri, ref_type)
+
+    def get_history(self):
+        with self._connect() as c:
+            return schema.get_history(c)

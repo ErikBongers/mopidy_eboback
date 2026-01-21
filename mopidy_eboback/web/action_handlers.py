@@ -31,24 +31,10 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_status(204)
         self.finish()
 
-    def get(self, data_path):
-        if data_path == "get_album_meta":
-            self.get_album_meta()
-            return
-        if data_path == "get_genres":
-            self.get_genres()
-            return
-        if data_path == "write_root_meta":
-            self.write_root_meta()
-            return
-        if data_path == "get_excluded_streamlines":
-            self.get_excluded_streamlines()
-            return
-        if data_path == "get_program_titles":
-            self.get_program_titles()
-            return
-        if data_path == "get_remembers":
-            self.get_remembers()
+    def get(self, data_path: str):
+        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history"]:
+            func = getattr(self, data_path)
+            func()
             return
 
         cnt = schema.count_albums(self._connect())
@@ -161,3 +147,7 @@ class DataHandler(tornado.web.RequestHandler):
     def get_remembers(self):
         lines = self.storage.read_remembers()
         self.write(json.dumps(lines))
+
+    def get_history(self):
+        history = self.storage.get_history()
+        self.write(json.dumps(history))

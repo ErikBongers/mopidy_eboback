@@ -717,5 +717,12 @@ def get_program_titles(c, uri: str):
     row = c.execute("select program_titles from track where uri = ?", (uri,)).fetchone()
     return row[0] if row else None
 
-def insert_history_line(c: Connection, name: str, uri: str, ref_type: str):
-    _insert_or_replace(c, "history", {"name": name, "uri": uri, "type": ref_type})
+def insert_history_line(c: Connection, moment: int, name: str, uri: str, ref_type: str):
+    _insert_or_replace(c, "history", {"moment": moment, "name": name, "uri": uri, "type": ref_type})
+
+
+def get_history(c):
+    def to_hist_def(row):
+        return {'moment': row[0], 'type': row[1], 'uri': row[2], 'name': row[3], 'ref_count': row[4]}
+    rows = c.execute("select * from history order by moment").fetchall()
+    return list(map(to_hist_def, rows))

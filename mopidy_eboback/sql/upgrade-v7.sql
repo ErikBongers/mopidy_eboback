@@ -87,10 +87,10 @@ alter table track add column program_titles text;
 
 create table history
 (
-    moment timestamp default current_timestamp,
+    moment integer not null,
     type text,
     uri text,
-    name text
+    name text,
     ref_count integer default 1
 );
 
