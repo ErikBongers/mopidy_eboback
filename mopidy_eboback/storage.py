@@ -382,6 +382,6 @@ class LocalStorageProvider:
             moment = int(datetime.now(timezone.utc).timestamp())
             schema.insert_history_line(c, moment, name, uri, ref_type)
 
-    def get_history(self):
+    def get_history(self, limit: int, offset: int):
         with self._connect() as c:
-            return schema.get_history(c)
+            return schema.get_history(c, limit, offset)

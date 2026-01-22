@@ -97,6 +97,32 @@ create table history
 create index history_moment_idx on history (moment);
 create index history_moment_uri_idx on history (moment, uri);
 
+create view compressed_history as
+WITH
+    partitioning AS
+        (
+            SELECT *,
+                   ROW_NUMBER() OVER (ORDER BY moment)
+                       -
+                   ROW_NUMBER() OVER (PARTITION BY type, uri, name ORDER BY moment)
+                       AS partition_id
+            FROM
+                history
+        )
+SELECT
+    MAX(moment) as moment,
+    type, uri, name,
+    COUNT(*) as row_count,
+    SUM(ref_count) as ref_count
+FROM
+    partitioning
+GROUP BY
+
+    type, uri, name,
+    partition_id
+ORDER BY
+    MAX(moment);
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;

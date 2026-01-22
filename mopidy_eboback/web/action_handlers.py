@@ -149,5 +149,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(lines))
 
     def get_history(self):
-        history = self.storage.get_history()
+        limit = int(self.get_argument("limit", "99999"))
+        offset = int(self.get_argument("offset", "0"))
+        history = self.storage.get_history(limit, offset)
         self.write(json.dumps(history))
