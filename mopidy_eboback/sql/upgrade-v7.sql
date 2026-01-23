@@ -123,6 +123,45 @@ GROUP BY
 ORDER BY
     MAX(moment);
 
+create view favorites as
+    with dedup as (
+        with weighted_history as (
+            with
+                latest as (
+                    select 100000 as base_weight, '1. latest' as period, h.*
+                    from compressed_history as h
+                    order by moment desc
+                    limit 1
+                    ),
+                last_days as (
+                    select 1000 as base_weight, '2. last days' as period, h.*
+                    from compressed_history as h
+                    where moment > unixepoch() - 60 * 60 * 24 * 2
+                    order by base_weight desc, moment desc
+                    limit -1 offset 1
+                ),
+                last_year as (
+                    select 100 as base_weight, '3. last year' as period, h.*
+                    from compressed_history as h
+                    where moment > unixepoch() - 60 * 60 * 24 * 365
+                    and moment < unixepoch() - 60 * 60 * 24 * 2
+                )
+            select *, 0 as days_ago -- days not relevant
+            from latest
+            union
+            select*, (unixepoch() - moment) / 60 / 60 / 24 as days_ago
+            from last_days
+            union
+            select *, (unixepoch() - moment) / 60 / 60 / 24 as days_ago
+            from last_year
+            )
+        select base_weight+(ref_count*10)-days_ago as weight, ref_count, days_ago, *
+        from weighted_history
+        )
+    select max(weight) as weight, substr(min(period), 4) as period, max(type) as type, uri, max(name) as name, sum(ref_count) as ref_count from dedup
+    group by uri
+    order by weight desc;
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
