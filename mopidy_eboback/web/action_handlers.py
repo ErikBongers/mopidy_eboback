@@ -45,7 +45,7 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "set_album_meta":
             self.set_album_meta()
             return
-        if data_path == "add_ref_to_playlist":
+        if data_path == "add_ref_to_playlist": #todo: wrap in function without params, so we can use a path list like with GET.
             self.add_ref_to_playlist()
             self.write(json.dumps({
                 "status": "ok"
@@ -54,6 +54,9 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path == "save_remember":
             self.save_remember()
             self.write(json.dumps({"status": "ok"}))
+            return
+        if data_path == "get_album_metas":
+            self.get_album_metas()
             return
 
         self.write("Oops...no valid data request: " + data_path)
@@ -64,6 +67,21 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         if meta_file_path.exists():
             self.write(meta_file_path.read_text())
+
+    def get_album_metas(self):
+        uris_comma_string = self.get_argument("uris", "nada...")
+        uris: list[str] = uris_comma_string.split(",")
+        metas: dict[str, dict] = {}
+        for uri in uris:
+            meta_file_path = self.uri_to_meta_path(uri)
+            if meta_file_path.exists(): #todo: cache the meta in the db
+                try:
+                    metas[uri] = json.loads(meta_file_path.read_text()) #todo: don't first decode json to encode it again below.
+                except Exception as e:
+                    logger.error(f"Cannot parse meta file {meta_file_path}: {e}")
+
+        self.set_header("Content-Type", 'application/json')
+        self.write(json.dumps(metas))
 
     def set_album_meta(self):
         uri = self.get_argument("uri", "nada...")
