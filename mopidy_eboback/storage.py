@@ -385,3 +385,7 @@ class LocalStorageProvider:
     def get_history(self, limit: int, offset: int):
         with self._connect() as c:
             return schema.get_history(c, limit, offset)
+
+    def update_album_dates(self):
+        with self._connect() as c:
+            schema.update_album_dates(c)

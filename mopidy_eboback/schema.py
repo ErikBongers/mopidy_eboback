@@ -735,3 +735,13 @@ def get_history(c, limit: int, offset: int):
         """,
         (limit, offset)).fetchall()
     return list(map(to_hist_def, rows))
+
+
+def update_album_dates(c: Connection):
+    logger.info("Updating album dates")
+    c.execute("""
+            update album 
+            set last_modified = (select max(track.last_modified) 
+                                 from track 
+                                 where album.uri = track.album)
+             """)

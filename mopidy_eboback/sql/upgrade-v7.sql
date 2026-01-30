@@ -162,6 +162,8 @@ create view favorites as
     group by uri
     order by weight desc;
 
+alter table album add column last_modified integer;
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;

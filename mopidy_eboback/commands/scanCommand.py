@@ -93,6 +93,7 @@ class ScanCommand(commands.Command):
         )
 
         self.scan_eboplayer_files(playlist_files)
+        self.library.update_album_dates()
         self.library.cleanup_images()
         self.library.close()
 
