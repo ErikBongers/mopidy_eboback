@@ -389,3 +389,7 @@ class LocalStorageProvider:
     def update_album_dates(self):
         with self._connect() as c:
             schema.update_album_dates(c)
+
+    def get_all_refs(self):
+        with self._connect() as c:
+            return schema.get_all_refs(c)

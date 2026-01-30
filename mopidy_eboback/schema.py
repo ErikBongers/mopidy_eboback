@@ -745,3 +745,10 @@ def update_album_dates(c: Connection):
                                  from track 
                                  where album.uri = track.album)
              """)
+
+
+def get_all_refs(c: Connection):
+    def to_ref(row):
+        return {'ref_type': row[0], 'uri': row[1], 'name': row[2], 'last_modified': row[3]}
+    rows = c.execute("select ref_type, uri, name, last_modified from all_refs")
+    return list(map(to_ref, rows))

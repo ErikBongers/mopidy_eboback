@@ -171,3 +171,8 @@ class DataHandler(tornado.web.RequestHandler):
         offset = int(self.get_argument("offset", "0"))
         history = self.storage.get_history(limit, offset)
         self.write(json.dumps(history))
+
+    def get_all_refs(self):
+        refs = self.storage.get_all_refs()
+        self.set_header("Content-Type", 'application/json')
+        self.write(json.dumps(refs))
