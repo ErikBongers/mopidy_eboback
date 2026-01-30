@@ -32,7 +32,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.finish()
 
     def get(self, data_path: str):
-        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history"]:
+        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history", "get_all_refs"]:
             func = getattr(self, data_path)
             func()
             return
