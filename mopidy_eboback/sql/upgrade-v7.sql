@@ -164,6 +164,31 @@ create view favorites as
 
 alter table album add column last_modified integer;
 
+create view all_refs as
+select 'album' as ref_type, uri, name, last_modified from album
+union
+select 'track' as ref_type, uri, name, last_modified from track
+union
+select 'artist' as ref_type, uri, name, null as last_modified from artist
+union
+select distinct 'genre' as ref_type, replacement as uri, replacement as name, null as last_modified
+from genres
+where replacement is not null and replacement != ''
+union
+select distinct 'genre' as ref_type, genre as uri, genre as name, null as last_modified
+from genres
+where replacement is null
+union
+select 'playlist' as ref_type, uri, name, null as last_modfied from playlists;
+
+
+create view genres as
+        select distinct
+            coalesce(genre, 'null') as genre,
+            genre_replace.new_name as replacement
+        from track
+        LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name;
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
