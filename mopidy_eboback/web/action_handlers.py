@@ -122,7 +122,6 @@ class DataHandler(tornado.web.RequestHandler):
             )
 
     def get_genres(self):
-        self.set_header("Content-Type", 'application/json')
         with self._connect() as c:
             genres: list[GenreDefRow] = schema.get_genres(c)
             # add uri
@@ -142,6 +141,7 @@ class DataHandler(tornado.web.RequestHandler):
                     'replacement': genre['replacement']
                 }
                 genre_defs.append(genre_def)
+            self.set_header("Content-Type", 'application/json')
             self.write(json.dumps(genre_defs))
 
     def write_root_meta(self):
@@ -164,12 +164,14 @@ class DataHandler(tornado.web.RequestHandler):
 
     def get_remembers(self):
         lines = self.storage.read_remembers()
+        self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(lines))
 
     def get_history(self):
         limit = int(self.get_argument("limit", "99999"))
         offset = int(self.get_argument("offset", "0"))
         history = self.storage.get_history(limit, offset)
+        self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(history))
 
     def get_all_refs(self):
