@@ -13,7 +13,7 @@ from mutagen import FileType
 from wavinfo import WavInfoReader
 
 from mopidy_eboback import storage, mtimes, translator
-from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.storage import LocalStorageProvider, ImageDef
 from mopidy_eboback.translator import path_to_track_uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
@@ -92,9 +92,10 @@ class ScanCommand(commands.Command):
             limit=limit,
         )
 
+        self.library.cleanup_images()
+
         self.scan_eboplayer_files(playlist_files)
         self.library.update_album_dates()
-        self.library.cleanup_images()
         self.library.close()
 
         mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
@@ -138,7 +139,7 @@ class ScanCommand(commands.Command):
                             uri="eboback:stream:" + item['uri'],
                             genre=item['genre']
                         )
-                        self.library.add_stream_track(track, item['image'], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
+                        self.library.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
                         self.library.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
 
             else:

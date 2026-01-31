@@ -23,11 +23,15 @@ create table playlists (
 );
 
 create table images (
+    id INTEGER  PRIMARY KEY AUTOINCREMENT,
     uri TEXT,
-    file_path TEXT
+    file_path TEXT,
+    width INTEGER,
+    height INTEGER
 );
 
 create index images_uri_index on images (uri);
+create index images_path_index on images (file_path);
 
 create table playlist_refs
 (

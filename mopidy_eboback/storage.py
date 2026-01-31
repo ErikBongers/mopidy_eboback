@@ -10,6 +10,7 @@ from sqlite3 import Connection
 from typing import TypedDict, cast
 
 import uritools
+from mopidy.models import Track
 
 from . import Extension, schema, translator
 from .json_encoder import CompactJSONEncoder
@@ -54,6 +55,11 @@ empty_root_meta: RootMetaDef = {
     "saved_stream_lines": []
 }
 
+ImageDef = TypedDict("ImageDef", {
+    "width": int | None,
+    "height": int | None,
+    "path": str
+})
 
 def check_dirs_and_files(config):
     if not pathlib.Path(config["eboback"]["media_dir"]).is_dir():
@@ -123,8 +129,12 @@ def get_image_type_from_header(header: bytes) -> str:
 
 class LocalStorageProvider:
     def __init__(self, config):
+        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         self._config = ext_config = config[Extension.ext_name]
+        logger.info(self._config)
+        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         self._media_dir = pathlib.Path(ext_config["media_dir"])
+        logger.info(self._media_dir)
         self._data_dir = Extension.get_data_dir(config)
         self._image_dir = Extension.get_image_dir(config)
         self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
@@ -141,11 +151,11 @@ class LocalStorageProvider:
     def begin(self):
         return schema.tracks(self._connect())
 
-    def add(self, track, tags=None, duration=None):
+    def add(self, track: Track, tags=None, duration=None):
         logger.debug("Adding track: %s", track)
-        images = None
+        images: dict[str, ImageDef] = {}
         file_path = translator.local_uri_to_path(track.uri, self._media_dir)
-        file_dir = str(file_path.parent)
+        file_dir: str = str(file_path.parent)
         if track.album and track.album.name:  # FIXME: album required
             try:
                 if tags is not None:
@@ -155,17 +165,24 @@ class LocalStorageProvider:
                 logger.warning("Error extracting images for %s: %s", file_path.as_uri(), e)
         try:
             track = self._validate_track(track)
-            schema.insert_track(self._connect(), track, images, file_dir)
+            image_strings = set([image["path"] for image in images.values()])
+            schema.insert_track(self._connect(), track, image_strings, file_dir)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
-    def add_stream_track(self, track, image_path: str, exclude_streamlines: list[str], program_titles: list[str]):
+    def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):
         try:
             exclude_str = "\n".join(exclude_streamlines)
             program_titles_str = "\n".join(program_titles)
             schema.insert_stream_track(self._connect(), track, exclude_str, program_titles_str)
-            if image_path:
-                schema.insert_image(self._connect(), track.uri, "/eboback/media" + image_path)
+            logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx image;" + image)
+            if image:
+                new_path = self._media_dir / image
+                logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx new_path;" + str(new_path))
+
+                image_def = self._get_or_create_image_file(new_path, None)
+                logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx iamge created???;")
+                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
@@ -265,34 +282,44 @@ class LocalStorageProvider:
                 logger.info(f"Deleting file {image_path.as_uri()}")
                 image_path.unlink()
 
-    def _extract_images(self, uri, tags):
-        images = set()  # filter duplicate images, e.g. embedded/external
+    def _extract_images(self, uri, tags) -> dict[str, ImageDef]:
+        images: dict[str, ImageDef] = {}  # filter duplicate images, e.g. embedded/external
         for image in tags.get("image", []) + tags.get("preview-image", []):
             try:
                 # FIXME: gst.Buffer or plain str/bytes type?
                 data = getattr(image, "data", image)
-                images.add(self._get_or_create_image_file(None, data))
+                image_def = self._get_or_create_image_file(None, data)
+                images[image_def["path"]] = image_def
             except Exception as e:
                 logger.warning("Error extracting images for %r: %r", uri, e)
         # look for external album art
-        track_path = translator.local_uri_to_path(uri, self._media_dir)
+        track_path: pathlib.Path = translator.local_uri_to_path(uri, self._media_dir)
         dir_path = track_path.parent
         for pattern in self._patterns:
             for match_path in dir_path.glob(pattern):
                 try:
-                    images.add(self._get_or_create_image_file(match_path))
+                    image_def = self._get_or_create_image_file(match_path)
+                    images[image_def["path"]] = image_def
                 except Exception as e:
                     logger.warning(
                         f"Cannot read image file {match_path.as_uri()}: {e!r}"
                     )
         return images
 
-    def _get_or_create_image_file(self, path, data=None):
+    def _get_or_create_image_file(self, path: pathlib.Path | None, data=None) -> ImageDef:
+        logger.info("crdate sdf,ksdf dsfc" + str(path))
         if not data:
+            logger.info("rrrrrrrrr")
             with open(path, "rb") as f:
                 header = f.read(MIN_BYTES_FOR_IMAGE_TYPE)
+                logger.info("ssssssssss")
 
-                what = get_image_type_from_header(header)
+                file_ext = path.suffix.lower()
+                if file_ext == ".svg":
+                    what = "svg"
+                else:
+                    what = get_image_type_from_header(header)
+                logger.info("WHAT???? " + what)
                 data_source = path.as_uri()
                 data = header + f.read()
         else:
@@ -303,6 +330,7 @@ class LocalStorageProvider:
         digest = hashlib.md5(data).hexdigest()
         width = None
         height = None
+        logger.info("WWWWWWWWWWW")
         try:
             if what == "png":
                 width, height = get_image_size_png(data)
@@ -310,6 +338,8 @@ class LocalStorageProvider:
                 width, height = get_image_size_gif(data)
             elif what == "jpeg":
                 width, height = get_image_size_jpeg(data)
+            elif what == "svg":
+                width, height = 9999, 9999
         except Exception as e:
             logger.error("Error getting image size for %r: %r", data_source, e)
         if width and height:
@@ -322,7 +352,10 @@ class LocalStorageProvider:
                 f"Creating file {image_path.as_uri()} from {data_source}"
             )
             image_path.write_bytes(data)
-        return uritools.urijoin(self._base_uri, name)
+        uri: str = uritools.urijoin(self._base_uri, name)
+        logger.info("RETWSEFS Scrdate sdf,ksdf dsfc")
+
+        return {"width": width, "height": height, "path": uri}
 
     def get_album_path_and_path_counts(self):
         return schema.get_album_paths_and_path_counts(self._connect())
