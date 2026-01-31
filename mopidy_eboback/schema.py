@@ -756,8 +756,8 @@ def update_album_dates(c: Connection):
 
 def get_all_refs(c: Connection):
     def to_ref(row):
-        return {'ref_type': row[0], 'uri': row[1], 'name': row[2], 'last_modified': row[3]}
-    rows = c.execute("select ref_type, uri, name, last_modified from all_refs")
+        return {'ref_type': row[0], 'uri': row[1], 'name': row[2], 'last_modified': row[3], 'id_min_image': row[4], 'id_max_image': row[5]}
+    rows = c.execute("select ref_type, uri, name, last_modified, id_min_image, id_max_image from all_refs")
     return list(map(to_ref, rows))
 
 
@@ -769,4 +769,11 @@ def update_album_images(c: Connection):
         from track
         join images on track.uri = images.uri
         where album is not null
+        """)
+    c.execute("""
+        update album
+        set id_max_image = album_images_min_max.max_id,
+            id_min_image = album_images_min_max.min_id
+        from album_images_min_max
+        where album.uri = album_images_min_max.uri
         """)

@@ -169,22 +169,44 @@ create view favorites as
 alter table album add column last_modified integer;
 
 create view all_refs as
-select 'album' as ref_type, uri, name, last_modified from album
+-- ALL_REFS for tracks without an album
+with max_images as (
+    select track.*, images.id as id_max_image, row_number() over (partition by track.uri order by width*height desc) as rank
+    from track
+    left outer join images on track.uri = images.uri
+    where track.album is null
+    ),
+    min_images as (
+    select track.*, images.id as id_min_image, row_number() over (partition by track.uri order by width*height) as rank
+    from track
+    left outer join images on track.uri = images.uri
+    where track.album is null
+    )
+select 'track' as ref_type, max_images.uri, max_images.name, max_images.last_modified, max_images.id_max_image, min_images.id_min_image
+from max_images, min_images
+where max_images.rank = 1
+and min_images.rank = 1
+and max_images.uri = min_images.uri
 union
-select 'track' as ref_type, uri, name, last_modified from track
+-- ALL_REFS for tracks with an album
+select 'track' as ref_type, track.uri, track.name, track.last_modified, album.id_min_image, album.id_max_image
+from track, album
+where track.album = album.uri
 union
-select 'artist' as ref_type, uri, name, null as last_modified from artist
+select 'album' as ref_type, uri, name, last_modified, id_min_image, id_max_image from album
 union
-select distinct 'genre' as ref_type, replacement as uri, replacement as name, null as last_modified
+select 'artist' as ref_type, uri, name, null as last_modified, null, null from artist
+union
+select distinct 'genre' as ref_type, replacement as uri, replacement as name, null, null, null
 from genres
 where replacement is not null and replacement != ''
 union
-select distinct 'genre' as ref_type, genre as uri, genre as name, null as last_modified
+select distinct 'genre' as ref_type, genre as uri, genre as name, null, null, null
 from genres
 where replacement is null
 union
-select 'playlist' as ref_type, uri, name, null as last_modfied from playlists;
-
+select 'playlist' as ref_type, uri, name, null, null, null
+from playlists;
 
 create view genres as
         select distinct
@@ -201,6 +223,28 @@ create table album_images
 );
 
 create unique index album_images_album_uri_image_id_idx on album_images (album_uri, image_id);
+
+create view album_images_min_max as
+with max_images as (
+    select album_images.album_uri, id, width*height as size, row_number() over (partition by album_images.album_uri order by width*height desc) as rank
+    from album_images
+    join images on images.id = album_images.image_id
+    order by album_images.album_uri
+    ),
+    min_images as (
+    select album_images.album_uri, id, width*height as size, row_number() over (partition by album_images.album_uri order by width*height) as rank
+    from album_images
+    join images on images.id = album_images.image_id
+    order by album_images.album_uri
+    )
+select max_images.album_uri as uri, min_images.id as min_id, max_images.id as max_id
+from max_images, min_images
+where max_images.album_uri = min_images.album_uri
+and max_images.rank = 1
+and min_images.rank = 1;
+
+alter table album add column id_max_image integer;
+alter table album add column id_min_image integer;
 
 PRAGMA user_version = 8;  -- update schema version
 
