@@ -419,3 +419,7 @@ class LocalStorageProvider:
     def get_all_refs(self):
         with self._connect() as c:
             return schema.get_all_refs(c)
+
+    def update_album_images(self):
+        with self._connect() as c:
+            schema.update_album_images(self._connect())

@@ -96,6 +96,7 @@ class ScanCommand(commands.Command):
 
         self.scan_eboplayer_files(playlist_files)
         self.library.update_album_dates()
+        self.library.update_album_images()
         self.library.close()
 
         mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")

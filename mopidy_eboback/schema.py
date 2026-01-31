@@ -759,3 +759,14 @@ def get_all_refs(c: Connection):
         return {'ref_type': row[0], 'uri': row[1], 'name': row[2], 'last_modified': row[3]}
     rows = c.execute("select ref_type, uri, name, last_modified from all_refs")
     return list(map(to_ref, rows))
+
+
+def update_album_images(c: Connection):
+    c.execute("delete from album_images")
+    c.execute("""
+        insert into album_images( album_uri, image_id)
+        select distinct album as album_uri, images.id
+        from track
+        join images on track.uri = images.uri
+        where album is not null
+        """)

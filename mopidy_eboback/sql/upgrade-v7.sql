@@ -193,6 +193,15 @@ create view genres as
         from track
         LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name;
 
+create table album_images
+(
+    album_uri TEXT not null,
+    image_id INTEGER not null,
+    FOREIGN KEY (album_uri) REFERENCES album(uri) ON DELETE CASCADE
+);
+
+create unique index album_images_album_uri_image_id_idx on album_images (album_uri, image_id);
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
