@@ -167,6 +167,8 @@ class LocalStorageProvider:
             track = self._validate_track(track)
             image_strings = set([image["path"] for image in images.values()])
             schema.insert_track(self._connect(), track, image_strings, file_dir)
+            for image_def in images.values():
+                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
@@ -175,13 +177,10 @@ class LocalStorageProvider:
             exclude_str = "\n".join(exclude_streamlines)
             program_titles_str = "\n".join(program_titles)
             schema.insert_stream_track(self._connect(), track, exclude_str, program_titles_str)
-            logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx image;" + image)
             if image:
                 new_path = self._media_dir / image
-                logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx new_path;" + str(new_path))
 
                 image_def = self._get_or_create_image_file(new_path, None)
-                logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx iamge created???;")
                 schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
@@ -307,19 +306,15 @@ class LocalStorageProvider:
         return images
 
     def _get_or_create_image_file(self, path: pathlib.Path | None, data=None) -> ImageDef:
-        logger.info("crdate sdf,ksdf dsfc" + str(path))
         if not data:
-            logger.info("rrrrrrrrr")
             with open(path, "rb") as f:
                 header = f.read(MIN_BYTES_FOR_IMAGE_TYPE)
-                logger.info("ssssssssss")
 
                 file_ext = path.suffix.lower()
                 if file_ext == ".svg":
                     what = "svg"
                 else:
                     what = get_image_type_from_header(header)
-                logger.info("WHAT???? " + what)
                 data_source = path.as_uri()
                 data = header + f.read()
         else:
@@ -330,7 +325,6 @@ class LocalStorageProvider:
         digest = hashlib.md5(data).hexdigest()
         width = None
         height = None
-        logger.info("WWWWWWWWWWW")
         try:
             if what == "png":
                 width, height = get_image_size_png(data)
@@ -353,7 +347,6 @@ class LocalStorageProvider:
             )
             image_path.write_bytes(data)
         uri: str = uritools.urijoin(self._base_uri, name)
-        logger.info("RETWSEFS Scrdate sdf,ksdf dsfc")
 
         return {"width": width, "height": height, "path": uri}
 

@@ -478,12 +478,10 @@ def insert_image(c: Connection, uri, file_path, width: int, height: int):
     rows = c.execute("select id from images where file_path = ?", (file_path,))
     image_id = rows.fetchone()
     if image_id:
-        logger.info(f"Existing image id {image_id}")
         return image_id
 
     rows = c.execute("insert into images (uri, file_path, width, height) values(?, ?, ?, ?) returning id", (uri, file_path, width, height))
     image_id =  rows.fetchone()
-    logger.info(f"Inserted image id {image_id}")
     return image_id
 
 def delete_track(c, uri):
