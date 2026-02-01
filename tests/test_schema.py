@@ -59,7 +59,7 @@ class SchemaTest(unittest.TestCase):
 
     def setUp(self):
         self.connection = sqlite3.connect(DBPATH, factory=schema.Connection)
-        schema.load(self.connection)
+        schema.create_or_update_db(self.connection)
         for track in self.tracks:
             schema.insert_track(self.connection, track)
 

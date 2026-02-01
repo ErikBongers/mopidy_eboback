@@ -140,10 +140,14 @@ class LocalStorageProvider:
         self._dbpath = self._data_dir / "library.db"
         self._connection: Connection | None = None
 
-    def load(self):
+    def create_or_update_db(self) -> int | None:
         with self._connect() as connection:
-            version = schema.load(connection)
+            version = schema.create_or_update_db(connection)
             logger.debug("Using SQLite database schema v%s", version)
+            return version
+
+    def count_tracks(self) -> int:
+        with self._connect() as connection:
             return schema.count_tracks(connection)
 
     def begin(self):

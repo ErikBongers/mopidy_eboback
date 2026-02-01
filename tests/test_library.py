@@ -37,7 +37,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
         ).proxy()
         self.library = self.backend.library
         self.storage = storage.LocalStorageProvider(self.config)
-        self.storage.load()
+        self.storage.create_or_update()
 
     def tearDown(self):  # noqa: N802
         pykka.ActorRegistry.stop_all()
@@ -73,7 +73,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
         self.storage.add(Track(uri="eboback:track:track.mp3"))
         self.storage.close()
         self.storage.clear()
-        assert self.storage.load() == 0
+        assert self.storage.create_or_update() == 0
 
     def test_search_uri(self):
         lib = self.library

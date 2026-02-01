@@ -201,7 +201,8 @@ class Connection(sqlite3.Connection):
         self.row_factory = self.Row
 
 
-def load(c):
+def create_or_update_db(c) -> int | None:
+    upgraded_to_version = None
     sql_dir = pathlib.Path(__file__).parent / "sql"
     user_version = c.execute("PRAGMA user_version").fetchone()[0]
     while user_version != schema_version:
@@ -216,7 +217,8 @@ def load(c):
         new_version = c.execute("PRAGMA user_version").fetchone()[0]
         assert new_version != user_version
         user_version = new_version
-    return user_version
+        upgraded_to_version = new_version
+    return upgraded_to_version
 
 
 def tracks(c):

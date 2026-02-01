@@ -73,42 +73,84 @@ class ScanCommand(commands.Command):
         return self.just_run_it(config, args.force, args.limit)
 
     def just_run_it(self, config, force: bool = False, limit: int = None):
-        self.media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
-        self.timeout = config["eboback"]["scan_timeout"]
+        self.init_scan(config, force, limit) #todo: force the order of these function calls?
 
-        self.library = storage.LocalStorageProvider(config)
-        file_mtimes = self._find_files(follow_symlinks=config["eboback"]["scan_follow_symlinks"])
-        files_to_update, files_in_library = self._check_tracks_in_library( file_mtimes=file_mtimes, force_rescan=force)
+        upgraded_to_version = self.create_or_upgrad_db()
+        if upgraded_to_version:
+            pass # log message.
 
-        self.included_exts = [ext.lower() for ext in config["eboback"]["included_file_extensions"]]
-        self.excluded_exts = [ext.lower() for ext in config["eboback"]["excluded_file_extensions"]]
-        files_to_scan, playlist_files = self._find_files_to_scan(file_mtimes=file_mtimes, files_in_library=files_in_library)
-        files_to_update.update(files_to_scan)
+        self.find_files()
 
-        self._scan_metadata(
-            file_mtimes=file_mtimes,
-            files=files_to_update,
-            flush_threshold=config["eboback"]["scan_flush_threshold"],
-            limit=limit,
-        )
+        self.compare_files_to_library()
+        # log lib files, removed files and changed files.
+
+        if self.remove_tracks():
+            pass # log message.
+
+        self.include_and_filter_new_files()
+
+        self.scan_metadata()
 
         self.library.cleanup_images()
 
-        self.scan_eboplayer_files(playlist_files)
-        self.library.update_album_dates()
-        self.library.update_album_images()
+        self.scan_eboplayer_files(self.playlist_files)
+
+        self.update_db()
+
         self.library.close()
 
-        mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
-        print(mutagen_tags)
-
-        wav_tags = WavInfoReader("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
-        print(wav_tags)
-        info_metadata = wav_tags.info
-        print(info_metadata)
+        # self.test_meta_scanners()
 
         return 0
 
+
+    def test_meta_scanners(self):
+        # mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
+        # print(mutagen_tags)
+        #
+        # wav_tags = WavInfoReader("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")
+        # print(wav_tags)
+        # info_metadata = wav_tags.info
+        # print(info_metadata)
+        pass
+
+
+    def init_scan(self, config, force: bool = False, limit: int = None):
+        self.config = config
+        self.force = force
+        self.limit = limit
+        self.media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
+        self.timeout = config["eboback"]["scan_timeout"]
+        self.flush_threshold=config["eboback"]["scan_flush_threshold"]
+        self.library = storage.LocalStorageProvider(config)
+
+    def create_or_upgrad_db(self) -> int | None:
+        return self.library.create_or_update_db()
+
+    def find_files(self):
+        self.file_mtimes = self._find_files(follow_symlinks=self.config["eboback"]["scan_follow_symlinks"])
+
+    def compare_files_to_library(self):
+        changed_files, all_library_files, uris_of_removed_files = self._compare_files_to_library(file_mtimes=self.file_mtimes, force_rescan=self.force)
+        self.files_to_update = changed_files
+        self.files_in_library = all_library_files
+        self.uris_to_remove = uris_of_removed_files
+
+    def remove_tracks(self) -> int | None:
+        logger.info(f"Removing {len(self.uris_to_remove)} missing tracks")
+        for local_uri in self.uris_to_remove:
+            self.library.remove(local_uri)
+        if len(self.uris_to_remove) > 0:
+            return len(self.uris_to_remove)
+        else:
+            return None
+
+    def include_and_filter_new_files(self):
+        self.included_exts = [ext.lower() for ext in self.config["eboback"]["included_file_extensions"]]
+        self.excluded_exts = [ext.lower() for ext in self.config["eboback"]["excluded_file_extensions"]]
+        files_to_scan, playlist_files = self.get_and_filter_new_files(file_mtimes=self.file_mtimes, files_in_library=self.files_in_library)
+        self.files_to_update.update(files_to_scan)
+        self.playlist_files = playlist_files
 
     def fix_encoding(self, title: str) -> str:
         try:
@@ -119,6 +161,9 @@ class ScanCommand(commands.Command):
             title = title.encode('latin1').decode('windows-1252')
         return title
 
+    def update_db(self):
+        self.library.update_album_dates()
+        self.library.update_album_images()
 
     def scan_eboplayer_files(self, playlist_files: set[pathlib.Path]):
         from mopidy_eboback.lib import text_scanner_py
@@ -176,13 +221,13 @@ class ScanCommand(commands.Command):
 
         return file_mtimes
 
-    def _check_tracks_in_library(self, *, file_mtimes, force_rescan):
-        num_tracks = self.library.load()
+    def _compare_files_to_library(self, *, file_mtimes, force_rescan):
+        num_tracks = self.library.count_tracks()
         logger.info(f"Checking {num_tracks} tracks from library")
 
-        uris_to_remove = set()
-        files_to_update = set()
-        files_in_library = set()
+        uris_of_removed_files = set()
+        changed_files = set()
+        all_library_files = set()
 
         for track in self.library.begin():
             if track.uri.startswith("eboback:stream:"):
@@ -192,25 +237,16 @@ class ScanCommand(commands.Command):
                 mtime = file_mtimes.get(absolute_path)
                 if mtime is None:
                     logger.debug(f"Removing {track.uri}: File not found")
-                    uris_to_remove.add(track.uri)
+                    uris_of_removed_files.add(track.uri)
                 elif mtime > track.last_modified or force_rescan:
-                    files_to_update.add(absolute_path)
-                files_in_library.add(absolute_path)
+                    changed_files.add(absolute_path)
+                all_library_files.add(absolute_path)
 
-        logger.info(f"Removing {len(uris_to_remove)} missing tracks")
-        for local_uri in uris_to_remove:
-            self.library.remove(local_uri)
+        return changed_files, all_library_files, uris_of_removed_files
 
-        return files_to_update, files_in_library
-
-    def _find_files_to_scan(
-        self,
-        *,
-        file_mtimes,
-        files_in_library,
-    ) -> tuple[set[pathlib.Path], set[pathlib.Path]]:
-        files_to_update = set()
-        meta_files = set()
+    def get_and_filter_new_files(self, *, file_mtimes, files_in_library) -> tuple[set[pathlib.Path], set[pathlib.Path]]:
+        new_files = set()
+        playlist_files = set()
 
         def _is_hidden_file(rel_path):
             return any(p.startswith(".") for p in rel_path.parts)
@@ -225,7 +261,7 @@ class ScanCommand(commands.Command):
             relative_path = absolute_path.relative_to(self.media_dir)
 
             if is_playlist_file(relative_path):
-                meta_files.add(absolute_path)
+                playlist_files.add(absolute_path)
                 continue
 
             if (
@@ -233,28 +269,21 @@ class ScanCommand(commands.Command):
                 and match_filters(relative_path)
                 and absolute_path not in files_in_library
             ):
-                files_to_update.add(absolute_path)
+                new_files.add(absolute_path)
 
         logger.info(
-            f"Found {len(files_to_update)} tracks which need to be updated"
+            f"Found {len(new_files)} tracks which need to be updated"
         )
-        return files_to_update, meta_files
+        return new_files, playlist_files
 
-    def _scan_metadata(
-        self,
-        *,
-        file_mtimes,
-        files,
-        flush_threshold,
-        limit,
-    ):
+    def scan_metadata(self):
         logger.info("Scanning...")
 
-        files = sorted(files)[:limit]
+        files = sorted(self.files_to_update)[:self.limit]
 
         logger.info(f"Timeoout: {self.timeout} ")
         scanner = scan.Scanner(self.timeout)
-        progress = _ScanProgress(batch_size=flush_threshold, total=len(files))
+        progress = _ScanProgress(batch_size=self.flush_threshold, total=len(files))
 
         for absolute_path in files:
             try:
@@ -277,7 +306,7 @@ class ScanCommand(commands.Command):
                     )
                 else:
                     local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
-                    mtime = file_mtimes.get(absolute_path)
+                    mtime = self.file_mtimes.get(absolute_path)
                     track: Track = tags.convert_tags_to_track(result.tags).replace(
                         uri=local_uri,
                         length=result.duration,
@@ -296,14 +325,14 @@ class ScanCommand(commands.Command):
                     if absolute_path.suffix.lower() == ".wav":
                         track = self.scan_wavinfo(absolute_path)
                         if track:
-                            mtime = file_mtimes.get(absolute_path)
+                            mtime = self.file_mtimes.get(absolute_path)
                             local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                             track = track.replace(uri=local_uri)
                             track = track.replace(last_modified=mtime)
                             self.library.add(track, None, None)
                             logger.debug(f"Added {track.uri}")
                     else:
-                        mtime = file_mtimes.get(absolute_path)
+                        mtime = self.file_mtimes.get(absolute_path)
                         local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                         track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
                         if track:

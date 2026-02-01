@@ -46,7 +46,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
 
     def load(self):
         with self._connect() as connection:
-            version = schema.load(connection)
+            version = schema.create_or_update_db(connection)
             logger.debug("Using SQLite database schema v%s", version)
             return schema.count_tracks(connection)
 
