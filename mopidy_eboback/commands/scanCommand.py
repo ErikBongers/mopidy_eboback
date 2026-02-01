@@ -1,11 +1,10 @@
-import logging
 import json
+import logging
 import pathlib
-import string
 import time
-from typing import Any, TypedDict
-import mutagen
+from typing import TypedDict
 
+import mutagen
 from mopidy import commands
 from mopidy.audio import tags, scan
 from mopidy.models import Track, Artist, Album
@@ -13,7 +12,7 @@ from mutagen import FileType
 from wavinfo import WavInfoReader
 
 from mopidy_eboback import storage, mtimes, translator
-from mopidy_eboback.storage import LocalStorageProvider, ImageDef
+from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.translator import path_to_track_uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
@@ -97,12 +96,19 @@ class ScanCommand(commands.Command):
 
         self.update_db()
 
+        self.run_update_meta_cmd()
+
         self.storage.close()
 
         # self.test_meta_scanners()
 
         return 0
 
+    def run_update_meta_cmd(self):
+        from mopidy_eboback.commands import UpdateMetaCommand
+
+        update_meta_command = UpdateMetaCommand()
+        update_meta_command.just_run_it_with_storage(self.config, self.storage)
 
     def test_meta_scanners(self):
         # mutagen_tags = mutagen.File("/media/DATA1/Music/Gidon Kremer/Hommage À Piazzolla/07 Soledad.wav")

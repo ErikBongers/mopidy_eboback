@@ -22,7 +22,16 @@ class UpdateMetaCommand(commands.Command):
         return self.just_run_it(config)
 
     def just_run_it(self, config):
-        self.storage = LocalStorageProvider(config)
+        storage = LocalStorageProvider(config) #todo: implement python `with` ?
+
+        res =  self.just_run_it_with_storage(config, storage)
+
+        storage.close()
+        self.storage = None
+        return res
+
+    def just_run_it_with_storage(self, config, storage: LocalStorageProvider):
+        self.storage = storage
 
         self.media_dir = Path(config["eboback"]["media_dir"]).resolve()
 
@@ -34,6 +43,7 @@ class UpdateMetaCommand(commands.Command):
 
         logger.error("Unable to update meta data")
         return 1
+
 
     def update_albums_meta_data(self):
         paths = self.storage.get_album_path_and_path_counts() #todo: try to use a class as a type annotation, even though Row isn't of that type...the Row class could be used as a base class though...
@@ -54,7 +64,6 @@ class UpdateMetaCommand(commands.Command):
         for warning in unique_warnings:
             logger.warning(warning)
 
-        self.storage.close()
         return True
 
     def try_update_album_meta_from(self, album, meta_file_path: Path, already_used_file: Path | None, file_is_for_named_album: bool):
