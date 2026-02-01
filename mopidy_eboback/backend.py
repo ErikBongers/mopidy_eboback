@@ -40,5 +40,4 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
         self.storage = storage.LocalStorageProvider(config)
 
     def track_playback_started(self, tl_track):
-        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbackend captured track_playback_started")
         self.storage.insert_history_line(tl_track.track.name, tl_track.track.uri, "track")

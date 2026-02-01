@@ -130,10 +130,7 @@ def get_image_type_from_header(header: bytes) -> str:
 
 class LocalStorageProvider:
     def __init__(self, config):
-        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         self._config = ext_config = config[Extension.ext_name]
-        logger.info(self._config)
-        logger.info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         self._media_dir = pathlib.Path(ext_config["media_dir"])
         logger.info(self._media_dir)
         self._data_dir = Extension.get_data_dir(config)

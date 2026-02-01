@@ -324,21 +324,6 @@ class ModifiedStaticFiledHandler(tornado.web.RequestHandler):
         """For subclass to add extra headers to the response"""
         pass
 
-    def get_cache_time(
-        self, path: str, modified: Optional[datetime.datetime], mime_type: str
-    ) -> int:
-        """Override to customize cache control behavior.
-
-        Return a positive number of seconds to make the result
-        cacheable for that amount of time or 0 to mark resource as
-        cacheable for an unspecified amount of time (subject to
-        browser heuristics).
-
-        By default returns cache expiry of 10 years for resources requested
-        with ``v`` argument.
-        """
-        return self.CACHE_MAX_AGE if "v" in self.request.arguments else 0
-
     @classmethod
     def make_static_url(
         cls, settings: Dict[str, Any], path: str, include_version: bool = True

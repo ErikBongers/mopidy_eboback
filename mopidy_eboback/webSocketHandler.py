@@ -16,7 +16,7 @@ def broadcast(message):
 class WebsocketHandler(tornado.websocket.WebSocketHandler):
 
     def initialize(self, config):
-        logger.info("eboplayer websocket initializedxxx")
+        logger.info("eboplayer websocket initialized")
         self.config = config
         self.ioloop = tornado.ioloop.IOLoop.current()
         logger.info(config)
