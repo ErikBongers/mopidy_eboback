@@ -56,7 +56,7 @@ class Extension(ext.Extension):
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
-            (r"/" + IMG_ID_PREFIX + r"/(.+)", ImageByIdHandler, {"path": "/", "config": config}), # "/" means: expecting absolute paths! Needed because StaticFileHandler requires the path to be in the passed root.
+            (r"/" + IMG_ID_PREFIX + r"/(.+)", ImageByIdHandler, {"data_dir": data_dir, "path": "/", "config": config}), # "/" means: expecting absolute paths! Needed because StaticFileHandler requires the path to be in the passed root.
             (r"/" + MEDIA_URI_PREFIX + r"/(.+)", ImageHandler, {"path": media_dir}),
             (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
             (r"/ws2/?", WebsocketHandler, {"config": config}),  # Why this pattern??? I know it's in mopidy http somewhere, but still...

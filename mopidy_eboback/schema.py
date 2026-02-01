@@ -781,3 +781,11 @@ def update_album_images(c: Connection):
         from album_images_min_max
         where album.uri = album_images_min_max.uri
         """)
+
+ImageDict = TypedDict('ImageDict', {'id': int, 'uri': str, 'file_path': str, 'width': int, 'height': int})
+
+def get_all_images(c) -> list[ImageDict]:
+    def to_image(row):
+        return {'id': row[0], 'uri': row[1], 'file_path': row[2], 'width': row[3], 'height': row[4]}
+    rows = c.execute("select * from images order by id")
+    return list(map(to_image, rows))

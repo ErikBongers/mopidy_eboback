@@ -14,7 +14,7 @@ from mopidy.models import Track
 
 from . import Extension, schema, translator
 from .json_encoder import CompactJSONEncoder
-from .schema import GenreDefRow
+from .schema import GenreDefRow, ImageDict
 
 logger = logging.getLogger(__name__)
 
@@ -278,8 +278,8 @@ class LocalStorageProvider:
         with self._connect() as c:
             uris = set(schema.get_image_uris(c))
         for image_path in self._image_dir.glob("**/*"):
-            if uritools.urijoin(self._base_uri, image_path.name) not in uris:
-                logger.info(f"Deleting file {image_path.as_uri()}")
+            if str(image_path) not in uris:
+                logger.info(f"Deleting file {str(image_path)}")
                 image_path.unlink()
 
     def _extract_images(self, uri, tags) -> dict[str, ImageDef]:
@@ -349,7 +349,7 @@ class LocalStorageProvider:
             image_path.write_bytes(data)
         uri: str = uritools.urijoin(self._base_uri, name)
 
-        return {"width": width, "height": height, "path": uri}
+        return {"width": width, "height": height, "path": str(image_path)}
 
     def get_album_path_and_path_counts(self):
         return schema.get_album_paths_and_path_counts(self._connect())
@@ -424,3 +424,7 @@ class LocalStorageProvider:
     def update_album_images(self):
         with self._connect() as c:
             schema.update_album_images(self._connect())
+
+    def get_all_images(self) -> list[ImageDict]:
+        with self._connect() as c:
+            return schema.get_all_images(c)

@@ -182,14 +182,14 @@ with max_images as (
     left outer join images on track.uri = images.uri
     where track.album is null
     )
-select 'track' as ref_type, max_images.uri, max_images.name, max_images.last_modified, max_images.id_max_image, min_images.id_min_image
+select case when max_images.last_modified is null then 'radio' else 'track' end as ref_type, max_images.uri, max_images.name, max_images.last_modified, max_images.id_max_image, min_images.id_min_image
 from max_images, min_images
 where max_images.rank = 1
 and min_images.rank = 1
 and max_images.uri = min_images.uri
 union
 -- ALL_REFS for tracks with an album
-select 'track' as ref_type, track.uri, track.name, track.last_modified, album.id_min_image, album.id_max_image
+select case when track.last_modified is null then 'radio' else 'track' end as ref_type, track.uri, track.name, track.last_modified, album.id_min_image, album.id_max_image
 from track, album
 where track.album = album.uri
 union
