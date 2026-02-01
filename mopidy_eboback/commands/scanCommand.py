@@ -50,7 +50,7 @@ class ScanCommand(commands.Command):
         super().__init__()
         self.excluded_exts = None
         self.included_exts = None
-        self.library: LocalStorageProvider
+        self.storage: LocalStorageProvider
         self.timeout = "1000"
         self.media_dir = None
         self.add_argument(
@@ -91,13 +91,13 @@ class ScanCommand(commands.Command):
 
         self.scan_metadata()
 
-        self.library.cleanup_images()
+        self.storage.cleanup_images()
 
         self.scan_eboplayer_files(self.playlist_files)
 
         self.update_db()
 
-        self.library.close()
+        self.storage.close()
 
         # self.test_meta_scanners()
 
@@ -122,10 +122,10 @@ class ScanCommand(commands.Command):
         self.media_dir = pathlib.Path(config["eboback"]["media_dir"]).resolve()
         self.timeout = config["eboback"]["scan_timeout"]
         self.flush_threshold=config["eboback"]["scan_flush_threshold"]
-        self.library = storage.LocalStorageProvider(config)
+        self.storage = storage.LocalStorageProvider(config)
 
     def create_or_upgrad_db(self) -> int | None:
-        return self.library.create_or_update_db()
+        return self.storage.create_or_update_db()
 
     def find_files(self):
         self.file_mtimes = self._find_files(follow_symlinks=self.config["eboback"]["scan_follow_symlinks"])
@@ -139,7 +139,7 @@ class ScanCommand(commands.Command):
     def remove_tracks(self) -> int | None:
         logger.info(f"Removing {len(self.uris_to_remove)} missing tracks")
         for local_uri in self.uris_to_remove:
-            self.library.remove(local_uri)
+            self.storage.remove(local_uri)
         if len(self.uris_to_remove) > 0:
             return len(self.uris_to_remove)
         else:
@@ -162,13 +162,13 @@ class ScanCommand(commands.Command):
         return title
 
     def update_db(self):
-        self.library.update_album_dates()
-        self.library.update_album_images()
+        self.storage.update_album_dates()
+        self.storage.update_album_images()
 
     def scan_eboplayer_files(self, playlist_files: set[pathlib.Path]):
         from mopidy_eboback.lib import text_scanner_py
 
-        self.library.delete_file_playlists()
+        self.storage.delete_file_playlists()
         logger.info("Number of playlist files found:" + str(len(playlist_files)))
         for playlist_file in playlist_files:
             playlist_text = playlist_file.read_text()
@@ -177,7 +177,7 @@ class ScanCommand(commands.Command):
                 name: str = playlist['name']
                 items = playlist['items']
                 hashdata: str = playlist_text
-                playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
+                playlist_uri = self.storage.add_playlist(name, playlist_file, hashdata)
                 for idx, item in enumerate(items):
                     if item['type'] == 'stream':
                         track = tags.convert_tags_to_track({}).replace(
@@ -185,8 +185,8 @@ class ScanCommand(commands.Command):
                             uri="eboback:stream:" + item['uri'],
                             genre=item['genre']
                         )
-                        self.library.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
-                        self.library.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
+                        self.storage.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
+                        self.storage.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
 
             else:
                 if playlist_file.suffix == ".wpl":
@@ -196,11 +196,11 @@ class ScanCommand(commands.Command):
                     name: str = wpl.name
                     items2 = wpl.items
                     hashdata: str = full_path
-                    playlist_uri = self.library.add_playlist(name, playlist_file, hashdata)
+                    playlist_uri = self.storage.add_playlist(name, playlist_file, hashdata)
                     for idx, line in enumerate(items2):
                         uri = path_to_track_uri(line.path, self.media_dir)
                         # Assuming the track will already be added during the scan, so just add the playlist ref.
-                        self.library.add_playlist_ref(playlist_uri, uri, "track", idx)
+                        self.storage.add_playlist_ref(playlist_uri, uri, "track", idx)
 
 
 
@@ -222,14 +222,14 @@ class ScanCommand(commands.Command):
         return file_mtimes
 
     def _compare_files_to_library(self, *, file_mtimes, force_rescan):
-        num_tracks = self.library.count_tracks()
+        num_tracks = self.storage.count_tracks()
         logger.info(f"Checking {num_tracks} tracks from library")
 
         uris_of_removed_files = set()
         changed_files = set()
         all_library_files = set()
 
-        for track in self.library.begin():
+        for track in self.storage.begin():
             if track.uri.startswith("eboback:stream:"):
                 pass #todo?
             else:
@@ -318,7 +318,7 @@ class ScanCommand(commands.Command):
                     name = self.fix_encoding(track.name)
                     track = track.replace(name=name)
 
-                    self.library.add(track, result.tags, result.duration)
+                    self.storage.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
                 try:
@@ -329,21 +329,21 @@ class ScanCommand(commands.Command):
                             local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                             track = track.replace(uri=local_uri)
                             track = track.replace(last_modified=mtime)
-                            self.library.add(track, None, None)
+                            self.storage.add(track, None, None)
                             logger.debug(f"Added {track.uri}")
                     else:
                         mtime = self.file_mtimes.get(absolute_path)
                         local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                         track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
                         if track:
-                            self.library.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
+                            self.storage.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
                             logger.debug(f"Added {track.uri}")
                 except Exception as error:
                     logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
 
             if progress.increment():
                 progress.log()
-                if self.library.flush():
+                if self.storage.flush():
                     logger.debug("Progress flushed")
 
         progress.log()
