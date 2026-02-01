@@ -6,7 +6,6 @@ from mopidy import config, ext
 
 __version__ = pkg_resources.get_distribution("mopidy-eboback").version
 
-
 class Extension(ext.Extension):
     dist_name = "mopidy-eboback"
     ext_name = "eboback"
@@ -46,9 +45,9 @@ class Extension(ext.Extension):
         return EbobackCommand()
 
     def webapp(self, config, core):
-        from mopidy_eboback.web.file_handlers import ImageHandler, IndexHandler
+        from mopidy_eboback.web.file_handlers import ImageHandler, IndexHandler, ImageByIdHandler
         from mopidy_eboback.web.action_handlers import DataHandler
-        from mopidy_eboback.storage import IMG_URI_PREFIX, MEDIA_URI_PREFIX
+        from mopidy_eboback.storage import IMG_URI_PREFIX, MEDIA_URI_PREFIX, IMG_ID_PREFIX
         from .webSocketHandler import WebsocketHandler
 
         data_dir = self.get_data_dir(config)
@@ -57,6 +56,7 @@ class Extension(ext.Extension):
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
+            (r"/" + IMG_ID_PREFIX + r"/(.+)", ImageByIdHandler, {"path": "/", "config": config}), # "/" means: expecting absolute paths! Needed because StaticFileHandler requires the path to be in the passed root.
             (r"/" + MEDIA_URI_PREFIX + r"/(.+)", ImageHandler, {"path": media_dir}),
             (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
             (r"/ws2/?", WebsocketHandler, {"config": config}),  # Why this pattern??? I know it's in mopidy http somewhere, but still...

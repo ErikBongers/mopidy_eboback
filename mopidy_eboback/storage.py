@@ -107,6 +107,7 @@ def get_image_size_jpeg(data):
 
 MIN_BYTES_FOR_IMAGE_TYPE = 8
 IMG_URI_PREFIX = "img"
+IMG_ID_PREFIX = "image"
 MEDIA_URI_PREFIX = "media"
 
 def get_image_type_from_header(header: bytes) -> str:

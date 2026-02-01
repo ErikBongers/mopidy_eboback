@@ -480,7 +480,11 @@ def insert_image(c: Connection, uri, file_path, width: int, height: int):
     if image_id:
         return image_id
 
-    rows = c.execute("insert into images (uri, file_path, width, height) values(?, ?, ?, ?) returning id", (uri, file_path, width, height))
+    rows = c.execute("""
+        insert into images (id, uri, file_path, width, height) 
+        values((select count(*)+1 from images), ?, ?, ?, ?) 
+        returning id""",
+        (uri, file_path, width, height))
     image_id =  rows.fetchone()
     return image_id
 
@@ -756,7 +760,7 @@ def update_album_dates(c: Connection):
 
 def get_all_refs(c: Connection):
     def to_ref(row):
-        return {'ref_type': row[0], 'uri': row[1], 'name': row[2], 'last_modified': row[3], 'id_min_image': row[4], 'id_max_image': row[5]}
+        return {'refType': row[0], 'uri': row[1], 'name': row[2], 'lastModified': row[3], 'idMinImage': row[4], 'idMaxImage': row[5]}
     rows = c.execute("select ref_type, uri, name, last_modified, id_min_image, id_max_image from all_refs")
     return list(map(to_ref, rows))
 
