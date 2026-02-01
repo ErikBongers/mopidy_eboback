@@ -17,7 +17,7 @@ def populate_tracklist(func):
     @functools.wraps(func)
     def wrapper(self):
         with deprecation.ignore("core.tracklist.add:tracks_arg"):
-            self.tl_tracks = self.core.tracklist.add(self.tracks)
+            self.tl_tracks = self.core.tracklist.add_track(self.tracks)
         return func(self)
 
     return wrapper

@@ -153,7 +153,7 @@ class LocalStorageProvider:
     def begin(self):
         return schema.tracks(self._connect())
 
-    def add(self, track: Track, tags=None, duration=None):
+    def add_track(self, track: Track, tags=None, duration=None):
         logger.debug("Adding track: %s", track)
         images: dict[str, ImageDef] = {}
         file_path = translator.local_uri_to_path(track.uri, self._media_dir)

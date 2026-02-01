@@ -40,7 +40,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
 
     def add_track(self, uri):
         track = Track(uri=uri, length=4464)
-        self.tracklist.add([track])
+        self.tracklist.add_track([track])
 
     def trigger_about_to_finish(self):
         # Flush any queued core calls.
@@ -418,7 +418,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
         # shuffle.
         assert next_tlid == expected_tl_track.tlid
 
-        self.tracklist.add(self.tracks[:1])
+        self.tracklist.add_track(self.tracks[:1])
 
         old_next_tlid = next_tlid
         expected_tl_track = self.tracklist.get_tl_tracks().get()[-1]
@@ -574,7 +574,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
         # shuffle.
         assert eot_tlid == expected_tl_track.tlid
 
-        self.tracklist.add(self.tracks[:1])
+        self.tracklist.add_track(self.tracks[:1])
 
         old_eot_tlid = eot_tlid
         expected_tl_track = self.tracklist.get_tl_tracks().get()[-1]
@@ -666,20 +666,20 @@ class LocalPlaybackProviderTest(unittest.TestCase):
 
     @mock.patch("mopidy.core.playback.PlaybackController._on_tracklist_change")
     def test_on_tracklist_change_gets_called(self, change_mock):
-        self.tracklist.add([Track()]).get()
+        self.tracklist.add_track([Track()]).get()
         change_mock.assert_called_once_with()
 
     @populate_tracklist
     def test_on_tracklist_change_when_playing(self):
         self.playback.play().get()
         current_track = self.playback.get_current_track().get()
-        self.tracklist.add([self.tracks[2]])
+        self.tracklist.add_track([self.tracks[2]])
         self.assert_state_is(PlaybackState.PLAYING)
         self.assert_current_track_is(current_track)
 
     @populate_tracklist
     def test_on_tracklist_change_when_stopped(self):
-        self.tracklist.add([self.tracks[2]])
+        self.tracklist.add_track([self.tracks[2]])
         self.assert_state_is(PlaybackState.STOPPED)
         self.assert_current_track_is(None)
 
@@ -688,7 +688,7 @@ class LocalPlaybackProviderTest(unittest.TestCase):
         self.playback.play().get()
         self.playback.pause()
         current_track = self.playback.get_current_track().get()
-        self.tracklist.add([self.tracks[2]])
+        self.tracklist.add_track([self.tracks[2]])
         self.assert_state_is(PlaybackState.PAUSED)
         self.assert_current_track_is(current_track)
 

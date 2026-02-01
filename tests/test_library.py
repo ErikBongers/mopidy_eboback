@@ -53,7 +53,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
         )
         track = Track(name=name, uri=uri)
         self.storage.begin()
-        self.storage.add(track)
+        self.storage.add_track(track)
         self.storage.close()
         assert [track] == self.library.lookup(uri).get()
 
@@ -64,13 +64,13 @@ class LocalLibraryProviderTest(unittest.TestCase):
         )
         track = Track(name=name, uri=uri)
         self.storage.begin()
-        self.storage.add(track)
+        self.storage.add_track(track)
         self.storage.close()
         assert [track] == self.library.lookup(uri).get()
 
     def test_clear(self):
         self.storage.begin()
-        self.storage.add(Track(uri="eboback:track:track.mp3"))
+        self.storage.add_track(Track(uri="eboback:track:track.mp3"))
         self.storage.close()
         self.storage.clear()
         assert self.storage.create_or_update() == 0

@@ -324,7 +324,7 @@ class ScanCommand(commands.Command):
                     name = self.fix_encoding(track.name)
                     track = track.replace(name=name)
 
-                    self.storage.add(track, result.tags, result.duration)
+                    self.storage.add_track(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
             except Exception as error:
                 try:
@@ -335,14 +335,14 @@ class ScanCommand(commands.Command):
                             local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                             track = track.replace(uri=local_uri)
                             track = track.replace(last_modified=mtime)
-                            self.storage.add(track, None, None)
+                            self.storage.add_track(track, None, None)
                             logger.debug(f"Added {track.uri}")
                     else:
                         mtime = self.file_mtimes.get(absolute_path)
                         local_uri = translator.path_to_track_uri(absolute_path, self.media_dir)
                         track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
                         if track:
-                            self.storage.add(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
+                            self.storage.add_track(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.
                             logger.debug(f"Added {track.uri}")
                 except Exception as error:
                     logger.warning(f"Failed scanning {absolute_path.as_uri()}: {error}")
