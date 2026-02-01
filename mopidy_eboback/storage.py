@@ -296,6 +296,12 @@ class LocalStorageProvider:
         # look for external album art
         track_path: pathlib.Path = translator.local_uri_to_path(uri, self._media_dir)
         dir_path = track_path.parent
+        extenal_images = self.get_image_files_from_folder(dir_path)
+        images.update(extenal_images)
+        return images
+
+    def get_image_files_from_folder(self, dir_path: pathlib.Path) -> dict[str, ImageDef]:
+        images: dict[str, ImageDef] = {}
         for pattern in self._patterns:
             for match_path in dir_path.glob(pattern):
                 try:
