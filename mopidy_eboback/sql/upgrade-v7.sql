@@ -183,7 +183,7 @@ with max_images as (
     left outer join images on track_images.image_id = images.id
     where track.album is null
     )
-select case when max_images.last_modified is null then 'radio' else 'track' end as ref_type, max_images.uri, max_images.name, max_images.last_modified, max_images.id_max_image, min_images.id_min_image
+select case when max_images.last_modified is null then 'radio' else 'track' end as ref_type, max_images.uri, max_images.name, max_images.last_modified, min_images.id_min_image, max_images.id_max_image
 from max_images, min_images
 where max_images.rank = 1
 and min_images.rank = 1
