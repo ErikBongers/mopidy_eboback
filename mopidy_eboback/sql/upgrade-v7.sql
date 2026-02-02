@@ -27,7 +27,8 @@ create table images (
     uri TEXT,
     file_path TEXT,
     width INTEGER,
-    height INTEGER
+    height INTEGER,
+    embedded BOOLEAN NOT NULL
 );
 
 create index images_uri_index on images (uri);

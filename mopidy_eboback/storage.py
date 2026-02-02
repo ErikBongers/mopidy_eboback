@@ -59,7 +59,8 @@ empty_root_meta: RootMetaDef = {
 ImageDef = TypedDict("ImageDef", {
     "width": int | None,
     "height": int | None,
-    "path": str
+    "path": str,
+    "embedded": bool
 })
 
 def check_dirs_and_files(config):
@@ -153,7 +154,7 @@ class LocalStorageProvider:
             image_strings = set([image["path"] for image in images.values()])
             schema.insert_track(self._connect(), track, image_strings, file_dir)
             for image_def in images.values():
-                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"])
+                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
@@ -166,7 +167,7 @@ class LocalStorageProvider:
                 new_path = self._media_dir / image
 
                 image_def = self._get_or_create_image_file(new_path, None)
-                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"])
+                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
@@ -310,7 +311,7 @@ class LocalStorageProvider:
         else:
             image_path = self.save_image_file(data, data_source, what, height, width)
 
-        return {"width": width, "height": height, "path": str(image_path)}
+        return {"width": width, "height": height, "path": str(image_path), "embedded": path is None}
 
     def save_image_file(self, data: bytes, data_source: str, what: str, height: int | None, width: int | None) -> Path:
         digest = hashlib.md5(data).hexdigest()

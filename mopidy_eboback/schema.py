@@ -476,17 +476,17 @@ def get_playlist_tracks(c, uri: Uri):
     """,
     (uri,uri)).fetchall()
 
-def insert_image(c: Connection, uri, file_path, width: int, height: int):
+def insert_image(c: Connection, uri, file_path, width: int, height: int, embedded: bool):
     rows = c.execute("select id from images where file_path = ?", (file_path,))
     image_id = rows.fetchone()
     if image_id:
         return image_id
 
     rows = c.execute("""
-        insert into images (id, uri, file_path, width, height) 
-        values((select count(*)+1 from images), ?, ?, ?, ?) 
+        insert into images (id, uri, file_path, width, height, embedded) 
+        values((select count(*)+1 from images), ?, ?, ?, ?, ?) 
         returning id""",
-        (uri, file_path, width, height))
+        (uri, file_path, width, height, embedded))
     image_id =  rows.fetchone()
     return image_id
 
