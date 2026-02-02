@@ -154,7 +154,7 @@ class LocalStorageProvider:
             image_strings = set([image["path"] for image in images.values()])
             schema.insert_track(self._connect(), track, image_strings, file_dir)
             for image_def in images.values():
-                image_id = schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
                 if track.album:
                     schema.add_album_image(self._connect(), track.album.uri, image_id)
                 else:
@@ -177,7 +177,7 @@ class LocalStorageProvider:
                 new_path = self._media_dir / image
 
                 image_def = self._get_or_create_image_file(new_path, None)
-                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
