@@ -24,14 +24,12 @@ create table playlists (
 
 create table images (
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
-    uri TEXT,
     file_path TEXT,
     width INTEGER,
     height INTEGER,
     embedded BOOLEAN NOT NULL
 );
 
-create index images_uri_index on images (uri);
 create index images_path_index on images (file_path);
 
 create table playlist_refs
@@ -223,7 +221,16 @@ create table album_images
     FOREIGN KEY (album_uri) REFERENCES album(uri) ON DELETE CASCADE
 );
 
-create unique index album_images_album_uri_image_id_idx on album_images (album_uri, image_id);
+create unique index album_images_idx on album_images (album_uri, image_id);
+
+create table track_images
+(
+    track_uri TEXT not null,
+    image_id INTEGER not null,
+    FOREIGN KEY (track_uri) REFERENCES track(uri) ON DELETE CASCADE
+);
+
+create unique index track_images_idx on track_images (track_uri, image_id);
 
 create view album_images_min_max as
 with max_images as (

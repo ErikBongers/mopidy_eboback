@@ -549,7 +549,14 @@ def clear(c):
     DELETE FROM album;
     DELETE FROM artist;
     DELETE FROM playlists;
+    DELETE FROM playist_excludes;
+    DELETE FROM playist_filters;
+    DELETE FROM playlist_refs;
     DELETE FROM images;
+    DELETE FROM table_images;
+    DELETE FROM album_images;
+    DELETE FROM genre_replace;
+    DELETE FROM history;
     VACUUM;
     """
     )
