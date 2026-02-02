@@ -497,17 +497,17 @@ def get_playlist_tracks(c, uri: Uri):
     (uri,uri)).fetchall()
 
 def insert_image(c: Connection, file_path, width: int, height: int, embedded: bool):
-    rows = c.execute("select id from images where file_path = ?", (file_path,))
-    image_id = rows.fetchone()
-    if image_id:
-        return image_id
+    cursor = c.execute("select id from images where file_path = ?", (file_path,))
+    row = cursor.fetchone()
+    if row:
+        return row[0]
 
-    rows = c.execute("""
+    cursor = c.execute("""
         insert into images (id, file_path, width, height, embedded) 
         values((select count(*)+1 from images), ?, ?, ?, ?) 
         returning id""",
         (file_path, width, height, embedded))
-    image_id =  rows.fetchone()
+    image_id =  cursor.fetchone()[0]
     return image_id
 
 def delete_track(c, uri):

@@ -72,6 +72,7 @@ class ScanCommand(commands.Command):
         return self.just_run_it(config, args.force, args.limit)
 
     def just_run_it(self, config, force: bool = False, limit: int = None):
+        logger.setLevel(logging.DEBUG)
         self.init_scan(config, force, limit) #todo: force the order of these function calls?
 
         upgraded_to_version = self.create_or_upgrad_db()
