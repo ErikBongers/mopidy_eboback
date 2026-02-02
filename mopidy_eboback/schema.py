@@ -806,8 +806,8 @@ ImageDict = TypedDict('ImageDict', {'id': int, 'uri': str, 'file_path': str, 'wi
 
 def get_all_images(c) -> list[ImageDict]:
     def to_image(row):
-        return {'id': row[0], 'uri': row[1], 'file_path': row[2], 'width': row[3], 'height': row[4]}
-    rows = c.execute("select * from images order by id")
+        return {'id': row[0], 'file_path': row[1], 'width': row[2], 'height': row[3]}
+    rows = c.execute("select id, file_path, width, height from images order by id")
     return list(map(to_image, rows))
 
 
