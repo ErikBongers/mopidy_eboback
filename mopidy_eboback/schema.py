@@ -787,7 +787,7 @@ def get_all_refs(c: Connection):
     return list(map(to_ref, rows))
 
 
-def update_album_images(c: Connection):
+def update_all_album_images(c: Connection):
     c.execute("delete from album_images")
     c.execute("""
         insert into album_images( album_uri, image_id)

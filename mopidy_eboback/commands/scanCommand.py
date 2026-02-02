@@ -169,7 +169,7 @@ class ScanCommand(commands.Command):
 
     def update_db(self):
         self.storage.update_album_dates()
-        self.storage.update_album_images()
+        self.storage.update_all_album_images()
 
     def scan_eboplayer_files(self, playlist_files: set[pathlib.Path]):
         from mopidy_eboback.lib import text_scanner_py

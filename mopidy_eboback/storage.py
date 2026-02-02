@@ -120,7 +120,7 @@ class LocalStorageProvider:
         self._data_dir = Extension.get_data_dir(config)
         self._image_dir = Extension.get_image_dir(config)
         self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
-        self._patterns = list(map(str, ext_config["album_art_files"]))
+        self.img_file_patterns = list(map(str, ext_config["album_art_files"])) #todo: also rename the config name: it's not files but patterns.
         self._dbpath = self._data_dir / "library.db"
         self._connection: Connection | None = None
 
@@ -157,6 +157,12 @@ class LocalStorageProvider:
                 schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
+
+    def xupdate_album_images(self, album_uri: str):
+        images = self.get_image_files_from_folder(translator.local_uri_to_path(album_uri, self._media_dir).parent)
+        # for image_def in images.values():
+        #     schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+        schema.update_all_album_images(self._connect())
 
     def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):
         try:
@@ -289,7 +295,7 @@ class LocalStorageProvider:
 
     def get_image_files_from_folder(self, dir_path: pathlib.Path) -> dict[str, ImageDef]:
         images: dict[str, ImageDef] = {}
-        for pattern in self._patterns:
+        for pattern in self.img_file_patterns:
             for match_path in dir_path.glob(pattern):
                 try:
                     image_def = self._get_or_create_image_file(match_path)
@@ -312,11 +318,11 @@ class LocalStorageProvider:
         if path:
             image_path = path
         else:
-            image_path = self.save_image_file(data, data_source, what, height, width)
+            image_path = self.write_image_file(data, data_source, what, height, width)
 
         return {"width": width, "height": height, "path": str(image_path), "embedded": path is None}
 
-    def save_image_file(self, data: bytes, data_source: str, what: str, height: int | None, width: int | None) -> Path:
+    def write_image_file(self, data: bytes, data_source: str, what: str, height: int | None, width: int | None) -> Path:
         digest = hashlib.md5(data).hexdigest()
         if width and height:
             name = "%s-%dx%d.%s" % (digest, width, height, what)
@@ -400,9 +406,9 @@ class LocalStorageProvider:
         with self._connect() as c:
             return schema.get_all_refs(c)
 
-    def update_album_images(self):
+    def update_all_album_images(self):
         with self._connect() as c:
-            schema.update_album_images(self._connect())
+            schema.update_all_album_images(self._connect())
 
     def get_all_images(self) -> list[ImageDict]:
         with self._connect() as c:
