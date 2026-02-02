@@ -177,7 +177,8 @@ class LocalStorageProvider:
                 new_path = self._media_dir / image
 
                 image_def = self._get_or_create_image_file(new_path, None)
-                schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                schema.add_track_image(self._connect(), track.uri, image_id)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
