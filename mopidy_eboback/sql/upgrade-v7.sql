@@ -172,13 +172,15 @@ create view all_refs as
 with max_images as (
     select track.*, images.id as id_max_image, row_number() over (partition by track.uri order by width*height desc) as rank
     from track
-    left outer join images on track.uri = images.uri
+    left outer join track_images on track.uri = track_images.track_uri
+    left outer join images on track_images.image_id = images.id
     where track.album is null
     ),
     min_images as (
     select track.*, images.id as id_min_image, row_number() over (partition by track.uri order by width*height) as rank
     from track
-    left outer join images on track.uri = images.uri
+    left outer join track_images on track.uri = track_images.track_uri
+    left outer join images on track_images.image_id = images.id
     where track.album is null
     )
 select case when max_images.last_modified is null then 'radio' else 'track' end as ref_type, max_images.uri, max_images.name, max_images.last_modified, max_images.id_max_image, min_images.id_min_image
