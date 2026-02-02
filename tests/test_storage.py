@@ -5,7 +5,7 @@ from mopidy_eboback import storage
 
 def test_get_image_type_from_header_png():
     data_bytes = b"\x89PNG\r\n\x1A\nffe000104a464"
-    assert storage.get_image_type_from_header(data_bytes) == "png"
+    assert storage.get_image_type(data_bytes) == "png"
 
 
 @pytest.mark.parametrize(
@@ -17,7 +17,7 @@ def test_get_image_type_from_header_png():
 )
 def test_get_image_type_from_header_gif(data):
     data_bytes = bytes.fromhex(data)
-    assert storage.get_image_type_from_header(data_bytes) == "gif"
+    assert storage.get_image_type(data_bytes) == "gif"
 
 
 @pytest.mark.parametrize(
@@ -30,16 +30,16 @@ def test_get_image_type_from_header_gif(data):
 )
 def test_get_image_type_from_header_jpeg(data):
     data_bytes = bytes.fromhex(data)
-    assert storage.get_image_type_from_header(data_bytes) == "jpeg"
+    assert storage.get_image_type(data_bytes) == "jpeg"
 
 
 def test_get_image_type_from_header_unknown_header():
     data_bytes = b"PIF81affe000104a464"
     with pytest.raises(ValueError):
-        storage.get_image_type_from_header(data_bytes)
+        storage.get_image_type(data_bytes)
 
 
 def test_get_image_type_from_header_too_short_header():
     data_bytes = b"\xFF"
     with pytest.raises(ValueError):
-        storage.get_image_type_from_header(data_bytes)
+        storage.get_image_type(data_bytes)

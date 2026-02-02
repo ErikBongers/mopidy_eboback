@@ -110,24 +110,6 @@ IMG_URI_PREFIX = "img"
 IMG_ID_PREFIX = "image"
 MEDIA_URI_PREFIX = "media"
 
-def get_image_type_from_header(header: bytes) -> str:
-    # original source: https://github.com/sphinx-doc/sphinx/commit/a502e7
-
-    if len(header) < MIN_BYTES_FOR_IMAGE_TYPE:
-        raise ValueError("Unknown image type")
-
-    if header.startswith(b"\x89PNG\r\n\x1A\n"):
-        return "png"
-
-    if header.startswith((b"GIF87a", b"GIF89a")):
-        return "gif"
-
-    if header.startswith(b"\xFF\xD8"):
-        return "jpeg"
-
-    raise ValueError("Unknown image type")
-
-
 class LocalStorageProvider:
     def __init__(self, config):
         self._config = ext_config = config[Extension.ext_name]
@@ -316,34 +298,14 @@ class LocalStorageProvider:
     def _get_or_create_image_file(self, path: pathlib.Path | None, data=None) -> ImageDef:
         if not data:
             with open(path, "rb") as f:
-                header = f.read(MIN_BYTES_FOR_IMAGE_TYPE)
-
-                file_ext = path.suffix.lower()
-                if file_ext == ".svg":
-                    what = "svg"
-                else:
-                    what = get_image_type_from_header(header)
+                data = f.read()
                 data_source = path.as_uri()
-                data = header + f.read()
         else:
-            header = data[:MIN_BYTES_FOR_IMAGE_TYPE]
-            what = get_image_type_from_header(header)
             data_source = "embedded image"
+        what = get_image_type(data, path)
 
         digest = hashlib.md5(data).hexdigest()
-        width = None
-        height = None
-        try:
-            if what == "png":
-                width, height = get_image_size_png(data)
-            elif what == "gif":
-                width, height = get_image_size_gif(data)
-            elif what == "jpeg":
-                width, height = get_image_size_jpeg(data)
-            elif what == "svg":
-                width, height = 9999, 9999
-        except Exception as e:
-            logger.error("Error getting image size for %r: %r", data_source, e)
+        width, height = get_image_size(data, what, data_source)
         if width and height:
             name = "%s-%dx%d.%s" % (digest, width, height, what)
         else:
@@ -435,3 +397,38 @@ class LocalStorageProvider:
     def get_all_images(self) -> list[ImageDict]:
         with self._connect() as c:
             return schema.get_all_images(c)
+
+def get_image_size(data: bytes, ext: str, data_source: str):
+    width: int | None = None
+    height: int | None = None
+    try:
+        if ext == "png":
+            width, height = get_image_size_png(data)
+        elif ext == "gif":
+            width, height = get_image_size_gif(data)
+        elif ext == "jpeg":
+            width, height = get_image_size_jpeg(data)
+        elif ext == "svg":
+            width, height = 9999, 9999
+    except Exception as e:
+        logger.error("Error getting image size for %r: %r", data_source, e)
+    return width, height
+
+def get_image_type(data: bytes, path: pathlib.Path) -> str:
+    # original source: https://github.com/sphinx-doc/sphinx/commit/a502e7
+    if path:
+        file_ext = path.suffix.lower()
+        if file_ext == ".svg":
+            return "svg"
+
+    if len(data) < MIN_BYTES_FOR_IMAGE_TYPE:
+        raise ValueError("Unknown image type")
+
+    if data.startswith(b"\x89PNG\r\n\x1A\n"):
+        return "png"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    if data.startswith(b"\xFF\xD8"):
+        return "jpeg"
+
+    raise ValueError("Unknown image type")
