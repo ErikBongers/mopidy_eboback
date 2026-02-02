@@ -6,8 +6,9 @@ import pathlib
 import shutil
 import sqlite3
 import struct
+from pathlib import Path
 from sqlite3 import Connection
-from typing import TypedDict, cast
+from typing import TypedDict, cast, Any
 
 import uritools
 from mopidy.models import Track
@@ -299,13 +300,20 @@ class LocalStorageProvider:
         if not data:
             with open(path, "rb") as f:
                 data = f.read()
-                data_source = path.as_uri()
+            data_source = path.as_uri()
         else:
             data_source = "embedded image"
         what = get_image_type(data, path)
-
-        digest = hashlib.md5(data).hexdigest()
         width, height = get_image_size(data, what, data_source)
+        if path:
+            image_path = path
+        else:
+            image_path = self.save_image_file(data, data_source, what, height, width)
+
+        return {"width": width, "height": height, "path": str(image_path)}
+
+    def save_image_file(self, data: bytes, data_source: str, what: str, height: int | None, width: int | None) -> Path:
+        digest = hashlib.md5(data).hexdigest()
         if width and height:
             name = "%s-%dx%d.%s" % (digest, width, height, what)
         else:
@@ -316,9 +324,7 @@ class LocalStorageProvider:
                 f"Creating file {image_path.as_uri()} from {data_source}"
             )
             image_path.write_bytes(data)
-        uri: str = uritools.urijoin(self._base_uri, name)
-
-        return {"width": width, "height": height, "path": str(image_path)}
+        return image_path
 
     def get_album_path_and_path_counts(self):
         return schema.get_album_paths_and_path_counts(self._connect())
