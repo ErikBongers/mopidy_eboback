@@ -154,7 +154,11 @@ class LocalStorageProvider:
             image_strings = set([image["path"] for image in images.values()])
             schema.insert_track(self._connect(), track, image_strings, file_dir)
             for image_def in images.values():
-                schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                image_id = schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                if track.album:
+                    schema.add_album_image(self._connect(), track.album.uri, image_id)
+                else:
+                    schema.add_track_image(self._connect(), track.uri, image_id)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
@@ -162,7 +166,7 @@ class LocalStorageProvider:
         images = self.get_image_files_from_folder(translator.local_uri_to_path(album_uri, self._media_dir).parent)
         # for image_def in images.values():
         #     schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
-        schema.update_all_album_images(self._connect())
+        schema.update_all_album_min_max_images(self._connect())
 
     def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):
         try:
@@ -204,7 +208,7 @@ class LocalStorageProvider:
         else:
             logger.error("Attempting to close while not connected")
 
-    def clear(self):
+    def clear_except_history(self):
         logger.info("Clearing image directory")
         try:
             shutil.rmtree(self._image_dir)
@@ -213,7 +217,7 @@ class LocalStorageProvider:
             logger.warning("Error clearing image directory: %s", e)
         logger.info("Clearing SQLite database")
         try:
-            schema.clear(self._connect())
+            schema.clear_except_history(self._connect())
             return True
         except sqlite3.Error as e:
             logger.error("Error clearing SQLite database: %s", e)
@@ -408,7 +412,7 @@ class LocalStorageProvider:
 
     def update_all_album_images(self):
         with self._connect() as c:
-            schema.update_all_album_images(self._connect())
+            schema.update_all_album_min_max_images(self._connect())
 
     def get_all_images(self) -> list[ImageDict]:
         with self._connect() as c:

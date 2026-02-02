@@ -15,7 +15,7 @@ class ClearCommand(commands.Command):
             print("Clearing library aborted")
             return 0
 
-        if library.clear():
+        if library.clear_except_history():
             print("Library successfully cleared")
             return 0
 

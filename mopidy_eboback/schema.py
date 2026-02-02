@@ -542,7 +542,7 @@ def cleanup(c):
     c.execute("ANALYZE")
 
 
-def clear(c):
+def clear_except_history(c):
     c.executescript(
         """
     DELETE FROM track;
@@ -556,7 +556,6 @@ def clear(c):
     DELETE FROM table_images;
     DELETE FROM album_images;
     DELETE FROM genre_replace;
-    DELETE FROM history;
     VACUUM;
     """
     )
@@ -794,15 +793,7 @@ def get_all_refs(c: Connection):
     return list(map(to_ref, rows))
 
 
-def update_all_album_images(c: Connection):
-    c.execute("delete from album_images")
-    c.execute("""
-        insert into album_images( album_uri, image_id)
-        select distinct album as album_uri, images.id
-        from track
-        join images on track.uri = images.uri
-        where album is not null
-        """)
+def update_all_album_min_max_images(c: Connection):
     c.execute("""
         update album
         set id_max_image = album_images_min_max.max_id,
@@ -818,3 +809,10 @@ def get_all_images(c) -> list[ImageDict]:
         return {'id': row[0], 'uri': row[1], 'file_path': row[2], 'width': row[3], 'height': row[4]}
     rows = c.execute("select * from images order by id")
     return list(map(to_image, rows))
+
+
+def add_album_image(c: Connection, uri: str, image_id: int):
+    c.execute("insert into album_images(album_uri, image_id) values(?,?)", (uri, image_id))
+
+def add_track_image(c: Connection, uri: str, image_id: int):
+    c.execute("insert into track_images(track_uri, image_id) values(?,?)", (uri, image_id))

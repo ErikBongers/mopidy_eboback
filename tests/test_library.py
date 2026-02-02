@@ -72,7 +72,7 @@ class LocalLibraryProviderTest(unittest.TestCase):
         self.storage.begin()
         self.storage.add_track(Track(uri="eboback:track:track.mp3"))
         self.storage.close()
-        self.storage.clear()
+        self.storage.clear_except_history()
         assert self.storage.create_or_update() == 0
 
     def test_search_uri(self):

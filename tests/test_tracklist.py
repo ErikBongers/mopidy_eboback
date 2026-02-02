@@ -153,18 +153,18 @@ class LocalTracklistProviderTest(unittest.TestCase):
 
     @populate_tracklist
     def test_clear(self):
-        self.controller.clear().get()
+        self.controller.clear_except_history().get()
         assert len(self.controller.get_tracks().get()) == 0
 
     def test_clear_empty_playlist(self):
-        self.controller.clear().get()
+        self.controller.clear_except_history().get()
         assert len(self.controller.get_tracks().get()) == 0
 
     @populate_tracklist
     def test_clear_when_playing(self):
         self.playback.play().get()
         self.assert_state_is(PlaybackState.PLAYING)
-        self.controller.clear().get()
+        self.controller.clear_except_history().get()
         self.assert_state_is(PlaybackState.STOPPED)
 
     def test_add_appends_to_the_tracklist(self):
