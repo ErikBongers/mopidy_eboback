@@ -311,10 +311,30 @@ def search_tracks(c, query, limit, offset, exact, filters=tuple()):
     return list(map(_track, rows))
 
 
-def get_image_uris(c):
-    rows = c.execute(_IMAGES_QUERY)
-    return (uri for row in rows for uri in row.images.split())
+def get_unreferenced_images(c):
+    rows = c.execute("""
+        select file_path 
+        from images
+        where embedded = TRUE
+        and id not in (
+            select id_min_image from album where id_min_image is not null
+            union
+            select id_max_image from album where id_max_image is not null
+        )
+        """)
+    return [row[0] for row in rows.fetchall()]
 
+def delete_unreferenced_images(c):
+    c.execute("""
+        delete 
+        from images
+        where embedded = TRUE
+        and id not in (
+            select id_min_image from album where id_min_image is not null
+            union
+            select id_max_image from album where id_max_image is not null
+            )
+        """)
 
 def get_album_images(c, uri):
     images = []

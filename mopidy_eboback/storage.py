@@ -261,11 +261,14 @@ class LocalStorageProvider:
     def cleanup_images(self):
         logger.info("Cleaning up image directory")
         with self._connect() as c:
-            uris = set(schema.get_image_uris(c))
-        for image_path in self._image_dir.glob("**/*"):
-            if str(image_path) not in uris:
-                logger.info(f"Deleting file {str(image_path)}")
-                image_path.unlink()
+            paths = set(schema.get_unreferenced_images(c))
+            for image_path in paths:
+                path = Path(image_path)
+                try:
+                    path.unlink()
+                except OSError as e:
+                    logger.warning("Error removing image file %s: %s", path, e)
+            schema.delete_unreferenced_images(c)
 
     def _extract_images(self, uri, tags) -> dict[str, ImageDef]:
         images: dict[str, ImageDef] = {}  # filter duplicate images, e.g. embedded/external
