@@ -504,7 +504,7 @@ def insert_image(c: Connection, file_path, width: int, height: int, embedded: bo
 
     cursor = c.execute("""
         insert into images (id, file_path, width, height, embedded) 
-        values((select max(id)+1 from images), ?, ?, ?, ?) 
+        values((select coalesce(max(id)+1,1) from images), ?, ?, ?, ?) 
         returning id""",
         (file_path, width, height, embedded))
     image_id =  cursor.fetchone()[0]
