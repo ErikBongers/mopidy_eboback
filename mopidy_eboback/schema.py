@@ -723,7 +723,18 @@ def _images(field):
 
 
 def get_images(c, uri):
-    return c.execute("select * from images where uri = ?", (uri,)).fetchall()
+    return c.execute("""
+    select * 
+    from images
+    where id in (
+        select id from track_images where track_uri = ?
+        union
+        select album_images.image_id from album_images where album_uri = ?
+        union
+        select album_images.image_id from album_images where album_uri in (
+            select tracks.album_uri from tracks where tracks.uri = ?
+        )
+    )""", (uri,uri,uri)).fetchall()
 
 GenreDefRow = TypedDict('GenreDefRow', {'genre': str, 'replacement': str})
 
