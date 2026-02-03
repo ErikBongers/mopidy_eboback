@@ -827,3 +827,7 @@ def add_album_image(c: Connection, uri: str, image_id: int):
 
 def add_track_image(c: Connection, uri: str, image_id: int):
     c.execute("insert into track_images(track_uri, image_id) values(?,?)", (uri, image_id))
+
+def get_album_track_uris(c, album_uri: str) -> list[str]:
+    rows = c.execute("select distinct uri from track where album = ?", (album_uri,)).fetchall()
+    return [row[0] for row in rows]

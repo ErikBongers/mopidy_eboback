@@ -162,10 +162,15 @@ class LocalStorageProvider:
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
-    def xupdate_album_images(self, album_uri: str):
-        images = self.get_image_files_from_folder(translator.local_uri_to_path(album_uri, self._media_dir).parent)
-        # for image_def in images.values():
-        #     schema.insert_image(self._connect(), track.uri, image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+    def update_album_images(self, album_uri: str):
+        track_uris = schema.get_album_track_uris(self._connect(), album_uri)
+        track_paths = [translator.local_uri_to_path(uri, self._media_dir) for uri in track_uris]
+        album_dirs = set(track_path.parent for track_path in track_paths)
+        logger.debug("Updating album images from %s", album_dirs)
+        for album_dir in album_dirs:
+            images = self.get_image_files_from_folder(album_dir)
+            for image_def in images.values():
+                schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], False)
         schema.update_all_album_min_max_images(self._connect())
 
     def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):

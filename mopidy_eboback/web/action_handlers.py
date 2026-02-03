@@ -32,7 +32,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.finish()
 
     def get(self, data_path: str):
-        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history", "get_all_refs"]:
+        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_images"]:
             func = getattr(self, data_path)
             func()
             return
@@ -178,3 +178,7 @@ class DataHandler(tornado.web.RequestHandler):
         refs = self.storage.get_all_refs()
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(refs))
+
+    def update_album_images(self):
+        album_uri = self.get_argument("album_uri", "--no album uri--")
+        self.storage.update_album_images(album_uri)
