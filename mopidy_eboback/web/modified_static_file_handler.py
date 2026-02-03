@@ -1,3 +1,4 @@
+import logging
 import datetime
 import email
 import hashlib
@@ -10,6 +11,7 @@ import tornado.web
 from tornado import httputil, iostream
 from tornado.log import gen_log
 
+logger = logging.getLogger(__name__)
 
 class ModifiedStaticFiledHandler(tornado.web.RequestHandler):
     CACHE_MAX_AGE = 86400 * 365 * 10  # 10 years
@@ -20,7 +22,7 @@ class ModifiedStaticFiledHandler(tornado.web.RequestHandler):
     def get_cache_time(self, *args):
         return self.CACHE_MAX_AGE
 
-    def parse_url_path(self, url_path: str) -> str:
+    def parse_url_path(self, url_path: str) -> str | None:
         raise NotImplementedError
 
     @classmethod
@@ -34,6 +36,10 @@ class ModifiedStaticFiledHandler(tornado.web.RequestHandler):
     async def get(self, path: str, include_body: bool = True) -> None:
         # Set up our path instance variables.
         self.path = self.parse_url_path(path)
+        if self.path is None:
+            logging.error("Invalid image index: %r", path)
+            self.send_error(404)
+            return
         del path  # make sure we don't refer to path instead of self.path again
         self.absolute_path = self.get_absolute_path(self.root, self.path)
         if self.absolute_path is None:
@@ -122,7 +128,10 @@ class ModifiedStaticFiledHandler(tornado.web.RequestHandler):
 
         .. versionadded:: 3.1
         """
-        assert self.absolute_path is not None
+        if not hasattr(self, "absolite_path"):
+            return None
+        if self.absolute_path is None:
+            return None
         version_hash = self._get_cached_version(self.absolute_path)
         if not version_hash:
             return None
