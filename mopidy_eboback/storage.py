@@ -163,15 +163,21 @@ class LocalStorageProvider:
             logger.warning("Skipped %s: %s", track.uri, e)
 
     def update_album_images(self, album_uri: str):
+        logger.info("Updating album images for %s", album_uri)
         track_uris = schema.get_album_track_uris(self._connect(), album_uri)
         track_paths = [translator.local_uri_to_path(uri, self._media_dir) for uri in track_uris]
         album_dirs = set(track_path.parent for track_path in track_paths)
-        logger.debug("Updating album images from %s", album_dirs)
         for album_dir in album_dirs:
+            logger.info("Updating album images for dir %s", album_dir)
             images = self.get_image_files_from_folder(album_dir)
             for image_def in images.values():
-                schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], False)
+                logger.info("Adding image %s", image_def)
+                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], False)
+                logger.info("Added image %s", image_id)
+                schema.add_album_image(self._connect(), album_uri, image_id)
         schema.update_all_album_min_max_images(self._connect())
+        self._connect().commit()
+
 
     def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):
         try:

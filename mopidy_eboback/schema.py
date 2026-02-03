@@ -823,7 +823,7 @@ def get_all_images(c) -> list[ImageDict]:
 
 
 def add_album_image(c: Connection, uri: str, image_id: int):
-    c.execute("insert into album_images(album_uri, image_id) values(?,?)", (uri, image_id))
+    c.execute("insert or ignore into album_images(album_uri, image_id) values(?,?)", (uri, image_id))
 
 def add_track_image(c: Connection, uri: str, image_id: int):
     c.execute("insert into track_images(track_uri, image_id) values(?,?)", (uri, image_id))

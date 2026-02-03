@@ -5,6 +5,7 @@ from pathlib import Path
 
 import tornado.web
 
+from mopidy_eboback import ImageCache
 from mopidy_eboback.schema import ImageDict
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.web.modified_static_file_handler import ModifiedStaticFiledHandler
@@ -37,21 +38,26 @@ class IndexHandler(tornado.web.RequestHandler):
                 yield pathlib.Path(IMG_URI_PREFIX).joinpath(file)
 
 class ImageByIdHandler(ModifiedStaticFiledHandler):
-    def initialize(self, data_dir: Path, path: str, config) -> None:
+    def initialize(self, data_dir: Path, path: str, config, image_cache_holder: ImageCache) -> None:
         self.root = path #todo: required by superclass. How to enforce?
         self.config = config["eboback"]
         self._dbpath = data_dir / "library.db"
         self._connection = None
         self.storage = LocalStorageProvider(config)
-        self.image_files: list[ImageDict | None] | None = None
+        self.cache_holder: ImageCache = image_cache_holder
 
-    def parse_url_path(self, url_path: str) -> str:
-        if self.image_files is None:
-            self.image_files = self.load_image_files()
-        image_dict = self.image_files[int(url_path)]
+    def parse_url_path(self, url_path: str) -> str | None:
+        if self.cache_holder["image_cache"] is None:
+            self.cache_holder["image_cache"] = self.load_image_files()
+        index = int(url_path)
+        if index >= len(self.cache_holder["image_cache"]):
+            return None
+
+        image_dict = self.cache_holder["image_cache"][index]
         if image_dict:
             return image_dict["file_path"]
-        return "---no image found at index---"
+
+        return None
 
     def load_image_files(self):
         all_images: list[ImageDict] = self.storage.get_all_images()

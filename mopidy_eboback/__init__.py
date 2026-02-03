@@ -1,10 +1,17 @@
 import pathlib
+from typing import TypedDict
 
 import pkg_resources
 
 from mopidy import config, ext
 
 __version__ = pkg_resources.get_distribution("mopidy-eboback").version
+
+from mopidy_eboback.schema import ImageDict
+
+
+class ImageCache(TypedDict):
+    image_cache: list[ImageDict] | None
 
 class Extension(ext.Extension):
     dist_name = "mopidy-eboback"
@@ -53,12 +60,13 @@ class Extension(ext.Extension):
         data_dir = self.get_data_dir(config)
         image_dir = self.get_image_dir(config)
         media_dir = config["eboback"]["media_dir"]
+        image_cache_holder: ImageCache = { "image_cache": None }
         return [
             (r"/(index.html)?", IndexHandler, {"root": image_dir}),
             (r"/" + IMG_URI_PREFIX + r"/(.+)", ImageHandler, {"path": image_dir}),
-            (r"/" + IMG_ID_PREFIX + r"/(.+)", ImageByIdHandler, {"data_dir": data_dir, "path": "/", "config": config}), # "/" means: expecting absolute paths! Needed because StaticFileHandler requires the path to be in the passed root.
+            (r"/" + IMG_ID_PREFIX + r"/(.+)", ImageByIdHandler, {"data_dir": data_dir, "path": "/", "config": config, "image_cache_holder": image_cache_holder}), # "/" means: expecting absolute paths! Needed because StaticFileHandler requires the path to be in the passed root.
             (r"/" + MEDIA_URI_PREFIX + r"/(.+)", ImageHandler, {"path": media_dir}),
-            (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config}),
+            (r"/data/(.+)", DataHandler, {"data_dir": data_dir, "config": config, "image_cache_holder": image_cache_holder}),
             (r"/ws2/?", WebsocketHandler, {"config": config}),  # Why this pattern??? I know it's in mopidy http somewhere, but still...
 
         ]

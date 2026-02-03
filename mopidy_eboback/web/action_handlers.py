@@ -2,11 +2,12 @@ import json
 import logging
 import pathlib
 import sqlite3
+import urllib
 
 import tornado.web
 from mopidy.models import Ref
 
-from mopidy_eboback import Extension
+from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
 from mopidy_eboback.schema import GenreDefRow
 from mopidy_eboback.storage import LocalStorageProvider
@@ -15,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 class DataHandler(tornado.web.RequestHandler):
     # noinspection PyAttributeOutsideInit
-    def initialize(self, data_dir, config):
+    def initialize(self, data_dir, config, image_cache_holder: ImageCache):
         self._dbpath = data_dir / "library.db"
         self._connection = None
         self._config = config[Extension.ext_name]
         self.storage = LocalStorageProvider(config)
-
+        self.cache_holder: ImageCache = image_cache_holder
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*") #todo: use allowed origins from config.
@@ -180,5 +181,8 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(refs))
 
     def update_album_images(self):
+        import urllib.request
         album_uri = self.get_argument("album_uri", "--no album uri--")
         self.storage.update_album_images(album_uri)
+        logger.info(f'Images in cache before clearing: {len(self.cache_holder["image_cache"])}')
+        self.cache_holder["image_cache"] = None
