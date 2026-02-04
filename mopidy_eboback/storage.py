@@ -15,7 +15,7 @@ from mopidy.models import Track
 
 from . import Extension, schema, translator
 from .json_encoder import CompactJSONEncoder
-from .schema import GenreDefRow, ImageDict
+from .schema import GenreDefRow, ImageDict, AlbumPathAndNameRow
 
 logger = logging.getLogger(__name__)
 
@@ -430,6 +430,12 @@ class LocalStorageProvider:
         with self._connect() as c:
             return schema.get_all_images(c)
 
+
+    def get_album_path_and_name(self, album_uri: str) -> AlbumPathAndNameRow:
+        with self._connect() as c:
+            return schema.get_album_path_and_name(c, album_uri)
+
+
 def get_image_size(data: bytes, ext: str, data_source: str):
     width: int | None = None
     height: int | None = None
@@ -464,3 +470,4 @@ def get_image_type(data: bytes, path: pathlib.Path) -> str:
         return "jpeg"
 
     raise ValueError("Unknown image type")
+

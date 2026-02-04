@@ -831,3 +831,17 @@ def add_track_image(c: Connection, uri: str, image_id: int):
 def get_album_track_uris(c, album_uri: str) -> list[str]:
     rows = c.execute("select distinct uri from track where album = ?", (album_uri,)).fetchall()
     return [row[0] for row in rows]
+
+AlbumPathAndNameRow = TypedDict('AlbumPathAndNameRow', {'name': str, 'path': str})
+
+def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumPathAndNameRow:
+    cursor = c.execute(
+        """
+        select name, path
+        from album
+        where album.uri = ?;
+        """,
+        (album_uri,)
+    )
+    row = cursor.fetchone()
+    return {"name": row[0], "path": row[1]}

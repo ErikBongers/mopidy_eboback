@@ -9,7 +9,7 @@ from mopidy.models import Ref
 
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
-from mopidy_eboback.schema import GenreDefRow
+from mopidy_eboback.schema import GenreDefRow, AlbumPathAndNameRow
 from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,9 @@ class DataHandler(tornado.web.RequestHandler):
         self.finish()
 
     def get(self, data_path: str):
-        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines", "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_images"]:
+        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines",
+                         "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_images",
+                         "upload_album_image"]:
             func = getattr(self, data_path)
             func()
             return
@@ -181,8 +183,25 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(refs))
 
     def update_album_images(self):
-        import urllib.request
         album_uri = self.get_argument("album_uri", "--no album uri--")
         self.storage.update_album_images(album_uri)
-        logger.info(f'Images in cache before clearing: {len(self.cache_holder["image_cache"])}')
         self.cache_holder["image_cache"] = None
+
+    def upload_album_image(self):
+        album_uri = self.get_argument("album_uri", "--no album uri--")
+        image_url = self.get_argument("image_url", "--no image url--")
+
+        album_path_and_name: AlbumPathAndNameRow = self.storage.get_album_path_and_name(album_uri)
+        logger.info(f'Uploading image for album {album_path_and_name["name"]} to {album_path_and_name["path"]}')
+
+        path = pathlib.Path(album_path_and_name["path"])
+        path = path / f"{album_path_and_name["name"]} cover.jpg" #todo: not always a jpeg!!!!
+        file_no = 1
+        while path.exists():
+            path = path.with_name(f"{album_path_and_name['name']} cover ({file_no}).jpg")
+        import requests
+        headers = {"User-Agent": "Eboplayer/1.0 (erik.bongers@outlook.com)"} # required by wikipedia
+        img_data = requests.get(image_url, headers=headers).content
+        with open(path, 'wb') as handler:
+            handler.write(img_data)
+        self.update_album_images() #note that "album_uri" param is expected here.
