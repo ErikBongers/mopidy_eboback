@@ -13,7 +13,7 @@ from typing import TypedDict, cast, Any
 import uritools
 from mopidy.models import Track
 
-from . import Extension, schema, translator
+from . import Extension, schema, translator, ImageCache
 from .json_encoder import CompactJSONEncoder
 from .schema import GenreDefRow, ImageDict, AlbumPathAndNameRow
 
@@ -162,7 +162,7 @@ class LocalStorageProvider:
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
 
-    def update_album_images(self, album_uri: str):
+    def update_album_images(self, album_uri: str, cache_holder: ImageCache):
         logger.info("Updating album images for %s", album_uri)
         track_uris = schema.get_album_track_uris(self._connect(), album_uri)
         track_paths = [translator.local_uri_to_path(uri, self._media_dir) for uri in track_uris]
@@ -177,6 +177,7 @@ class LocalStorageProvider:
                 schema.add_album_image(self._connect(), album_uri, image_id)
         schema.update_all_album_min_max_images(self._connect())
         self._connect().commit()
+        cache_holder["image_cache"] = None # or...add the new images in above loop.
 
 
     def add_stream_track(self, track, image: str | None, exclude_streamlines: list[str], program_titles: list[str]):

@@ -34,7 +34,7 @@ class DataHandler(tornado.web.RequestHandler):
 
     def get(self, data_path: str):
         if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines",
-                         "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_images",
+                         "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
                          "upload_album_image"]:
             func = getattr(self, data_path)
             func()
@@ -182,10 +182,10 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(refs))
 
-    def update_album_images(self):
+    def update_album_data(self, album_uri: str):
         album_uri = self.get_argument("album_uri", "--no album uri--")
-        self.storage.update_album_images(album_uri)
-        self.cache_holder["image_cache"] = None
+        self.storage.update_album_images(album_uri, self.cache_holder)
+        #todo: update from meta files, if any.
 
     def upload_album_image(self):
         album_uri = self.get_argument("album_uri", "--no album uri--")
@@ -204,4 +204,4 @@ class DataHandler(tornado.web.RequestHandler):
         img_data = requests.get(image_url, headers=headers).content
         with open(path, 'wb') as handler:
             handler.write(img_data)
-        self.update_album_images() #note that "album_uri" param is expected here.
+        self.storage.update_album_images(album_uri, self.cache_holder)
