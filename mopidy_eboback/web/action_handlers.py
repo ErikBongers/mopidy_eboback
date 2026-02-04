@@ -27,6 +27,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_header("Access-Control-Allow-Origin", "*") #todo: use allowed origins from config.
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        self.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
 
     def options(self, *args):
         self.set_status(204)
@@ -182,7 +183,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(refs))
 
-    def update_album_data(self, album_uri: str):
+    def update_album_data(self):
         album_uri = self.get_argument("album_uri", "--no album uri--")
         self.storage.update_album_images(album_uri, self.cache_holder)
         #todo: update from meta files, if any.
