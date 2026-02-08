@@ -59,6 +59,9 @@ class DataHandler(tornado.web.RequestHandler):
             self.save_remember()
             self.write(json.dumps({"status": "ok"}))
             return
+        if data_path == "delete_remember":
+            self.delete_remember()
+            return
         if data_path == "get_album_metas":
             self.get_album_metas()
             return
@@ -165,6 +168,10 @@ class DataHandler(tornado.web.RequestHandler):
 
     def save_remember(self):
         self.storage.write_remember(self.request.body.decode("utf-8"))
+
+    def delete_remember(self):
+        self.storage.delete_remember(self.request.body.decode("utf-8"))
+        self.write(json.dumps({"status": "ok"}))
 
     def get_remembers(self):
         lines = self.storage.read_remembers()

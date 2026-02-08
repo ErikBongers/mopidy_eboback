@@ -19,6 +19,7 @@ from .schema import GenreDefRow, ImageDict, AlbumPathAndNameRow
 
 logger = logging.getLogger(__name__)
 
+HashedRemember = TypedDict("HashedRemember", {"id": str, "text": str})
 
 class GenreDefClass():
     __slots__ = ["genre", "replacement"]
@@ -388,23 +389,32 @@ class LocalStorageProvider:
         path.write_text(text)
 
     def write_remember(self, remember: str):
+        remembers = self.read_remember_strings()
+        remembers.append(remember)
+        self.write_remembers(remembers)
+
+    def write_remembers(self, remembers: list[str]):
         path = pathlib.Path(self._media_dir) / "remember.eboplayer"
-        if path.exists():
-            text = path.read_text()
-            loaded_meta: list[str] = json.loads(text)
-        else:
-            loaded_meta = []
-        loaded_meta.append(remember)
-        text = json.dumps(loaded_meta, indent=4, cls=CompactJSONEncoder)
+        text = json.dumps(remembers, indent=4, cls=CompactJSONEncoder)
         path.write_text(text)
 
-    def read_remembers(self) -> list[str]:
+    def delete_remember(self, r_id: str):
+        remembers = self.read_remembers()
+        remember_strings = [r["text"] for r in remembers if r["id"] != r_id]
+        self.write_remembers(remember_strings)
+
+    def read_remembers(self) -> list[HashedRemember]:
         path = pathlib.Path(self._media_dir) / "remember.eboplayer"
+        remembers = []
         if path.exists():
             text = path.read_text()
-            return json.loads(text)
-        else:
-            return []
+            remembers =  json.loads(text)
+        hashed_remembers: list[HashedRemember] = [{"id":hashlib.md5(r.encode()).hexdigest(), "text":r} for r in remembers]
+        return hashed_remembers
+
+    def read_remember_strings(self) -> list[str]:
+        remembers = self.read_remembers()
+        return [r["text"] for r in remembers]
 
     def insert_history_line(self, name: str, uri: str, ref_type: str):
         with self._connect() as c:
