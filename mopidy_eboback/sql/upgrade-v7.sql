@@ -256,6 +256,64 @@ and min_images.rank = 1;
 alter table album add column id_max_image integer;
 alter table album add column id_min_image integer;
 
+create table genre_defs (
+	name TEXT not null,
+	child TEXT,
+	sequence INTEGER not null,
+	level INTEGER not null
+);
+
+create index genre_defs_name_idx on genre_defs (name);
+
+create view genre_tree as
+with level3 as (
+    with level2 as (
+        with level1 as (
+            with roots as (
+                select name as lvl0 from genre_defs where child is null
+                )
+            select lvl0, d.child as lvl1 from roots
+            left join genre_defs d on roots.lvl0 = d.name
+            )
+        select lvl0, lvl1, dd.child as lvl2
+        from level1
+        left join genre_defs dd on level1.lvl1 = dd.name
+    )
+    select lvl0, lvl1, lvl2, ddd.child as lvl3 from level2
+    left outer join genre_defs ddd on level2.lvl2 = ddd.name
+)
+select lvl0, lvl1, lvl2, lvl3, dddd.child as lvl4 from level3
+left outer join genre_defs dddd on level3.lvl3 = dddd.name;
+
+create view genre_tree_flat as
+select lvl0 as parent, lvl1 as descendant from genre_tree
+union
+select lvl0, lvl2 from genre_tree
+union
+select lvl0, lvl3 from genre_tree
+union
+select lvl0, lvl4 from genre_tree
+union
+select lvl0, lvl5 from genre_tree
+union
+select lvl1, lvl2 from genre_tree
+union
+select lvl1, lvl3 from genre_tree
+union
+select lvl1, lvl4 from genre_tree
+union
+select lvl1, lvl5 from genre_tree
+union
+select lvl2, lvl3 from genre_tree
+union
+select lvl2, lvl4 from genre_tree
+union
+select lvl2, lvl5 from genre_tree
+union
+select lvl3, lvl4 from genre_tree
+union
+select lvl3, lvl5 from genre_tree;
+
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
