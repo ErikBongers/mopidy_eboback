@@ -2,14 +2,13 @@ import json
 import logging
 import pathlib
 import sqlite3
-import urllib
 
 import tornado.web
 from mopidy.models import Ref
 
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
-from mopidy_eboback.schema import GenreDefRow, AlbumPathAndNameRow
+from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
 from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
@@ -34,9 +33,9 @@ class DataHandler(tornado.web.RequestHandler):
         self.finish()
 
     def get(self, data_path: str):
-        if data_path in ["get_album_meta", "get_genres", "write_root_meta", "get_excluded_streamlines",
+        if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
-                         "upload_album_image"]:
+                         "upload_album_image", "get_genre_defs"]:
             func = getattr(self, data_path)
             func()
             return
@@ -67,6 +66,12 @@ class DataHandler(tornado.web.RequestHandler):
             return
 
         self.write("Oops...no valid data request: " + data_path)
+
+    def get_genre_defs(self):
+        with self._connect() as c:
+            genre_defs = schema.get_genres(c)
+             self.set_header("Content-Type", 'application/json')
+            self.write(json.dumps(genre_defs))
 
     def get_album_meta(self):
         uri = self.get_argument("uri", "nada...")
@@ -128,9 +133,9 @@ class DataHandler(tornado.web.RequestHandler):
                 int(self.get_argument("sequence"))
             )
 
-    def get_genres(self):
+    def get_genre_replacements(self):
         with self._connect() as c:
-            genres: list[GenreDefRow] = schema.get_genres(c)
+            genres: list[GenreReplacementRow] = schema.get_active_genres(c)
             # add uri
             genre_defs = []
             for genre in genres:

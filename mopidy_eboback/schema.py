@@ -736,9 +736,20 @@ def get_images(c, uri):
         )
     )""", (uri,uri,uri)).fetchall()
 
-GenreDefRow = TypedDict('GenreDefRow', {'genre': str, 'replacement': str})
+GenreReplacementRow = TypedDict('GenreReplacementRow', {'genre': str, 'replacement': str})
+GenreDefRow = TypedDict('GenreDefRow', {'name': str, 'child': str, 'sequence': int, 'level': int})
 
-def get_genres(c) -> list[GenreDefRow]:
+def get_genres(c) -> list[GenreReplacementRow]:
+    rows = c.execute("""
+        select name, child, sequence, level
+        from genre_defs
+        order by sequence
+    """).fetchall()
+    def to_genre_def(row) -> GenreDefRow:
+        return {'name': row[0], 'child': row[1], 'sequence': row[2], 'level': row[3]}
+    return list(map(to_genre_def, rows))
+
+def get_active_genres(c) -> list[GenreReplacementRow]:
     rows = c.execute("""
         select distinct 
             coalesce(genre, 'null') as genre, 
@@ -746,17 +757,17 @@ def get_genres(c) -> list[GenreDefRow]:
         from track
         LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name
     """).fetchall()
-    def to_genre_def(row) -> GenreDefRow:
+    def to_genre_rep_def(row) -> GenreReplacementRow:
         return {'genre': row[0], 'replacement': row[1]}
-    return list(map(to_genre_def, rows))
+    return list(map(to_genre_rep_def, rows))
 
-def get_genre_defs(c) -> list[GenreDefRow]:
+def get_genre_replacements(c) -> list[GenreReplacementRow]:
     rows = c.execute("""
         select * from genre_replace
     """).fetchall()
-    def to_genre_def(row) -> GenreDefRow:
+    def to_genre_rep_def(row) -> GenreReplacementRow:
         return {'genre': row[0], 'replacement': row[1]}
-    return list(map(to_genre_def, rows))
+    return list(map(to_genre_rep_def, rows))
 
 
 def get_excluded_streamlines(c, uri: str):

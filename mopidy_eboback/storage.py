@@ -15,7 +15,7 @@ from mopidy.models import Track
 
 from . import Extension, schema, translator, ImageCache
 from .json_encoder import CompactJSONEncoder
-from .schema import GenreDefRow, ImageDict, AlbumPathAndNameRow
+from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ RootMetaDef = TypedDict( "RootMetaDef", {
     "//streams_folder": str,
     "streams_folder": str,
     "//genre_replacements": str,
-    "genre_replacements": list[GenreDefRow],
+    "genre_replacements": list[GenreReplacementRow],
     "//saved_stream_lines": str,
     "saved_stream_lines": list[str]
     }
@@ -378,7 +378,7 @@ class LocalStorageProvider:
 
     def write_root_meta(self):
         root_meta = self.get_root_meta()
-        genre_defs = schema.get_genre_defs(self._connect())
+        genre_defs = schema.get_genre_replacements(self._connect())
         meta_data: RootMetaDef = RootMetaDef(**empty_root_meta) # ensure a full (recent) definition.
         meta_data.name= root_meta.get("name", "Eboplayer media"),
         meta_data.streams_folder = root_meta.get("streams_folder", "/RadioStreams"),
