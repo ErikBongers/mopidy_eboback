@@ -70,7 +70,7 @@ class DataHandler(tornado.web.RequestHandler):
     def get_genre_defs(self):
         with self._connect() as c:
             genre_defs = schema.get_genres(c)
-             self.set_header("Content-Type", 'application/json')
+            self.set_header("Content-Type", 'application/json')
             self.write(json.dumps(genre_defs))
 
     def get_album_meta(self):
