@@ -198,11 +198,11 @@ select 'album' as ref_type, uri, name, last_modified, id_min_image, id_max_image
 union
 select 'artist' as ref_type, uri, name, null as last_modified, null, null from artist
 union
-select distinct 'genre' as ref_type, replacement as uri, replacement as name, null, null, null
+select distinct 'genre' as ref_type, 'eboback:directory?genre='||replacement as uri, replacement as name, null, null, null
 from genres
 where replacement is not null and replacement != ''
 union
-select distinct 'genre' as ref_type, genre as uri, genre as name, null, null, null
+select distinct 'genre' as ref_type, 'eboback:directory?genre='||genre as uri, genre as name, null, null, null
 from genres
 where replacement is null
 union
