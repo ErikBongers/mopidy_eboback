@@ -35,7 +35,7 @@ class DataHandler(tornado.web.RequestHandler):
     def get(self, data_path: str):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
-                         "upload_album_image", "get_genre_defs"]:
+                         "upload_album_image", "get_genre_defs", "set_album_genre"]:
             func = getattr(self, data_path)
             func()
             return
@@ -101,6 +101,19 @@ class DataHandler(tornado.web.RequestHandler):
         meta_file_path.write_text(self.request.body.decode("utf-8"))
         self.write("written:")
         self.write(self.request.body)
+
+    def set_album_genre(self):
+        genre = self.get_argument("genre", "nada...")
+        album_uri = self.get_argument("album_uri", "nada...")
+        meta_file_path = self.uri_to_meta_path(album_uri)
+        album_meta = {}
+        if meta_file_path.exists():
+            album_meta = json.loads(meta_file_path.read_text())
+        album_meta["genre"] = genre
+        meta_file_path.write_text(json.dumps(album_meta))
+        self.write(json.dumps({
+            "status": "ok"
+        }))
 
     def uri_to_meta_path(self, uri) -> pathlib.Path:
         path_string = schema.get_albums_path(self._connect(), (uri,))
