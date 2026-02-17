@@ -16,6 +16,7 @@ from mopidy.models import Track
 from . import Extension, schema, translator, ImageCache
 from .json_encoder import CompactJSONEncoder
 from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
+from .types import AlbumMetaDict
 
 logger = logging.getLogger(__name__)
 
@@ -357,8 +358,12 @@ class LocalStorageProvider:
     def get_album_path_and_path_counts(self):
         return schema.get_album_paths_and_path_counts(self._connect())
 
-    def update_album_meta(self, album_uri: str, meta_data):
-        schema.update_album_meta(self._connect(), album_uri, meta_data)
+    def update_album_meta(self, album_uri: str, meta_data: AlbumMetaDict):
+        with self._connect() as c:
+            if meta_data.get("albumTitle"):
+                schema.update_album_alt_name(self._connect(), album_uri, meta_data["albumTitle"])
+            if meta_data.get("genre"):
+                schema.update_album_genre(self._connect(), album_uri, meta_data["genre"])
 
     def add_playlist_ref(self, playlist_uri: str, uri: str, ref_type: str, sequence: int):
         schema.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)

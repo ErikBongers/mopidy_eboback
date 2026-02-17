@@ -702,12 +702,18 @@ def get_album_paths_and_path_counts(c) -> list[Row] :
     )
     return res.fetchall()
 
-def update_album_meta(c, uri, meta_data):
+def update_album_alt_name(c, uri, alt_name):
     c.execute(
         """
         update album set alt_name = ? where uri = ?
-        """, (meta_data["albumTitle"], uri))
+        """, (alt_name, uri))
 
+def update_album_genre(c, album_uri, genre):
+    logger.info("Updating album genre: %s -> %s", album_uri, genre)
+    c.execute(
+        """
+        update track set genre = ? where album = ?
+        """, (genre, album_uri))
 
 def _images(field):
     images = []

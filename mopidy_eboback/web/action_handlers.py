@@ -2,6 +2,7 @@ import json
 import logging
 import pathlib
 import sqlite3
+from typing import NotRequired, TypedDict
 
 import tornado.web
 from mopidy.models import Ref
@@ -95,7 +96,7 @@ class DataHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(metas))
 
-    def set_album_meta(self):
+    def set_album_meta(self): #todo: get rid of this as it was for testing only?
         uri = self.get_argument("uri", "nada...")
         meta_file_path = self.uri_to_meta_path(uri)
         meta_file_path.write_text(self.request.body.decode("utf-8"))
@@ -111,6 +112,7 @@ class DataHandler(tornado.web.RequestHandler):
             album_meta = json.loads(meta_file_path.read_text())
         album_meta["genre"] = genre
         meta_file_path.write_text(json.dumps(album_meta))
+        self.storage.update_album_meta(album_uri, album_meta)
         self.write(json.dumps({
             "status": "ok"
         }))
