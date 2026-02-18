@@ -1,4 +1,5 @@
 import json
+import pathlib
 
 import tornado.websocket
 import logging
@@ -40,9 +41,10 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
     def scan(self):
         from threading import Thread
         logger.info("eboplayer websocket start_scan received")
+        media_dir = pathlib.Path(self.config["eboback"]["media_dir"]).resolve()
         the_event = {
             "event": "scan_started",
-            "message": "nada..."
+            "message": f"Scanning {str(media_dir)} ..."
         }
         broadcast(json.dumps(the_event))
 

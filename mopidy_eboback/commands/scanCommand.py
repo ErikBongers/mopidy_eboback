@@ -64,28 +64,32 @@ class ScanCommand(commands.Command):
         if upgraded_to_version:
             pass # log message.
 
-        report_progress("Scanning media directory...")
-        self.find_files()
+        file_count = self.find_files()
 
-        report_progress("Comparing media files to library...")
+        report_progress(f"Comparing {file_count} files to library...")
         self.compare_files_to_library()
         # log lib files, removed files and changed files.
 
-        report_progress("Removing missing tracks...")
-        if self.remove_tracks():
-            pass # log message.
-
+        if len(self.uris_to_remove) > 0:
+            report_progress(f"Removing {len(self.uris_to_remove)} missing tracks...")
+            self.remove_tracks()
 
         report_progress("Filtering files...")
-        self.include_and_filter_new_files()
+        files_to_scan, playlist_files = self.get_and_filter_new_files(file_mtimes=self.file_mtimes, files_in_library=self.files_in_library)
+
+        report_progress(f"Found {len(files_to_scan)} new tracks") #todo: add extensions of these tracks, as they may need to be excluded by user.
+        self.files_to_update.update(files_to_scan)
+        self.playlist_files = playlist_files
 
         report_progress("Scanning metadata in files...")
         self.scan_metadata()
 
-        report_progress("Cleaning up images...")
-        self.storage.cleanup_images()
+        image_paths = self.storage.get_images_to_cleanup()
+        if len(image_paths) > 0:
+            report_progress(f"Cleaning up {len(image_paths)} images...")
+            self.storage.cleanup_images(image_paths)
 
-        report_progress("Scanning .eboplayer.playlist files...")
+        report_progress(f"Scanning {len(self.playlist_files)} .eboplayer.playlist files...")
         self.scan_eboplayer_files(self.playlist_files)
 
         report_progress("Updating database...")
@@ -125,12 +129,15 @@ class ScanCommand(commands.Command):
         self.timeout = config["eboback"]["scan_timeout"]
         self.flush_threshold=config["eboback"]["scan_flush_threshold"]
         self.storage = storage.LocalStorageProvider(config)
+        self.included_exts = [ext.lower() for ext in self.config["eboback"]["included_file_extensions"]]
+        self.excluded_exts = [ext.lower() for ext in self.config["eboback"]["excluded_file_extensions"]]
 
     def create_or_upgrad_db(self) -> int | None:
         return self.storage.create_or_update_db()
 
     def find_files(self):
         self.file_mtimes = self._find_files(follow_symlinks=self.config["eboback"]["scan_follow_symlinks"])
+        return len(self.file_mtimes)
 
     def compare_files_to_library(self):
         changed_files, all_library_files, uris_of_removed_files = self._compare_files_to_library(file_mtimes=self.file_mtimes, force_rescan=self.force)
@@ -146,13 +153,6 @@ class ScanCommand(commands.Command):
             return len(self.uris_to_remove)
         else:
             return None
-
-    def include_and_filter_new_files(self):
-        self.included_exts = [ext.lower() for ext in self.config["eboback"]["included_file_extensions"]]
-        self.excluded_exts = [ext.lower() for ext in self.config["eboback"]["excluded_file_extensions"]]
-        files_to_scan, playlist_files = self.get_and_filter_new_files(file_mtimes=self.file_mtimes, files_in_library=self.files_in_library)
-        self.files_to_update.update(files_to_scan)
-        self.playlist_files = playlist_files
 
     def fix_encoding(self, title: str) -> str:
         try:

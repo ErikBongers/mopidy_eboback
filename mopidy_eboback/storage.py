@@ -286,16 +286,20 @@ class LocalStorageProvider:
             performers=list(map(self._validate_artist, model.performers)),
         )
 
-    def cleanup_images(self):
+    def get_images_to_cleanup(self) -> set[str]:
         logger.info("Cleaning up image directory")
         with self._connect() as c:
             paths = set(schema.get_unreferenced_images(c))
-            for image_path in paths:
-                path = Path(image_path)
-                try:
-                    path.unlink()
-                except OSError as e:
-                    logger.warning("Error removing image file %s: %s", path, e)
+            return paths
+
+    def cleanup_images(self, paths: set[str]):
+        for image_path in paths:
+            path = Path(image_path)
+            try:
+                path.unlink()
+            except OSError as e:
+                logger.warning("Error removing image file %s: %s", path, e)
+        with self._connect() as c:
             schema.delete_unreferenced_images(c)
 
     def _extract_images(self, uri, tags) -> dict[str, ImageDef]:

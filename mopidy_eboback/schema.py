@@ -311,7 +311,7 @@ def search_tracks(c, query, limit, offset, exact, filters=tuple()):
     return list(map(_track, rows))
 
 
-def get_unreferenced_images(c):
+def get_unreferenced_images(c) -> list[str]:
     rows = c.execute("""
         select file_path 
         from images
