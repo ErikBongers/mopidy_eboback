@@ -8,6 +8,8 @@ from typing import TypedDict
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
+from mopidy_eboback.types import PlaylistRow, TrackRow
+
 Uri = str
 
 _IMAGE_SIZE_RE = re.compile(r".*-(\d+)x(\d+)\.(?:png|gif|jpeg)$")
@@ -862,3 +864,56 @@ def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumPathAndNameRo
     )
     row = cursor.fetchone()
     return {"name": row[0], "path": row[1]}
+
+
+def read_playlist(c: Connection, playlist_uri: str) -> PlaylistRow:
+    cursor = c.execute("""
+        select uri, name, file_path from playlists where uri = ?;
+    """, (playlist_uri,))
+    row = cursor.fetchone()
+    return {"uri": row[0], "name": row[1], "file_path": row[2]}
+
+
+def get_track_row(c: Connection, uri: str) -> TrackRow:
+    cursor = c.execute("""
+        select
+            uri,
+            name,
+            album,
+            artists,
+            composers,
+            performers,
+            genre,
+            track_no,
+            disc_no,
+            date,
+            length,
+            bitrate,
+            comment,
+            musicbrainz_id,
+            last_modified,
+            exclude_streamlines,
+            program_titles 
+        from track 
+        where uri = ?;
+    """, (uri,))
+    row = cursor.fetchone()
+    return {
+        "uri": row[0],
+        "name": row[1],
+        "album": row[2],
+        "artists": row[3],
+        "composers": row[4],
+        "performers": row[5],
+        "genre": row[6],
+        "track_no": row[7],
+        "disc_no": row[8],
+        "date": row[9],
+        "length": row[10],
+        "bitrate": row[11],
+        "comment": row[12],
+        "musicbrainz_id": row[13],
+        "last_modified": row[14],
+        "exclude_streamlines": row[15],
+        "program_titles": row[16]
+    }

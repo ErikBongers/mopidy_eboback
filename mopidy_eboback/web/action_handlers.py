@@ -9,7 +9,8 @@ from mopidy.models import Ref
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
 from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
-from mopidy_eboback.storage import LocalStorageProvider, RootMetaDef
+from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.types import PlaylistDict
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,8 @@ class DataHandler(tornado.web.RequestHandler):
     def get(self, data_path: str):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
-                         "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist"]:
+                         "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist",
+                         "add_playlist_file"]:
             func = getattr(self, data_path)
             func()
             return
@@ -210,13 +212,13 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps(refs))
 
     def update_album_data(self):
-        album_uri = self.get_argument("album_uri", "--no album uri--")
+        album_uri = self.get_argument("album_uri")
         self.storage.update_album_images(album_uri, self.cache_holder)
         #todo: update from meta files, if any.
 
     def upload_album_image(self):
-        album_uri = self.get_argument("album_uri", "--no album uri--")
-        image_url = self.get_argument("image_url", "--no image url--")
+        album_uri = self.get_argument("album_uri")
+        image_url = self.get_argument("image_url")
 
         album_path_and_name: AlbumPathAndNameRow = self.storage.get_album_path_and_name(album_uri)
         logger.info(f'Uploading image for album {album_path_and_name["name"]} to {album_path_and_name["path"]}')
@@ -234,7 +236,14 @@ class DataHandler(tornado.web.RequestHandler):
         self.storage.update_album_images(album_uri, self.cache_holder)
 
     def create_playlist(self):
-        root_meta: RootMetaDef = self.storage.get_root_meta()
-        playlist_name = self.get_argument("playlist_name", "--error--")
+        playlist_name = self.get_argument("playlist_name")
         self.storage.create_playlist(playlist_name)
 
+    def add_playlist_file(self):
+        playlist_def: PlaylistDict = self.storage.read_playlist(self.get_argument("playlist_uri"))
+        file_uri = self.get_argument("file_uri")
+        file_path = self.storage.get_file_path_for_uri(file_uri)
+        if file_path is None:
+            raise ValueError(f"Not a valid file uri {file_uri}")
+        playlist_def["files"].append(str(file_path))
+        self.storage.write_playlist(self.get_argument("playlist_uri"), playlist_def)
