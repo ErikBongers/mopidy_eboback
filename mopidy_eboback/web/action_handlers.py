@@ -238,7 +238,8 @@ class DataHandler(tornado.web.RequestHandler):
 
     def create_playlist(self):
         playlist_name = self.get_argument("playlist_name")
-        self.storage.create_playlist(playlist_name)
+        playlist_uri = self.storage.create_playlist(playlist_name)
+        self.write({"status": "ok", "playlist_uri": playlist_uri})
 
     def add_playlist_file(self):
         playlist_def: PlaylistDict = self.storage.read_playlist(self.get_argument("playlist_uri"))

@@ -458,11 +458,12 @@ class LocalStorageProvider:
         filename = playlist_name + ".eboplayer.playlist"
         path = pathlib.Path(self._media_dir) / filename
         with self._connect() as c:
-            playlists_db.insert_playlist(c, playlist_name, path)
+            playlist_uri = playlists_db.insert_playlist(c, playlist_name, path)
             with open(path, "w") as f:
                 new_playlist_def: PlaylistDict = empty_playlist_def.copy()
                 new_playlist_def["name"] = playlist_name
                 f.write(json.dumps(new_playlist_def, indent=4, cls=CompactJSONEncoder))
+                return playlist_uri
 
     def read_playlist(self, playlist_uri: str) -> PlaylistDict:
         playlist_row = playlists_db.read_playlist(self._connect(), playlist_uri)
