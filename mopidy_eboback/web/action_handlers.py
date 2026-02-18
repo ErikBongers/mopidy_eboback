@@ -246,4 +246,6 @@ class DataHandler(tornado.web.RequestHandler):
         if file_path is None:
             raise ValueError(f"Not a valid file uri {file_uri}")
         playlist_def["files"].append(str(file_path))
+        #void duplicates.
+        playlist_def["files"] = list(set(playlist_def["files"]))
         self.storage.write_playlist(self.get_argument("playlist_uri"), playlist_def)
