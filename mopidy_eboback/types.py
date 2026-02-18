@@ -7,3 +7,19 @@ AlbumMetaDict = TypedDict('AlbumMetaDict', {
     'showTrackNumbers': NotRequired[bool],
     })
 
+PlaylistItemStream = TypedDict('PlaylistItemStream', {
+    'type': str,
+    'uri': str,
+    'name': str,
+    'genre': str,
+    'image': str,
+    'exclude_streamlines': list[str],
+    'program_titles': list[str]
+    })
+
+PlaylistDict = TypedDict('PlaylistDict', {
+    'name': str,
+    'items': list[PlaylistItemStream]
+    })
+
+empty_playlist_def: PlaylistDict = {'name': '', 'items': []}

@@ -11,12 +11,12 @@ from sqlite3 import Connection
 from typing import TypedDict, cast, Any
 
 import uritools
-from mopidy.models import Track
+from mopidy.models import Track, Playlist
 
 from . import Extension, schema, translator, ImageCache
 from .json_encoder import CompactJSONEncoder
 from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
-from .types import AlbumMetaDict
+from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,8 @@ RootMetaDef = TypedDict( "RootMetaDef", {
     "name": str,
     "//streams_folder": str,
     "streams_folder": str,
+    "//favorites_playlist": str,
+    "favorites_playlist": str,
     "//genre_replacements": str,
     "genre_replacements": list[GenreReplacementRow],
     "//saved_stream_lines": str,
@@ -52,6 +54,8 @@ empty_root_meta: RootMetaDef = {
     "name": "",
     "//streams_folder": "Path to folder where stream images, etc are stored",
     "streams_folder": "",
+    "//favorites_playlist": "Name of the playlist where favorites are stored.",
+    "favorites_playlist": "Favorites",
     "//genre_replacements": "List of genre replacements",
     "genre_replacements": [],
     "//saved_stream_lines": "List of stream info lines that are saved for later reference. These are not cleared when the stream lines history is cleared.",
@@ -380,6 +384,17 @@ class LocalStorageProvider:
             full_meta.update(loaded_meta)
             return full_meta
         return empty_root_meta.copy()
+
+    def create_playlist(self, playlist_name: str):
+        filename = playlist_name + ".eboplayer.playlist"
+        path = pathlib.Path(self._media_dir) / filename
+        playlist_uri = "eboback:playlist:"+hashlib.md5(filename.encode()).hexdigest()
+        with self._connect() as c:
+            schema.insert_playlist(c, playlist_uri, playlist_name, path.as_uri())
+            with open(path, "w") as f:
+                new_playlist_def: PlaylistDict = empty_playlist_def.copy()
+                new_playlist_def["name"] = playlist_name
+                f.write(json.dumps(new_playlist_def, indent=4, cls=CompactJSONEncoder))
 
     def write_root_meta(self):
         root_meta = self.get_root_meta()

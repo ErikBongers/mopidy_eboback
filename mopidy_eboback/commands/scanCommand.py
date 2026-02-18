@@ -2,7 +2,6 @@ import json
 import logging
 import pathlib
 import time
-from typing import TypedDict
 
 import mutagen
 from mopidy import commands
@@ -14,6 +13,7 @@ from wavinfo import WavInfoReader
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.translator import path_to_track_uri
+from mopidy_eboback.types import PlaylistDict
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
@@ -26,21 +26,6 @@ class WplItem:
 class Wpl:
     name: str
     items: list[WplItem]
-
-RadioStreamDef = TypedDict('RadioStreamDef', {
-    'name': str,
-    'type': str,
-    'image': str,
-    'uri': str,
-    'genre': str,
-    'exclude_streamlines': list[str],
-    'program_titles': list[str],
-})
-
-PlaylistDef = TypedDict('PlaylistDef', {
-    'name': str,
-    'items': list[RadioStreamDef]
-})
 
 class ScanCommand(commands.Command):
     help = "Scan local media files and populate the eboplayer library."
@@ -180,7 +165,7 @@ class ScanCommand(commands.Command):
         for playlist_file in playlist_files:
             playlist_text = playlist_file.read_text()
             if playlist_file.suffixes == [".eboplayer", ".playlist"]:
-                playlist: PlaylistDef = json.loads(playlist_text)
+                playlist: PlaylistDict = json.loads(playlist_text)
                 name: str = playlist['name']
                 items = playlist['items']
                 hashdata: str = playlist_text

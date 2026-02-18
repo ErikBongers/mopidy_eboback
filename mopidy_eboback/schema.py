@@ -449,7 +449,7 @@ def get_playlists(c):
 def delete_file_playlists(c):
     c.execute("DELETE FROM playlists where file_path IS NOT NULL")
 
-def insert_playlist(c, uri, name, file_path):
+def insert_playlist(c: Connection, uri: str, name: str, file_path: str):
     _insert_or_replace(
         c,
         "playlists",

@@ -2,7 +2,6 @@ import json
 import logging
 import pathlib
 import sqlite3
-from typing import NotRequired, TypedDict
 
 import tornado.web
 from mopidy.models import Ref
@@ -10,7 +9,7 @@ from mopidy.models import Ref
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
 from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
-from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.storage import LocalStorageProvider, RootMetaDef
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ class DataHandler(tornado.web.RequestHandler):
     def get(self, data_path: str):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
-                         "upload_album_image", "get_genre_defs", "set_album_genre"]:
+                         "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist"]:
             func = getattr(self, data_path)
             func()
             return
@@ -233,3 +232,9 @@ class DataHandler(tornado.web.RequestHandler):
         with open(path, 'wb') as handler:
             handler.write(img_data)
         self.storage.update_album_images(album_uri, self.cache_holder)
+
+    def create_playlist(self):
+        root_meta: RootMetaDef = self.storage.get_root_meta()
+        playlist_name = self.get_argument("playlist_name", "--error--")
+        self.storage.create_playlist(playlist_name)
+
