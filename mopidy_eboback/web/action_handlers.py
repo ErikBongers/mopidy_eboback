@@ -248,3 +248,4 @@ class DataHandler(tornado.web.RequestHandler):
             raise ValueError(f"Not a valid file uri {file_uri}")
         playlist_def["items"].append(str(file_path))
         self.storage.write_playlist(self.get_argument("playlist_uri"), playlist_def)
+        self.storage.save_playlist_dict_in_db(playlist_def, file_path)

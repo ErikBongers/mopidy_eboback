@@ -491,6 +491,9 @@ class LocalStorageProvider:
     def save_playlist_file_in_db(self, playlist_file: pathlib.Path):
         playlist_text = playlist_file.read_text()
         playlist: PlaylistDict = json.loads(playlist_text)
+        self.save_playlist_dict_in_db(playlist, playlist_file)
+
+    def save_playlist_dict_in_db(self, playlist: PlaylistDict, playlist_file: pathlib.Path):
         name: str = playlist['name']
         items = playlist['items']
         with self._connect() as c:
