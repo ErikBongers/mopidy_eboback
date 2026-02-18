@@ -1,5 +1,8 @@
 * Avoid duplicate images.
 
+* Add cascading delete to all playlist details tables.
+* rename playlist_file to playlist_files
+
 Playlists
 =============
 - Always completely delete and overwrite

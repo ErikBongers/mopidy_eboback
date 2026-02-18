@@ -1,5 +1,7 @@
 from typing import TypedDict, NotRequired
 
+Uri = str
+
 AlbumMetaDict = TypedDict('AlbumMetaDict', {
     'albumTitle': NotRequired[str],
     'genre': NotRequired[str],
@@ -19,14 +21,12 @@ PlaylistItemStream = TypedDict('PlaylistItemStream', {
 
 PlaylistDict = TypedDict('PlaylistDict', {
     'name': str,
-    'items': list[PlaylistItemStream],
-    'files': list[str]
+    'items': list[PlaylistItemStream | str],
     })
 
 empty_playlist_def: PlaylistDict = {
     'name': '',
     'items': [],
-    'files': []
 }
 
 PlaylistRow = TypedDict('PlaylistRow', {'uri': str, 'name': str, 'file_path': str})

@@ -42,12 +42,3 @@ class EbobackPlaylists(PlaylistsProvider):
                 check_same_thread=False,
             )
         return self._connection
-
-    def create(self, name: str) -> Optional[Playlist]:
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        digest = hashlib.md5(timestamp.encode("utf-8")).hexdigest()
-        uri = f"eboback:playlist:md5:{digest}"
-        with self._connect() as c:
-            schema.insert_playlist(c, uri, name, "")
-        playlist = Playlist(uri=uri, name=name)
-        return playlist

@@ -8,6 +8,7 @@ from mopidy.models import Ref
 
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
+from mopidy_eboback.database import playlists_db
 from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.types import PlaylistDict
@@ -141,7 +142,7 @@ class DataHandler(tornado.web.RequestHandler):
         logger.info(self.get_argument("ref_type"))
         logger.info(self.get_argument("sequence"))
         with self._connect() as c:
-            schema.add_playlist_ref(
+            playlists_db.add_playlist_ref(
                 c,
                 self.get_argument("playlist_uri"),
                 self.get_argument("item_uri"),
@@ -245,5 +246,5 @@ class DataHandler(tornado.web.RequestHandler):
         file_path = self.storage.get_file_path_for_uri(file_uri)
         if file_path is None:
             raise ValueError(f"Not a valid file uri {file_uri}")
-        playlist_def["files"].append(str(file_path))
+        playlist_def["items"].append(str(file_path))
         self.storage.write_playlist(self.get_argument("playlist_uri"), playlist_def)

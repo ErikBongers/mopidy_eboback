@@ -1,5 +1,3 @@
-import urllib
-from datetime import datetime, timezone
 import hashlib
 import json
 import logging
@@ -7,15 +5,17 @@ import pathlib
 import shutil
 import sqlite3
 import struct
+from datetime import datetime, timezone
 from pathlib import Path
 from sqlite3 import Connection
-from typing import TypedDict, cast, Any
+from typing import TypedDict
 from urllib.parse import urlparse
 
-import uritools
-from mopidy.models import Track, Playlist
+from mopidy.audio import tags
+from mopidy.models import Track
 
 from . import Extension, schema, translator, ImageCache
+from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
 from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
 from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow
@@ -206,13 +206,10 @@ class LocalStorageProvider:
         schema.delete_track(self._connect(), uri)
 
     def delete_file_playlists(self):
-        schema.delete_file_playlists(self._connect())
+        playlists_db.delete_file_playlists(self._connect())
 
-    def add_playlist(self, name: str, file_path: pathlib.Path, hash_data: str):
-        digest = hashlib.md5(hash_data. encode(encoding="utf-8")).hexdigest()
-        uri = "eboback:playlist:md5:"+digest
-        schema.insert_playlist(self._connect(), uri, name, file_path.as_uri())
-        return uri
+    def add_playlist(self, name: str, file_path: pathlib.Path):
+        return playlists_db.insert_playlist(self._connect(), name, file_path)
 
     def flush(self):
         if not self._connection:
@@ -276,7 +273,7 @@ class LocalStorageProvider:
         if model.name:
             name = model.name
         else:
-            name = translator.local_uri_to_path(model.uri, "").name
+            name = translator.local_uri_to_path(model.uri, "").name #todo: is this a problem?
         if model.album and model.album.name:
             album = self._validate_album(model.album)
         else:
@@ -372,7 +369,7 @@ class LocalStorageProvider:
                 schema.update_album_genre(self._connect(), album_uri, meta_data["genre"])
 
     def add_playlist_ref(self, playlist_uri: str, uri: str, ref_type: str, sequence: int):
-        schema.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)
+        playlists_db.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)
 
     def add_genre_replacement(self, org_name, new_name):
         schema.insert_genre_replacement(self._connect(), org_name, new_name)
@@ -460,16 +457,15 @@ class LocalStorageProvider:
     def create_playlist(self, playlist_name: str):
         filename = playlist_name + ".eboplayer.playlist"
         path = pathlib.Path(self._media_dir) / filename
-        playlist_uri = "eboback:playlist:"+hashlib.md5(filename.encode()).hexdigest()
         with self._connect() as c:
-            schema.insert_playlist(c, playlist_uri, playlist_name, path.as_uri())
+            playlists_db.insert_playlist(c, playlist_name, path)
             with open(path, "w") as f:
                 new_playlist_def: PlaylistDict = empty_playlist_def.copy()
                 new_playlist_def["name"] = playlist_name
                 f.write(json.dumps(new_playlist_def, indent=4, cls=CompactJSONEncoder))
 
     def read_playlist(self, playlist_uri: str) -> PlaylistDict:
-        playlist_row = schema.read_playlist(self._connect(), playlist_uri)
+        playlist_row = playlists_db.read_playlist(self._connect(), playlist_uri)
         file_path_uri = playlist_row["file_path"]
         file_path = Path(urlparse(file_path_uri).path)
         playlist_def: PlaylistDict = empty_playlist_def.copy()
@@ -477,7 +473,7 @@ class LocalStorageProvider:
         return playlist_def
 
     def write_playlist(self, playlist_uri: str, playlist_def: PlaylistDict):
-        playlist_row = schema.read_playlist(self._connect(), playlist_uri)
+        playlist_row = playlists_db.read_playlist(self._connect(), playlist_uri)
         file_path_uri = playlist_row["file_path"]
         file_path = Path(urlparse(file_path_uri).path)
         with open(file_path, "w") as f:
@@ -492,6 +488,26 @@ class LocalStorageProvider:
             return None
         return translator.local_uri_to_path(file_uri, self._media_dir)
 
+    def save_playlist_file_in_db(self, playlist_file: pathlib.Path):
+        playlist_text = playlist_file.read_text()
+        playlist: PlaylistDict = json.loads(playlist_text)
+        name: str = playlist['name']
+        items = playlist['items']
+        with self._connect() as c:
+            playlist_uri = playlists_db.insert_playlist(c, name, playlist_file)
+            playlists_db.delete_playlist_items(c, playlist_uri)
+            for idx, item in enumerate(items):
+                if type(item) is str:
+                    # file type
+                    playlists_db.add_playlist_file(c, playlist_uri, item)
+                elif item['type'] == 'stream':
+                    track = tags.convert_tags_to_track({}).replace(
+                        name=item['name'],
+                        uri="eboback:stream:" + item['uri'],
+                        genre=item['genre']
+                    )
+                    self.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"])  # todo: this may already exist. Ok to overwrite?
+                    self.add_playlist_ref(playlist_uri, track.uri, "track", idx)  # todo: streams are saved as tracks...
 
 
 def get_image_size(data: bytes, ext: str, data_source: str):

@@ -8,9 +8,7 @@ from typing import TypedDict
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
-from mopidy_eboback.types import PlaylistRow, TrackRow
-
-Uri = str
+from mopidy_eboback.types import TrackRow
 
 _IMAGE_SIZE_RE = re.compile(r".*-(\d+)x(\d+)\.(?:png|gif|jpeg)$")
 
@@ -445,23 +443,6 @@ def insert_stream_track(c, track, exclude_streamlines: str, program_titles: str)
     )
     return track.uri
 
-def get_playlists(c):
-    return c.execute("SELECT * FROM playlists").fetchall()
-
-def delete_file_playlists(c):
-    c.execute("DELETE FROM playlists where file_path IS NOT NULL")
-
-def insert_playlist(c: Connection, uri: str, name: str, file_path: str):
-    _insert_or_replace(
-        c,
-        "playlists",
-        {
-            "uri": uri,
-            "name": name,
-            "file_path": file_path,
-        },
-    )
-
 def insert_genre_replacement(c, org_name, new_name):
     _insert_or_replace(
         c,
@@ -471,32 +452,6 @@ def insert_genre_replacement(c, org_name, new_name):
             "new_name": new_name,
         },
     )
-
-def add_playlist_ref(c: Connection, playlist_uri: str, uri: str, ref_type: str, sequence: int) -> None:
-    _insert_or_replace(c, "playlist_refs", {
-        "playlist_uri": playlist_uri,
-        "uri": uri,
-        "ref_type": ref_type,
-        "sequence": sequence
-    })
-
-
-def get_playlist_tracks(c, uri: Uri):
-    return c.execute("""
-        SELECT refs.uri, track.name, refs.sequence
-        FROM playlist_refs as refs
-                 INNER JOIN track ON track.uri = refs.uri
-        WHERE playlist_uri = ?
-          AND refs.ref_type = 'track'
-        UNION
-        SELECT track.uri, track.name, album_refs.sequence
-        FROM playlist_refs as album_refs
-                 INNER JOIN track ON track.album = album_refs.uri
-        WHERE playlist_uri = ?
-          AND album_refs.ref_type = 'album'
-        ORDER BY sequence;
-    """,
-    (uri,uri)).fetchall()
 
 def insert_image(c: Connection, file_path, width: int, height: int, embedded: bool) -> int:
     cursor = c.execute("select id from images where file_path = ?", (file_path,))
@@ -864,14 +819,6 @@ def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumPathAndNameRo
     )
     row = cursor.fetchone()
     return {"name": row[0], "path": row[1]}
-
-
-def read_playlist(c: Connection, playlist_uri: str) -> PlaylistRow:
-    cursor = c.execute("""
-        select uri, name, file_path from playlists where uri = ?;
-    """, (playlist_uri,))
-    row = cursor.fetchone()
-    return {"uri": row[0], "name": row[1], "file_path": row[2]}
 
 
 def get_track_row(c: Connection, uri: str) -> TrackRow:

@@ -1,4 +1,3 @@
-import json
 import logging
 import pathlib
 import time
@@ -13,7 +12,6 @@ from wavinfo import WavInfoReader
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.translator import path_to_track_uri
-from mopidy_eboback.types import PlaylistDict
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
@@ -163,32 +161,15 @@ class ScanCommand(commands.Command):
         self.storage.delete_file_playlists()
         logger.info("Number of playlist files found:" + str(len(playlist_files)))
         for playlist_file in playlist_files:
-            playlist_text = playlist_file.read_text()
             if playlist_file.suffixes == [".eboplayer", ".playlist"]:
-                playlist: PlaylistDict = json.loads(playlist_text)
-                name: str = playlist['name']
-                items = playlist['items']
-                hashdata: str = playlist_text
-                playlist_uri = self.storage.add_playlist(name, playlist_file, hashdata)
-                for idx, item in enumerate(items):
-                    if item['type'] == 'stream':
-                        track = tags.convert_tags_to_track({}).replace(
-                            name=item['name'],
-                            uri="eboback:stream:" + item['uri'],
-                            genre=item['genre']
-                        )
-                        self.storage.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"]) #todo: this may already exist. Ok to overwrite?
-                        self.storage.add_playlist_ref(playlist_uri, track.uri, "track", idx) #todo: streams are saved as tracks...
-
+                self.storage.save_playlist_file_in_db(playlist_file)
             else:
                 if playlist_file.suffix == ".wpl":
                     full_path = playlist_file.resolve().as_posix()
                     logger.info("Parsing playlist file: " + full_path)
                     wpl: Wpl = text_scanner_py.scan_wpl(full_path)
-                    name: str = wpl.name
                     items2 = wpl.items
-                    hashdata: str = full_path
-                    playlist_uri = self.storage.add_playlist(name, playlist_file, hashdata)
+                    playlist_uri = self.storage.add_playlist(wpl.name, playlist_file)
                     for idx, line in enumerate(items2):
                         uri = path_to_track_uri(line.path, self.media_dir)
                         # Assuming the track will already be added during the scan, so just add the playlist ref.
