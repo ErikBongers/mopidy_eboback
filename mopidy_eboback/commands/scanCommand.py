@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import time
+from typing import Callable
 
 import mutagen
 from mopidy import commands
@@ -52,34 +53,45 @@ class ScanCommand(commands.Command):
         )
 
     def run(self, args, config):
-        return self.just_run_it(config, args.force, args.limit)
+        def void_reporter(msg: str) -> None:
+            pass
+        return self.just_run_it(config, void_reporter, args.force, args.limit)
 
-    def just_run_it(self, config, force: bool = False, limit: int = None):
-        logger.setLevel(logging.DEBUG)
+    def just_run_it(self, config, report_progress: Callable[[str], None], force: bool = False, limit: int = None):
         self.init_scan(config, force, limit) #todo: force the order of these function calls?
 
         upgraded_to_version = self.create_or_upgrad_db()
         if upgraded_to_version:
             pass # log message.
 
+        report_progress("Scanning media directory...")
         self.find_files()
 
+        report_progress("Comparing media files to library...")
         self.compare_files_to_library()
         # log lib files, removed files and changed files.
 
+        report_progress("Removing missing tracks...")
         if self.remove_tracks():
             pass # log message.
 
+
+        report_progress("Filtering files...")
         self.include_and_filter_new_files()
 
+        report_progress("Scanning metadata in files...")
         self.scan_metadata()
 
+        report_progress("Cleaning up images...")
         self.storage.cleanup_images()
 
+        report_progress("Scanning .eboplayer.playlist files...")
         self.scan_eboplayer_files(self.playlist_files)
 
+        report_progress("Updating database...")
         self.update_db()
 
+        report_progress("Scanning .eboplayer files...")
         self.run_update_meta_cmd()
 
         self.storage.close()
@@ -161,12 +173,12 @@ class ScanCommand(commands.Command):
         self.storage.delete_file_playlists()
         logger.info("Number of playlist files found:" + str(len(playlist_files)))
         for playlist_file in playlist_files:
+            full_path = playlist_file.resolve().as_posix()
+            logger.info("Parsing playlist file: " + full_path)
             if playlist_file.suffixes == [".eboplayer", ".playlist"]:
                 self.storage.save_playlist_file_in_db(playlist_file)
             else:
                 if playlist_file.suffix == ".wpl":
-                    full_path = playlist_file.resolve().as_posix()
-                    logger.info("Parsing playlist file: " + full_path)
                     wpl: Wpl = text_scanner_py.scan_wpl(full_path)
                     items2 = wpl.items
                     playlist_uri = self.storage.add_playlist(wpl.name, playlist_file)

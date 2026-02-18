@@ -51,19 +51,18 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
 
 
 def threaded_scan(config):
+    def reporter(message) -> None:
+        the_event = {
+            "event": "scan_status",
+            "message": message
+        }
+        broadcast(json.dumps(the_event))
+
     scan_cmd = ScanCommand()
-    scan_cmd.just_run_it(config)
+    scan_cmd.just_run_it(config, reporter)
 
-    the_event = {
-        "event": "scan_status",
-        "message": "Updating meta..."
-    }
-    meta_cmd = UpdateMetaCommand()
-    broadcast(json.dumps(the_event))
-    meta_cmd.just_run_it(config)
-
-    the_event = {
+    the_end = {
         "event": "scan_finished",
         "message": "nada..."
     }
-    broadcast(json.dumps(the_event))
+    broadcast(json.dumps(the_end))
