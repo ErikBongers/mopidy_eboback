@@ -506,7 +506,7 @@ class LocalStorageProvider:
             playlists_db.delete_playlist_items(c, playlist_uri)
             for idx, item in enumerate(items):
                 if type(item) is str:
-                    # file type
+                    # file path or stream url
                     playlists_db.add_playlist_file(c, playlist_uri, item)
                 elif item['type'] == 'stream':
                     track = tags.convert_tags_to_track({}).replace(

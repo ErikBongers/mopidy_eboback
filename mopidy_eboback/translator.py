@@ -32,7 +32,7 @@ def path_to_file_uri(path: Union[str, bytes, Path]) -> str:
     return ppath.as_uri()
 
 
-def path_to_track_uri(
+def path_to_track_or_stream_uri(
     path: Union[str, bytes, Path], media_dir: Path
 ) -> str:
     """Convert path to local track URI."""
