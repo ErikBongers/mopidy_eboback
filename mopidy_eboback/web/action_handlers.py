@@ -38,7 +38,7 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
                          "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist",
-                         "add_playlist_file"]:
+                         "add_playlist_file", "toggle_favorite"]:
             func = getattr(self, data_path)
             func()
             return
@@ -242,11 +242,18 @@ class DataHandler(tornado.web.RequestHandler):
         self.write({"status": "ok", "playlist_uri": playlist_uri})
 
     def add_playlist_file(self):
-        playlist_def: PlaylistDict = self.storage.read_playlist(self.get_argument("playlist_uri"))
+        playlist_def: PlaylistDict = self.storage.read_playlist_file(self.get_argument("playlist_uri"))
         file_uri = self.get_argument("file_uri")
         file_path = self.storage.get_file_path_for_uri(file_uri)
         if file_path is None:
             raise ValueError(f"Not a valid file uri {file_uri}")
         playlist_def["items"].append(str(file_path))
-        self.storage.write_playlist(self.get_argument("playlist_uri"), playlist_def)
+        self.storage.write_playlist_file(self.get_argument("playlist_uri"), playlist_def)
         self.storage.save_playlist_dict_in_db(playlist_def, file_path)
+
+    def toggle_favorite(self):
+        uri: Uri = self.get_argument("uri")
+        is_favorite = self.storage.toggle_favorite(uri)
+        self.write(json.dumps({"status": "ok", "is_favorite": is_favorite}))
+
+    def get_favorite_uris(self):

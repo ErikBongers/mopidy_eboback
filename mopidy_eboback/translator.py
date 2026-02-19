@@ -6,6 +6,8 @@ import urllib
 from pathlib import Path
 from typing import Union
 
+from mopidy_eboback.types import Uri
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,9 +34,7 @@ def path_to_file_uri(path: Union[str, bytes, Path]) -> str:
     return ppath.as_uri()
 
 
-def path_to_track_or_stream_uri(
-    path: Union[str, bytes, Path], media_dir: Path
-) -> str:
+def path_to_track_or_stream_uri(path: Union[str, bytes, Path], media_dir: Path) -> str:
     """Convert path to local track URI."""
     if isinstance(path, str):
         if path.startswith("http"):
@@ -44,3 +44,8 @@ def path_to_track_or_stream_uri(
         ppath = ppath.relative_to(media_dir)
     quoted_path = urllib.parse.quote(bytes(ppath))
     return f"eboback:track:{quoted_path}"
+
+def track_or_stream_uri_to_path_or_url(uri: Uri, media_dir: Path):
+    if uri.startswith("eboback:stream:"):
+        return uri[len("eboback:stream:"):]
+    return local_uri_to_path(uri, media_dir)

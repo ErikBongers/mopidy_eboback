@@ -9,6 +9,13 @@ from mopidy_eboback.types import Uri, PlaylistRow
 def get_playlists(c):
     return c.execute("SELECT * FROM playlists").fetchall()
 
+def get_playlist_by_name(c, name) -> PlaylistRow | None:
+    cursor = c.execute("SELECT uri, name, file_path FROM playlists WHERE name = ?", (name,)).fetchone()
+    if cursor is None:
+        return None
+    row: PlaylistRow = {"uri": cursor[0], "name": cursor[1], "file_path": cursor[2]}
+    return row
+
 def delete_file_playlists(c):
     c.execute("DELETE FROM playlists where file_path IS NOT NULL")
 
@@ -69,3 +76,12 @@ def delete_playlist_items(c: Connection, playlist_uri: Uri):
     c.execute("delete from playlist_files where playlist_uri = ?", (playlist_uri,))
     c.execute("delete from playlist_excludes where playlist_uri = ?", (playlist_uri,))
     c.execute("delete from playlist_filters where playlist_uri = ?", (playlist_uri,))
+
+def get_playlist_items_by_name(c, playlist_name: str) -> list[Uri]:
+    rows = c.execute("""
+        select path from playlist_files 
+        where playlist_uri in (
+            select uri from playlists where name = ?
+            )
+    """, (playlist_name,)).fetchall()
+    return [row[0] for row in rows]

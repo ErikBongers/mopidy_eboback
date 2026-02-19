@@ -18,7 +18,7 @@ from . import Extension, schema, translator, ImageCache
 from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
 from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
-from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow
+from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, Uri
 
 logger = logging.getLogger(__name__)
 
@@ -469,7 +469,7 @@ class LocalStorageProvider:
                 f.write(json.dumps(new_playlist_def, indent=4, cls=CompactJSONEncoder))
                 return playlist_uri
 
-    def read_playlist(self, playlist_uri: str) -> PlaylistDict:
+    def read_playlist_file(self, playlist_uri: str) -> PlaylistDict:
         playlist_row = playlists_db.read_playlist(self._connect(), playlist_uri)
         file_path_uri = playlist_row["file_path"]
         file_path = Path(urlparse(file_path_uri).path)
@@ -477,7 +477,7 @@ class LocalStorageProvider:
         playlist_def.update(json.loads(file_path.read_text()))
         return playlist_def
 
-    def write_playlist(self, playlist_uri: str, playlist_def: PlaylistDict):
+    def write_playlist_file(self, playlist_uri: str, playlist_def: PlaylistDict):
         playlist_row = playlists_db.read_playlist(self._connect(), playlist_uri)
         file_path_uri = playlist_row["file_path"]
         file_path = Path(urlparse(file_path_uri).path)
@@ -516,6 +516,33 @@ class LocalStorageProvider:
                     )
                     self.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"])  # todo: this may already exist. Ok to overwrite?
                     self.add_playlist_ref(playlist_uri, track.uri, "track", idx)  # todo: streams are saved as tracks...
+
+    def toggle_favorite(self, item_uri: Uri) -> bool:
+        favorites_name = "Favorites" #todo: defined in settings.
+        item_path_or_url = translator.track_or_stream_uri_to_path_or_url(item_uri, self._media_dir)
+        logger.info(f"Toggle favorite for item {item_uri} ({item_path_or_url})")
+        with self._connect() as c:
+            playlist_row = playlists_db.get_playlist_by_name(c, favorites_name)
+            if playlist_row is None:
+                playlist_path = self._media_dir / (favorites_name + ".eboplayer.playlist")
+                playlist_uri: Uri = playlists_db.insert_playlist(c, favorites_name, playlist_path)
+                playlist_def: PlaylistDict = empty_playlist_def.copy()
+                playlist_def["name"] = favorites_name
+            else:
+                playlist_path = playlist_row["file_path"]
+                playlist_uri = playlist_row["uri"]
+                playlist_def = self.read_playlist_file(playlist_uri)
+            # toggle item (str) in favorites playlist
+            if item_path_or_url in playlist_def["items"]:
+                playlist_def["items"].remove(item_path_or_url)
+                is_favorite = False
+            else:
+                playlist_def["items"].append(item_path_or_url)
+                is_favorite = True
+            self.write_playlist_file(playlist_uri, playlist_def)
+            # update db
+            self.save_playlist_dict_in_db(playlist_def, playlist_path)
+            return is_favorite
 
 
 def get_image_size(data: bytes, ext: str, data_source: str):
