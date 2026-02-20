@@ -20,8 +20,8 @@ def delete_file_playlists(c):
     c.execute("DELETE FROM playlists where file_path IS NOT NULL")
 
 def insert_playlist(c: Connection, name: str, file_path: Path) -> Uri:
-    file_path_uri = file_path.as_uri()
-    digest = hashlib.md5(str(file_path_uri).encode(encoding="utf-8")).hexdigest()
+    file_path_str = str(file_path)
+    digest = hashlib.md5(str(file_path_str).encode(encoding="utf-8")).hexdigest()
     uri = "eboback:playlist:md5:" + digest
     _insert_or_replace(
         c,
@@ -29,7 +29,7 @@ def insert_playlist(c: Connection, name: str, file_path: Path) -> Uri:
         {
             "uri": uri,
             "name": name,
-            "file_path": file_path_uri,
+            "file_path": file_path_str,
         },
     )
     return uri

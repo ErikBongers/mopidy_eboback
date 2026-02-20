@@ -37,7 +37,7 @@ class GenreDefClass():
             sort_keys=True,
             indent=4)
 
-RootMetaDef = TypedDict( "RootMetaDef", {
+RootMetaDef = TypedDict( "RootMetaDef", { #todo: move to types.py
     "//name": str,
     "name": str,
     "//streams_folder": str,
@@ -524,12 +524,12 @@ class LocalStorageProvider:
         with self._connect() as c:
             playlist_row = playlists_db.get_playlist_by_name(c, favorites_name)
             if playlist_row is None:
-                playlist_path = self._media_dir / (favorites_name + ".eboplayer.playlist")
+                playlist_path: Path = self._media_dir / (favorites_name + ".eboplayer.playlist")
                 playlist_uri: Uri = playlists_db.insert_playlist(c, favorites_name, playlist_path)
                 playlist_def: PlaylistDict = empty_playlist_def.copy()
                 playlist_def["name"] = favorites_name
             else:
-                playlist_path = playlist_row["file_path"]
+                playlist_path = Path(playlist_row["file_path"])
                 playlist_uri = playlist_row["uri"]
                 playlist_def = self.read_playlist_file(playlist_uri)
             # toggle item (str) in favorites playlist
@@ -541,8 +541,17 @@ class LocalStorageProvider:
                 is_favorite = True
             self.write_playlist_file(playlist_uri, playlist_def)
             # update db
+            logger.info(f"saving playlist {str(playlist_path)} to db")
             self.save_playlist_dict_in_db(playlist_def, playlist_path)
             return is_favorite
+
+    def get_favorite_uris(self):
+        playlist_name = "Favorites"  # todo: get from settings.
+        items = playlists_db.get_playlist_items_by_name(self._connect(), playlist_name)
+        def to_url(item) -> str:
+            return translator.path_to_track_or_stream_uri(item, self._media_dir)
+        item_urls = list(map(to_url, items))
+        return item_urls
 
 
 def get_image_size(data: bytes, ext: str, data_source: str):

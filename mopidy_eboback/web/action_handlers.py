@@ -11,7 +11,7 @@ from mopidy_eboback import schema
 from mopidy_eboback.database import playlists_db
 from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
 from mopidy_eboback.storage import LocalStorageProvider
-from mopidy_eboback.types import PlaylistDict
+from mopidy_eboback.types import PlaylistDict, Uri
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
                          "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist",
-                         "add_playlist_file", "toggle_favorite"]:
+                         "add_playlist_file", "toggle_favorite", "get_favorite_uris"]:
             func = getattr(self, data_path)
             func()
             return
@@ -257,3 +257,6 @@ class DataHandler(tornado.web.RequestHandler):
         self.write(json.dumps({"status": "ok", "is_favorite": is_favorite}))
 
     def get_favorite_uris(self):
+        favorite_uris = self.storage.get_favorite_uris()
+        self.set_header("Content-Type", 'application/json')
+        self.write(json.dumps(favorite_uris))
