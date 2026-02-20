@@ -806,9 +806,9 @@ def get_album_track_uris(c, album_uri: str) -> list[str]:
     rows = c.execute("select distinct uri from track where album = ?", (album_uri,)).fetchall()
     return [row[0] for row in rows]
 
-AlbumPathAndNameRow = TypedDict('AlbumPathAndNameRow', {'name': str, 'path': str})
+AlbumKeyInfoRow = TypedDict('AlbumKeyInfoRow', {'name': str, 'path': str, 'uri': str})
 
-def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumPathAndNameRow:
+def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumKeyInfoRow:
     cursor = c.execute(
         """
         select name, path
@@ -818,7 +818,19 @@ def get_album_path_and_name(c: Connection, album_uri: str) -> AlbumPathAndNameRo
         (album_uri,)
     )
     row = cursor.fetchone()
-    return {"name": row[0], "path": row[1]}
+    return {"name": row[0], "path": row[1], "uri": album_uri}
+
+def get_album_uri_and_name(c: Connection, path: pathlib.Path) -> AlbumKeyInfoRow:
+    cursor = c.execute(
+        """
+        select name, uri
+        from album
+        where album.path = ?;
+        """,
+        (str(path),)
+    )
+    row = cursor.fetchone()
+    return {"name": row[0], "uri": row[1], "path": str(path)}
 
 
 def get_track_row(c: Connection, uri: str) -> TrackRow:

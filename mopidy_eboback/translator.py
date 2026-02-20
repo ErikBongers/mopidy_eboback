@@ -32,20 +32,3 @@ def path_to_file_uri(path: Union[str, bytes, Path]) -> str:
     ppath = Path(os.fsdecode(path))
     assert ppath.is_absolute()
     return ppath.as_uri()
-
-
-def path_to_track_or_stream_uri(path: Union[str, bytes, Path], media_dir: Path) -> str:
-    """Convert path to local track URI."""
-    if isinstance(path, str):
-        if path.startswith("http"):
-            return f"eboback:stream:{path}"
-    ppath = Path(os.fsdecode(path))
-    if ppath.is_absolute():
-        ppath = ppath.relative_to(media_dir)
-    quoted_path = urllib.parse.quote(bytes(ppath))
-    return f"eboback:track:{quoted_path}"
-
-def track_or_stream_uri_to_path_or_url(uri: Uri, media_dir: Path) -> str:
-    if uri.startswith("eboback:stream:"):
-        return uri[len("eboback:stream:"):]
-    return str(local_uri_to_path(uri, media_dir))

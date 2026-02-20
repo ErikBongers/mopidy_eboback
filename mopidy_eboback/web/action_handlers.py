@@ -9,7 +9,7 @@ from mopidy.models import Ref
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
 from mopidy_eboback.database import playlists_db
-from mopidy_eboback.schema import GenreReplacementRow, AlbumPathAndNameRow
+from mopidy_eboback.schema import GenreReplacementRow, AlbumKeyInfoRow
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.types import PlaylistDict, Uri
 
@@ -221,7 +221,7 @@ class DataHandler(tornado.web.RequestHandler):
         album_uri = self.get_argument("album_uri")
         image_url = self.get_argument("image_url")
 
-        album_path_and_name: AlbumPathAndNameRow = self.storage.get_album_path_and_name(album_uri)
+        album_path_and_name: AlbumKeyInfoRow = self.storage.get_album_path_and_name(album_uri)
         logger.info(f'Uploading image for album {album_path_and_name["name"]} to {album_path_and_name["path"]}')
 
         path = pathlib.Path(album_path_and_name["path"])

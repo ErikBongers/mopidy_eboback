@@ -100,7 +100,7 @@ def test_path_to_file_uri(path, uri):
 def test_path_to_local_track_uri(path, uri):
     media_dir = pathlib.Path("/home/alice/Music")
 
-    result = translator.path_to_track_or_stream_uri(path, media_dir)
+    result = translator.playlist_item_to_uri(path, media_dir)
 
     assert isinstance(result, str)
     assert result == uri

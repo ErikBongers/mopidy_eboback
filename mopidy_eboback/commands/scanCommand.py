@@ -12,7 +12,6 @@ from wavinfo import WavInfoReader
 
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.storage import LocalStorageProvider
-from mopidy_eboback.translator import path_to_track_or_stream_uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
@@ -183,7 +182,7 @@ class ScanCommand(commands.Command):
                     items2 = wpl.items
                     playlist_uri = self.storage.add_playlist(wpl.name, playlist_file)
                     for idx, line in enumerate(items2):
-                        uri = path_to_track_or_stream_uri(line.path, self.media_dir)
+                        uri = self.storage.playlist_item_to_uri(line.path)
                         # Assuming the track will already be added during the scan, so just add the playlist ref.
                         self.storage.add_playlist_ref(playlist_uri, uri, "track", idx)
 
@@ -290,7 +289,7 @@ class ScanCommand(commands.Command):
                         f"Track shorter than {MIN_DURATION_MS}ms"
                     )
                 else:
-                    local_uri = translator.path_to_track_or_stream_uri(absolute_path, self.media_dir)
+                    local_uri = translator.playlist_item_to_uri(absolute_path, self.media_dir)
                     mtime = self.file_mtimes.get(absolute_path)
                     track: Track = tags.convert_tags_to_track(result.tags).replace(
                         uri=local_uri,
@@ -311,14 +310,14 @@ class ScanCommand(commands.Command):
                         track = self.scan_wavinfo(absolute_path)
                         if track:
                             mtime = self.file_mtimes.get(absolute_path)
-                            local_uri = translator.path_to_track_or_stream_uri(absolute_path, self.media_dir)
+                            local_uri = translator.playlist_item_to_uri(absolute_path, self.media_dir)
                             track = track.replace(uri=local_uri)
                             track = track.replace(last_modified=mtime)
                             self.storage.add_track(track, None, None)
                             logger.debug(f"Added {track.uri}")
                     else:
                         mtime = self.file_mtimes.get(absolute_path)
-                        local_uri = translator.path_to_track_or_stream_uri(absolute_path, self.media_dir)
+                        local_uri = translator.playlist_item_to_uri(absolute_path, self.media_dir)
                         track = self.scan_mutagen_full(absolute_path, track=Track(uri=local_uri, last_modified=mtime))
                         if track:
                             self.storage.add_track(track, None, None) # todo: pass a results.image, so add() can extract the images from the tags. Different extensions have different image tag names.

@@ -1,14 +1,16 @@
 import hashlib
 import json
 import logging
+import os
 import pathlib
 import shutil
 import sqlite3
 import struct
+import urllib
 from datetime import datetime, timezone
 from pathlib import Path
 from sqlite3 import Connection
-from typing import TypedDict
+from typing import TypedDict, Union
 from urllib.parse import urlparse
 
 from mopidy.audio import tags
@@ -17,7 +19,7 @@ from mopidy.models import Track
 from . import Extension, schema, translator, ImageCache
 from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
-from .schema import GenreReplacementRow, ImageDict, AlbumPathAndNameRow
+from .schema import GenreReplacementRow, ImageDict, AlbumKeyInfoRow
 from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, Uri
 
 logger = logging.getLogger(__name__)
@@ -454,9 +456,13 @@ class LocalStorageProvider:
             return schema.get_all_images(c)
 
 
-    def get_album_path_and_name(self, album_uri: str) -> AlbumPathAndNameRow:
+    def get_album_path_and_name(self, album_uri: str) -> AlbumKeyInfoRow:
         with self._connect() as c:
             return schema.get_album_path_and_name(c, album_uri)
+
+    def get_album_uri_and_name(self, path: Path) -> AlbumKeyInfoRow:
+        with self._connect() as c:
+            return schema.get_album_uri_and_name(self._connect(), path)
 
     def create_playlist(self, playlist_name: str):
         filename = playlist_name + ".eboplayer.playlist"
@@ -517,9 +523,35 @@ class LocalStorageProvider:
                     self.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"])  # todo: this may already exist. Ok to overwrite?
                     self.add_playlist_ref(playlist_uri, track.uri, "track", idx)  # todo: streams are saved as tracks...
 
+    def uri_to_playlist_item(self, uri: Uri) -> str:
+        if uri.startswith("eboback:stream:"):
+            return uri[len("eboback:stream:"):]
+        elif uri.startswith("eboback:track:"):
+            return str(translator.local_uri_to_path(uri, self._media_dir))
+        elif uri.startswith("eboback:album:"):
+            return self.get_album_path_and_name(uri)["path"]
+        else:
+            raise ValueError(f"todo: can't yet set favorite for uri of this type")
+
+    def playlist_item_to_uri(self, path: Union[str, bytes, Path]) -> Uri:
+        if isinstance(path, str):
+            if path.startswith("http"):
+                return f"eboback:stream:{path}"
+        ppath = Path(os.fsdecode(path))
+        if ppath.is_absolute():
+            absolute_path = ppath
+            ppath = ppath.relative_to(self._media_dir)
+        else:
+            absolute_path = self._media_dir / ppath
+        escaped_path = urllib.parse.quote(bytes(ppath))
+        if not absolute_path.is_dir():
+            return f"eboback:track:{escaped_path}"
+        else:
+            return self.get_album_uri_and_name(absolute_path)["uri"] #todo: it could be a relative path!
+
     def toggle_favorite(self, item_uri: Uri) -> bool:
         favorites_name = "Favorites" #todo: defined in settings.
-        item_path_or_url = translator.track_or_stream_uri_to_path_or_url(item_uri, self._media_dir)
+        item_path_or_url: str = self.uri_to_playlist_item(item_uri)
         logger.info(f"Toggle favorite for item {item_uri} ({item_path_or_url})")
         with self._connect() as c:
             playlist_row = playlists_db.get_playlist_by_name(c, favorites_name)
@@ -549,7 +581,7 @@ class LocalStorageProvider:
         playlist_name = "Favorites"  # todo: get from settings.
         items = playlists_db.get_playlist_items_by_name(self._connect(), playlist_name)
         def to_url(item) -> str:
-            return translator.path_to_track_or_stream_uri(item, self._media_dir)
+            return self.playlist_item_to_uri(item)
         item_urls = list(map(to_url, items))
         return item_urls
 
