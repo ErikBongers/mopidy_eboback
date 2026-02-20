@@ -48,4 +48,4 @@ def path_to_track_or_stream_uri(path: Union[str, bytes, Path], media_dir: Path) 
 def track_or_stream_uri_to_path_or_url(uri: Uri, media_dir: Path):
     if uri.startswith("eboback:stream:"):
         return uri[len("eboback:stream:"):]
-    return local_uri_to_path(uri, media_dir)
+    return str(local_uri_to_path(uri, media_dir))
