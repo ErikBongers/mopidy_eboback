@@ -585,6 +585,13 @@ class LocalStorageProvider:
         item_urls = list(map(to_url, items))
         return item_urls
 
+    def get_playlist_item_uris(self, playlist_uri: Uri):
+        items = playlists_db.get_playlist_items(self._connect(), playlist_uri)
+        def to_url(item) -> str:
+            return self.playlist_item_to_uri(item)
+        item_urls = list(map(to_url, items))
+        return item_urls
+
 
 def get_image_size(data: bytes, ext: str, data_source: str):
     width: int | None = None

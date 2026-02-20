@@ -2,6 +2,8 @@ import hashlib
 from pathlib import Path
 from sqlite3 import Connection
 
+from mopidy.models import Ref
+
 from mopidy_eboback.schema import _insert_or_replace
 from mopidy_eboback.types import Uri, PlaylistRow
 
@@ -43,8 +45,8 @@ def add_playlist_ref(c: Connection, playlist_uri: str, uri: str, ref_type: str, 
     })
 
 
-def get_playlist_tracks(c, uri: Uri):
-    return c.execute("""
+def get_playlist_tracks(c, uri: Uri) -> list[Ref]:
+    rows = c.execute("""
         SELECT refs.uri, track.name, refs.sequence
         FROM playlist_refs as refs
                  INNER JOIN track ON track.uri = refs.uri
@@ -59,6 +61,7 @@ def get_playlist_tracks(c, uri: Uri):
         ORDER BY sequence;
     """,
     (uri,uri)).fetchall()
+    return list(map(lambda row: Ref.track(name=row["name"], uri=row["uri"]), rows))
 
 def read_playlist(c: Connection, playlist_uri: str) -> PlaylistRow:
     cursor = c.execute("""
@@ -84,4 +87,11 @@ def get_playlist_items_by_name(c, playlist_name: str) -> list[Uri]:
             select uri from playlists where name = ?
             )
     """, (playlist_name,)).fetchall()
+    return [row[0] for row in rows]
+
+def get_playlist_items(c, playlist_uri: Uri) -> list[Uri]:
+    rows = c.execute("""
+        select path from playlist_files 
+        where playlist_uri  = ?
+    """, (playlist_uri,)).fetchall()
     return [row[0] for row in rows]
