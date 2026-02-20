@@ -45,7 +45,7 @@ def path_to_track_or_stream_uri(path: Union[str, bytes, Path], media_dir: Path) 
     quoted_path = urllib.parse.quote(bytes(ppath))
     return f"eboback:track:{quoted_path}"
 
-def track_or_stream_uri_to_path_or_url(uri: Uri, media_dir: Path):
+def track_or_stream_uri_to_path_or_url(uri: Uri, media_dir: Path) -> str:
     if uri.startswith("eboback:stream:"):
         return uri[len("eboback:stream:"):]
     return str(local_uri_to_path(uri, media_dir))
