@@ -38,7 +38,7 @@ class DataHandler(tornado.web.RequestHandler):
         if data_path in ["get_album_meta", "get_genre_replacements", "write_root_meta", "get_excluded_streamlines",
                          "get_program_titles", "get_remembers", "get_history", "get_all_refs", "update_album_data",
                          "upload_album_image", "get_genre_defs", "set_album_genre", "create_playlist",
-                         "add_playlist_file", "toggle_favorite", "get_favorite_uris"]:
+                         "add_playlist_file", "toggle_favorite", "get_favorite_uris", "get_favorites_playlist_name"]:
             func = getattr(self, data_path)
             func()
             return
@@ -260,3 +260,7 @@ class DataHandler(tornado.web.RequestHandler):
         favorite_uris = self.storage.get_favorite_uris()
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(favorite_uris))
+
+    def get_favorites_playlist_name(self):
+        self.set_header("Content-Type", 'text/plain')
+        self.write(self.storage.get_root_meta()["favorites_playlist"])
