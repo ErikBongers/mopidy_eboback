@@ -132,7 +132,14 @@ class LocalLibraryProvider(backend.LibraryProvider):
 
     def _browse_artist(self, uri, order=("type", "name COLLATE NOCASE")):
         with self._connect() as c:
-            albums = schema.browse(c, Ref.ALBUM, order, albumartist=uri)
+            albums_albumartists = schema.browse(c, Ref.ALBUM, order, albumartist=uri)
+            albums_composers = schema.browse(c, Ref.ALBUM, order, composer=uri)
+            albums_artists = schema.browse(c, Ref.ALBUM, order, artist=uri)
+            all_albums = albums_albumartists + albums_composers + albums_artists
+            album_dict = {}
+            for album in all_albums:
+                album_dict[album.uri] = album
+            albums = list(album_dict.values())
             refs = schema.browse(c, order=order, artist=uri)
         album_uris, tracks = {ref.uri for ref in albums}, []
         for ref in refs:
