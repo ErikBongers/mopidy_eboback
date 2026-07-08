@@ -276,6 +276,29 @@ def exists(c, uri):
     rows = c.execute("SELECT EXISTS(SELECT * FROM track WHERE uri = ?)", [uri])
     return rows.fetchone()[0]
 
+def get_refs_for_genre(c: Connection, genre: str) -> list[Ref]:
+    sql = """
+        with selected_genres as (
+            select ug.genre, ug.replacement, g.parent
+            from genre_tree_flat g
+            inner join used_genres ug on coalesce(ug.replacement, ug.genre) = coalesce(g.descendant, g.parent)
+            where parent = ?
+        )
+        select 'track' as type, t.uri, t.name
+        from selected_genres g
+        inner join track t on t.genre = coalesce(g.replacement, g.genre)
+        union
+        select 'album' as type, a.uri, a.name
+        from selected_genres g
+        inner join track t on t.genre = g.genre
+        inner join album a on a.uri = t.album
+        union
+        select 'directory' as type, 'eboback:directory?genre='||coalesce(g.replacement, g.genre) as uri, coalesce(g.replacement, g.genre) as name
+        from selected_genres g
+        where coalesce(g.replacement, g.genre) != g.parent
+    """
+    return [Ref(**row) for row in c.execute(sql, (genre,))]
+
 
 def browse(c, type=None, order=("type", "name COLLATE NOCASE"), **kwargs):
     filters, params = _filters(_BROWSE_FILTERS[type], **kwargs)

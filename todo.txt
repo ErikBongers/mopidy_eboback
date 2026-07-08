@@ -1,14 +1,5 @@
-* rename view genres to used_standard_genres
-
-* browse_directory -> genre='Classical' :
-  > don't do the standard browse, as this selects artists and albums where genre = ...
-  > we want:
-    - sub-genres
-      > ref.uri = 'eboback:directory?genre=Xxx'
-    - artists and albums for all those.
-  > only show genres that are in use.
-    > make the inverse tree and the filter all for the ones that are attached to tracks.
-
+* browse genre: also list artists
+  > see schema.get_refs_for_genre()
 
 
 

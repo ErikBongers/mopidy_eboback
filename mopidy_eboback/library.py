@@ -153,9 +153,19 @@ class LocalLibraryProvider(backend.LibraryProvider):
         return albums + tracks
 
     def _browse_directory(self, uri, order=("type", "name COLLATE NOCASE")):
+        logger.info("Browsing directory: %s", uri)
         query = dict(uritools.urisplit(uri).getquerylist())
         type = query.pop("type", None)
         role = query.pop("role", None)
+        genre = query.pop("genre", None)
+        logger.info("Query: %s", query)
+        logger.info("Type: %s", type)
+        logger.info("Role: %s", role)
+        logger.info("Genre: %s", genre)
+
+        if genre:
+            logger.info("Browsing genre: %s", genre)
+            return list(schema.get_refs_for_genre(self._connect(), genre))
 
         if type == "date":
             format = query.get("format", "%Y-%m-%d")
@@ -163,6 +173,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 map(date_ref, schema.dates(self._connect(), format=format))
             )
         if type == "genre":
+            logger.info("Listing genres")
             return list(
                 map(genre_ref, schema.list_distinct(self._connect(), "genre"))
             )
@@ -176,9 +187,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
         roles = role or ("artist", "albumartist")
 
         refs = []
-        for ref in schema.browse(
-            self._connect(), type, order, role=roles, **query
-        ):  # noqa
+        for ref in schema.browse(self._connect(), type, order, role=roles, **query):  # noqa
             if ref.type == Ref.TRACK or (not query and not role):
                 refs.append(ref)
             elif ref.type == Ref.ALBUM:
