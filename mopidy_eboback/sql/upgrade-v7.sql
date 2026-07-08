@@ -167,6 +167,22 @@ create view favorites as
 
 alter table album add column last_modified integer;
 
+create view used_genres as
+        select distinct
+            coalesce(genre, 'null') as genre,
+            genre_replace.new_name as replacement
+        from track
+        LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name;
+
+create view used_standard_genres as
+select replacement as genre
+from used_genres
+where replacement is not null and replacement != ''
+union
+select genre
+from used_genres
+where replacement is null;
+
 create view all_refs as
 -- ALL_REFS for tracks without an album
 with max_images as (
@@ -198,23 +214,11 @@ select 'album' as ref_type, uri, name, last_modified, id_min_image, id_max_image
 union
 select 'artist' as ref_type, uri, name, null as last_modified, null, null from artist
 union
-select distinct 'genre' as ref_type, 'eboback:directory?genre='||replacement as uri, replacement as name, null, null, null
-from genres
-where replacement is not null and replacement != ''
-union
 select distinct 'genre' as ref_type, 'eboback:directory?genre='||genre as uri, genre as name, null, null, null
-from genres
-where replacement is null
+from used_standard_genres
 union
 select 'playlist' as ref_type, uri, name, null, null, null
 from playlists;
-
-create view genres as
-        select distinct
-            coalesce(genre, 'null') as genre,
-            genre_replace.new_name as replacement
-        from track
-        LEFT OUTER JOIN genre_replace on genre = genre_replace.org_name;
 
 create table album_images
 (
