@@ -328,3 +328,6 @@ create index playlist_file_uri_idx on playlist_file (playlist_uri);
 PRAGMA user_version = 8;  -- update schema version
 
 END TRANSACTION;
+
+alter table album add column volume_adjust integer;
+alter table track add column volume_adjust integer;

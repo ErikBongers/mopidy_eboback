@@ -899,3 +899,13 @@ def get_track_row(c: Connection, uri: str) -> TrackRow:
         "exclude_streamlines": row[15],
         "program_titles": row[16]
     }
+
+def get_volume_adjust(c: Connection, track_uri: str) -> int:
+    cursor = c.execute("""
+        select coalesce(t.volume_adjust, a.volume_adjust, 0) as volume_adjust 
+        from track t
+        left outer join album a on t.album = a.uri 
+        where t.uri = ?;
+    """, (track_uri,))
+    row = cursor.fetchone()
+    return row[0] if row else 0

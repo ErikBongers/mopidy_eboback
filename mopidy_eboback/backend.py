@@ -22,22 +22,23 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
 
         storage.check_dirs_and_files(config)
 
-        self._scanner = scan.Scanner(
+        self.the_scanner = scan.Scanner(
             timeout="1000", proxy_config=config["proxy"]
         )
 
-        self._session = http.get_requests_session(
+        self.the_session = http.get_requests_session(
             proxy_config=config["proxy"],
             user_agent=(
                 f"{stream.Extension.dist_name}/{stream.Extension.version}"
             ),
         )
 
-        self.playback = LocalPlaybackProvider(audio=audio, backend=self)
+        self.storage = storage.LocalStorageProvider(config) #todo: this is dep for LocalPlaybackProvider, inject it.
+
+        self.playback = LocalPlaybackProvider(audio=audio, ebo_backend=self)
         self.library = LocalLibraryProvider(backend=self, config=config)
         self.playlists = EbobackPlaylists(backend=self, config=config)
 
-        self.storage = storage.LocalStorageProvider(config)
 
     def track_playback_started(self, tl_track):
         self.storage.insert_history_line(tl_track.track.name, tl_track.track.uri, "track")

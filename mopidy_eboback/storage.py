@@ -592,6 +592,34 @@ class LocalStorageProvider:
         item_urls = list(map(to_url, items))
         return item_urls
 
+    def get_track_volume(self, track_uri: Uri):
+        volume_adjust = schema.get_volume_adjust(self._connect(), track_uri)
+        match volume_adjust:
+            case None:
+                return "50%"
+            case -5:
+                return "20%"
+            case -4:
+                return "25%"
+            case -3:
+                return "30%"
+            case -2:
+                return "35%"
+            case -1:
+                return "40%"
+            case  0:
+                return "50%"
+            case  1:
+                return "60%"
+            case  2:
+                return "70%"
+            case  3:
+                return "80%"
+            case  4:
+                return "90%"
+            case  5:
+                return "100%"
+        return "50%"
 
 def get_image_size(data: bytes, ext: str, data_source: str):
     width: int | None = None
@@ -627,4 +655,3 @@ def get_image_type(data: bytes, path: pathlib.Path) -> str:
         return "jpeg"
 
     raise ValueError("Unknown image type")
-

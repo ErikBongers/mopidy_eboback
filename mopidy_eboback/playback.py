@@ -1,13 +1,14 @@
-from mopidy import backend, exceptions
-from mopidy.internal import http, playlists
-from mopidy.audio import scan, tags
 import logging
 import time
+import typing
 import urllib
 
+from mopidy import backend, exceptions
+from mopidy.internal import http, playlists
 from mopidy.models import Track
 
 from mopidy_eboback import translator
+from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
 
@@ -16,21 +17,28 @@ type Uri = str #todo: try to get rid of this
 STREAM_PREFIX = "eboback:stream:"
 
 class LocalPlaybackProvider(backend.PlaybackProvider):
+
+    def __init__(self, audio, ebo_backend: backend.Backend):
+        from mopidy_eboback.backend import EbobackBackend
+        super().__init__(audio, ebo_backend)
+        self.storage: LocalStorageProvider = typing.cast(EbobackBackend, ebo_backend).storage
+
     def translate_uri(self, uri):
+        from mopidy_eboback.backend import EbobackBackend
         if uri.startswith(STREAM_PREFIX):
             stripped_uri = uri[len(STREAM_PREFIX) :]
             unwrapped_uri, _ = _unwrap_stream(
                 stripped_uri,
                 timeout=5000,
-                scanner=self.backend._scanner,
-                requests_session=self.backend._session,
+                scanner=typing.cast(EbobackBackend, self.backend).the_scanner,
+                requests_session=typing.cast(EbobackBackend, self.backend).the_session,
             )
 
 
             return stripped_uri
 
         return translator.local_uri_to_file_uri(
-            uri, self.backend.config["eboback"]["media_dir"]
+            uri, typing.cast(EbobackBackend, self.backend).config["eboback"]["media_dir"]
         )
 
     def is_live(self, uri: Uri) -> bool:
@@ -65,11 +73,15 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
             live_stream=live,
             download=self.should_download(uri),
         ).get()
+        self.adjust_volume(track)
         return True
 
     def play(self) -> bool:
         return self.audio.start_playback().get()
 
+    def adjust_volume(self, track: Track):
+        track_volume = self.storage.get_track_volume(track.uri)
+        logger.info("Setting volume to %s", track_volume)
 
 def _unwrap_stream(uri, timeout, scanner, requests_session):
     """
