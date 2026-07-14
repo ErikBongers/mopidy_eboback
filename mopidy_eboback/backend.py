@@ -1,13 +1,14 @@
 import logging
-import pykka
-from mopidy import backend, exceptions, stream, core
 
-from mopidy_eboback import storage, schema
+import pykka
+from mopidy import backend, stream, core
+from mopidy.audio import scan
+from mopidy.internal import http
+
+from mopidy_eboback import storage
 from mopidy_eboback.library import LocalLibraryProvider
 from mopidy_eboback.playback import LocalPlaybackProvider
 from mopidy_eboback.playlists import EbobackPlaylists
-from mopidy.internal import http
-from mopidy.audio import scan
 
 logger = logging.getLogger(__name__)
 
@@ -45,5 +46,12 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
 
     def adjust_album_volume_down(self, album_uri: str):
         logger.info("backend: Adjusting album volume down")
-        self.storage.adjust_album_volume_down(album_uri)
+        return self.storage.adjust_album_volume(album_uri, -1)
+
+    def adjust_album_volume_up(self, album_uri: str):
+        logger.info("backend: Adjusting album volume up")
+        return self.storage.adjust_album_volume(album_uri, 1)
+
+    def set_volume_from_track(self, track_uri: str):
+        self.storage.set_volume_from_track(track_uri)
 

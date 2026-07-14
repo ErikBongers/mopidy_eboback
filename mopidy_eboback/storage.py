@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from mopidy.audio import tags
 from mopidy.models import Track
+from mopidy_eboback.alsa_proxy import AlsaProxy
 
 from . import Extension, schema, translator, ImageCache
 from .database import playlists_db
@@ -134,6 +135,7 @@ class LocalStorageProvider:
         self.img_file_patterns = list(map(str, ext_config["album_art_files"])) #todo: also rename the config name: it's not files but patterns.
         self._dbpath = self._data_dir / "library.db"
         self._connection: Connection | None = None
+        self.mixer = AlsaProxy("Master") #todo: don't hard-code this mixer name.
 
     def create_or_update_db(self) -> int | None:
         with self._connect() as connection:
@@ -605,6 +607,10 @@ class LocalStorageProvider:
 
     def get_track_volume(self, track_uri: Uri) -> int:
         volume_adjust = schema.get_track_volume_adjust(self._connect(), track_uri)
+        return self.convert_volume_adjust_to_percentage(volume_adjust)
+
+    @staticmethod
+    def convert_volume_adjust_to_percentage(volume_adjust: int):
         match volume_adjust:
             case None:
                 return 50
@@ -632,10 +638,17 @@ class LocalStorageProvider:
                 return 100
         return 50
 
-    def adjust_album_volume_down(self, album_uri):
+    def set_volume_from_track(self, track_uri: Uri):
+        track_volume = self.get_track_volume(track_uri)
+        logger.info("Setting volume to %i%%", track_volume)
+        self.mixer.setvolume(track_volume)
+
+    def adjust_album_volume(self, album_uri, plus_or_min_one: int):
         with self._connect() as c:
-            volume = schema.get_album_volume_adjust(c, album_uri)
-            self.set_album_meta_field(album_uri, "volumeAdjust", volume-1)
+            volume_adjust = schema.get_album_volume_adjust(c, album_uri)
+            volume_adjust = min(max(volume_adjust + plus_or_min_one, -5), 5)
+            self.set_album_meta_field(album_uri, "volumeAdjust", volume_adjust)
+            return volume_adjust
 
     def uri_to_meta_path(self, uri) -> pathlib.Path:
         path_string = schema.get_albums_path(self._connect(), (uri,))
@@ -643,12 +656,19 @@ class LocalStorageProvider:
         meta_file_path = path / "meta.eboplayer"
         return meta_file_path
 
-    def set_album_meta_field(self, album_uri: str, field_name: str, value: typing.Union[int, str]):
+    def get_album_meta_file(self, album_uri: str):
         meta_file_path = self.uri_to_meta_path(album_uri)
         album_meta: AlbumMetaDict = {}
         if meta_file_path.exists():
             album_meta = typing.cast(AlbumMetaDict, json.loads(meta_file_path.read_text()))
+        return album_meta
+
+    def write_album_meta_file(self, album_uri: str, album_meta: AlbumMetaDict):
+        meta_file_path = self.uri_to_meta_path(album_uri)
         meta_file_path.write_text(json.dumps(album_meta))
+
+    def set_album_meta_field(self, album_uri: str, field_name: str, value: typing.Union[int, str]):
+        album_meta = self.get_album_meta_file(album_uri)
         with self._connect() as c:
             match field_name:
                 case "volumeAdjust":
@@ -657,6 +677,7 @@ class LocalStorageProvider:
                 case "genre":
                     album_meta[field_name] = str(value)
                     schema.update_album_tracks_genre(c, album_uri, album_meta["genre"])
+        self.write_album_meta_file(album_uri, album_meta)
 
 def get_image_size(data: bytes, ext: str, data_source: str):
     width: int | None = None
