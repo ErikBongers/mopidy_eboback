@@ -26,7 +26,7 @@ class ProgressReporter:
         self.error = report_error
 
 class Scanner:
-    def __init__(self, config, force: bool, limit: int, reporter: ProgressReporter):
+    def __init__(self, config, force: bool, limit: int | None, reporter: ProgressReporter):
         self.config = config
         self.force = force
         self.limit = limit
