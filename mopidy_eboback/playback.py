@@ -12,8 +12,6 @@ from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
 
-type Uri = str #todo: try to get rid of this
-
 STREAM_PREFIX = "eboback:stream:"
 
 class LocalPlaybackProvider(backend.PlaybackProvider):

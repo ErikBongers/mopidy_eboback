@@ -1,6 +1,6 @@
 from typing import TypedDict, NotRequired
 
-Uri = str
+type Uri = str
 
 AlbumMetaDict = TypedDict('AlbumMetaDict', {
     'albumTitle': NotRequired[str],

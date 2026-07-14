@@ -1,9 +1,9 @@
 import json
 import logging
 from pathlib import Path
-from sqlite3 import Row
 
 from mopidy import commands
+
 from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)

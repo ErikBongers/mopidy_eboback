@@ -2,6 +2,8 @@ import pathlib
 import queue
 import stat
 import threading
+from os import stat_result
+from pathlib import Path
 
 from mopidy import exceptions
 
@@ -12,7 +14,7 @@ class FindError(exceptions.MopidyException):
         self.errno = errno
 
 
-def find_mtimes(root, follow=False):
+def get_files_modtimes(root, follow: bool):
     results, errors = _find(root, relative=False, follow=follow)
 
     # return the mtimes as integer milliseconds
@@ -35,8 +37,8 @@ def _find(root, thread_count=10, relative=False, follow=False):
     """
     root = pathlib.Path(root).resolve()
     threads = []
-    results = {}
-    errors = {}
+    results: dict[Path, stat_result] = {}
+    errors: dict[Path, FindError] = {}
     done = threading.Event()
     work = queue.Queue()
     work.put((root, []))
@@ -58,7 +60,7 @@ def _find(root, thread_count=10, relative=False, follow=False):
     return results, errors
 
 
-def _find_worker(root, follow, done, work, results, errors):
+def _find_worker(root, follow, done, work, results: dict[Path, stat_result], errors: dict[Path, FindError]):
     """Worker thread for collecting stat() results.
 
     :param Path root: directory to make results relative to
@@ -75,15 +77,15 @@ def _find_worker(root, follow, done, work, results, errors):
             continue
 
         if root:
-            path = entry.relative_to(root)
+            path: Path = entry.relative_to(root)
         else:
-            path = entry
+            path: Path = entry
 
         try:
             if follow:
-                st = entry.stat()
+                st: stat_result = entry.stat()
             else:
-                st = entry.lstat()
+                st: stat_result = entry.lstat()
 
             if (st.st_dev, st.st_ino) in parents:
                 errors[path] = FindError("Sym/hardlink loop found.")
