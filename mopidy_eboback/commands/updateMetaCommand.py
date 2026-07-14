@@ -79,7 +79,7 @@ class UpdateMetaCommand(commands.Command):
             logger.info(f'Updating meta data from "{str(meta_file_path.relative_to(self.media_dir))}"')
             text = meta_file_path.read_text()
             meta_data = json.loads(text)
-            self.storage.update_album_meta(album.uri, meta_data)
+            self.storage.update_album_meta_in_db(album.uri, meta_data)
             return True
         return False
 

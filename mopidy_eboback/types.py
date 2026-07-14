@@ -7,6 +7,7 @@ AlbumMetaDict = TypedDict('AlbumMetaDict', {
     'genre': NotRequired[str],
     'imageFile': NotRequired[str],
     'showTrackNumbers': NotRequired[bool],
+    'volumeAdjust': NotRequired[int]
     })
 
 PlaylistItemStream = TypedDict('PlaylistItemStream', {

@@ -8,6 +8,7 @@ from mopidy.internal import http, playlists
 from mopidy.models import Track
 
 from mopidy_eboback import translator
+from mopidy_eboback.alsa_proxy import AlsaProxy
 from mopidy_eboback.storage import LocalStorageProvider
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
         from mopidy_eboback.backend import EbobackBackend
         super().__init__(audio, ebo_backend)
         self.storage: LocalStorageProvider = typing.cast(EbobackBackend, ebo_backend).storage
+        self.mixer = AlsaProxy("Master") #todo: don't hard-code this mixer name.
 
     def translate_uri(self, uri):
         from mopidy_eboback.backend import EbobackBackend
@@ -73,15 +75,17 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
             live_stream=live,
             download=self.should_download(uri),
         ).get()
-        self.adjust_volume(track)
+        self.adjust_volume(track.uri)
         return True
 
     def play(self) -> bool:
         return self.audio.start_playback().get()
 
-    def adjust_volume(self, track: Track):
-        track_volume = self.storage.get_track_volume(track.uri)
-        logger.info("Setting volume to %s", track_volume)
+    def adjust_volume(self, track_uri: Uri):
+        track_volume = self.storage.get_track_volume(track_uri)
+        logger.info("Setting volume to %i%% using proxy", track_volume)
+        self.mixer.setvolume(track_volume)
+
 
 def _unwrap_stream(uri, timeout, scanner, requests_session):
     """

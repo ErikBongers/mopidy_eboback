@@ -688,12 +688,19 @@ def update_album_alt_name(c, uri, alt_name):
         update album set alt_name = ? where uri = ?
         """, (alt_name, uri))
 
-def update_album_genre(c, album_uri, genre):
-    logger.info("Updating album genre: %s -> %s", album_uri, genre)
+def update_album_tracks_genre(c, album_uri, genre):
+    logger.info("Updating album tracks genre: %s -> %s", album_uri, genre)
     c.execute(
         """
         update track set genre = ? where album = ?
         """, (genre, album_uri))
+
+def update_album_volume_adjust(c, album_uri, volume_adjust):
+    logger.info("Updating album volume_adjust: %s -> %s", album_uri, volume_adjust)
+    c.execute(
+        """
+        update album set volume_adjust = ? where uri = ?
+        """, (volume_adjust, album_uri))
 
 def _images(field):
     images = []
@@ -900,7 +907,7 @@ def get_track_row(c: Connection, uri: str) -> TrackRow:
         "program_titles": row[16]
     }
 
-def get_volume_adjust(c: Connection, track_uri: str) -> int:
+def get_track_volume_adjust(c: Connection, track_uri: str) -> int:
     cursor = c.execute("""
         select coalesce(t.volume_adjust, a.volume_adjust, 0) as volume_adjust 
         from track t
@@ -909,3 +916,15 @@ def get_volume_adjust(c: Connection, track_uri: str) -> int:
     """, (track_uri,))
     row = cursor.fetchone()
     return row[0] if row else 0
+
+def get_album_volume_adjust(c: Connection, uri: str) -> int:
+    cursor = c.execute(
+        """
+        select volume_adjust
+        from album
+        where uri = ?
+        """,
+        (uri,)
+    )
+    row = cursor.fetchone()
+    return row[0]

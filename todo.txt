@@ -1,3 +1,59 @@
+Track audio adjustment
+========================
+Not all sound cards expose a Master control.
+----------------------------------------------
+Some have only:
+
+PCM
+Speaker
+Headphone
+Digital
+etc.
+
+> Get list:
+  shell: amixer scontrols
+  python:
+    import alsaaudio
+    print(alsaaudio.mixers())
+
+Applying track volume via mopidy (GStreamer)
+--------------------------------------------
+Using the hardware master volume for ReplayGain-like adjustment isn't usually the preferred design.
+
+Most players that implement ReplayGain apply the track gain before the user volume, so conceptually:
+
+decoded audio
+     │
+ReplayGain (automatic)
+     │
+User volume
+     │
+Output
+
+This way:
+  * the user's volume knob always behaves predictably,
+  * changing tracks doesn't physically change the system volume,
+  * other applications aren't affected.
+
+Different hardware - different audio pipelines
+------------------------------------------------
+- USB DAC or USB sound card: OK
+- Raspberry Pi headphone jack (older models): OK
+- HDMI audio
+  > Many HDMI outputs don't have a real hardware mixer. The available ALSA control may be a software control or there may be no useful mixer at all. In some cases, Master doesn't exist.
+- PipeWire / PulseAudio
+    If you later install a desktop environment, PipeWire or PulseAudio may become the main volume manager. Then:
+
+    * Mopidy may be controlling a PipeWire stream volume.
+    * amixer may control an underlying ALSA device.
+    * They may still be independent—or one may effectively be fixed at 100%.
+
+    So it depends on how the audio is routed.
+
+
+
+
+
 * browse genre: also list artists
   > see schema.get_refs_for_genre()
 

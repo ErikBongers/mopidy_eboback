@@ -2,6 +2,7 @@ import json
 import logging
 import pathlib
 import sqlite3
+import typing
 
 import tornado.web
 from mopidy.models import Ref
@@ -78,7 +79,7 @@ class DataHandler(tornado.web.RequestHandler):
 
     def get_album_meta(self):
         uri = self.get_argument("uri", "nada...")
-        meta_file_path = self.uri_to_meta_path(uri)
+        meta_file_path = self.storage.uri_to_meta_path(uri)
         self.set_header("Content-Type", 'application/json')
         if meta_file_path.exists():
             self.write(meta_file_path.read_text())
@@ -88,7 +89,7 @@ class DataHandler(tornado.web.RequestHandler):
         uris: list[str] = uris_comma_string.split(",")
         metas: dict[str, dict] = {}
         for uri in uris:
-            meta_file_path = self.uri_to_meta_path(uri)
+            meta_file_path = self.storage.uri_to_meta_path(uri)
             if meta_file_path.exists(): #todo: cache the meta in the db
                 try:
                     metas[uri] = json.loads(meta_file_path.read_text()) #todo: don't first decode json to encode it again below.
@@ -100,30 +101,21 @@ class DataHandler(tornado.web.RequestHandler):
 
     def set_album_meta(self): #todo: get rid of this as it was for testing only?
         uri = self.get_argument("uri", "nada...")
-        meta_file_path = self.uri_to_meta_path(uri)
+        meta_file_path = self.storage.uri_to_meta_path(uri)
         meta_file_path.write_text(self.request.body.decode("utf-8"))
         self.write("written:")
         self.write(self.request.body)
 
     def set_album_genre(self):
-        genre = self.get_argument("genre", "nada...")
-        album_uri = self.get_argument("album_uri", "nada...")
-        meta_file_path = self.uri_to_meta_path(album_uri)
-        album_meta = {}
-        if meta_file_path.exists():
-            album_meta = json.loads(meta_file_path.read_text())
-        album_meta["genre"] = genre
-        meta_file_path.write_text(json.dumps(album_meta))
-        self.storage.update_album_meta(album_uri, album_meta)
+        self.set_album_meta_field_from_params("genre")
         self.write(json.dumps({
             "status": "ok"
         }))
 
-    def uri_to_meta_path(self, uri) -> pathlib.Path:
-        path_string = schema.get_albums_path(self._connect(), (uri,))
-        path = pathlib.Path(path_string)
-        meta_file_path = path / "meta.eboplayer"
-        return meta_file_path
+    def set_album_meta_field_from_params(self, field_name):
+        value = self.get_argument(field_name, "nada...")
+        album_uri = self.get_argument("album_uri", "nada...")
+        self.storage.set_album_meta_field(album_uri, field_name, value)
 
     def _connect(self):
         if not self._connection:
@@ -133,7 +125,7 @@ class DataHandler(tornado.web.RequestHandler):
                 timeout=self._config["timeout"],
                 check_same_thread=False,
             )
-        return self._connection
+        return typing.cast(sqlite3.Connection, self._connection)
 
     def add_ref_to_playlist(self):
         logger.info("add_ref_to_playlist")

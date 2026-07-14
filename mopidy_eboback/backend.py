@@ -42,3 +42,8 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
 
     def track_playback_started(self, tl_track):
         self.storage.insert_history_line(tl_track.track.name, tl_track.track.uri, "track")
+
+    def adjust_album_volume_down(self, album_uri: str):
+        logger.info("backend: Adjusting album volume down")
+        self.storage.adjust_album_volume_down(album_uri)
+

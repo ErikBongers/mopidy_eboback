@@ -6,6 +6,7 @@ import pathlib
 import shutil
 import sqlite3
 import struct
+import typing
 import urllib
 from datetime import datetime, timezone
 from pathlib import Path
@@ -251,7 +252,7 @@ class LocalStorageProvider:
                 timeout=self._config["timeout"],
                 check_same_thread=False,
             )
-        return self._connection
+        return typing.cast(sqlite3.Connection, self._connection)
 
     def _validate_artist(self, model):
         if not model.name:
@@ -275,7 +276,7 @@ class LocalStorageProvider:
         if model.name:
             name = model.name
         else:
-            name = translator.local_uri_to_path(model.uri, "").name #todo: is this a problem?
+            name = translator.local_uri_to_path(model.uri, Path("")).name #todo: is this a problem?
         if model.album and model.album.name:
             album = self._validate_album(model.album)
         else:
@@ -367,12 +368,22 @@ class LocalStorageProvider:
     def get_album_path_and_path_counts(self):
         return schema.get_album_paths_and_path_counts(self._connect())
 
-    def update_album_meta(self, album_uri: str, meta_data: AlbumMetaDict):
+    def update_album_meta_in_db(self, album_uri: str, meta_data: AlbumMetaDict):
         with self._connect() as c:
             if meta_data.get("albumTitle"):
                 schema.update_album_alt_name(self._connect(), album_uri, meta_data["albumTitle"])
             if meta_data.get("genre"):
-                schema.update_album_genre(self._connect(), album_uri, meta_data["genre"])
+                schema.update_album_tracks_genre(self._connect(), album_uri, meta_data["genre"])
+            if meta_data.get("volumeAdjust"):
+                schema.update_album_volume_adjust(self._connect(), album_uri, meta_data["volumeAdjust"])
+
+    def update_album_genre_in_db(self, album_uri: str, meta_data: AlbumMetaDict):
+        with self._connect() as c:
+            schema.update_album_tracks_genre(self._connect(), album_uri, meta_data["genre"])
+
+    def update_album_volume_adjust_in_db(self, album_uri: str, meta_data: AlbumMetaDict):
+        with self._connect() as c:
+            schema.update_album_volume_adjust(self._connect(), album_uri, meta_data["volumeAdjust"])
 
     def add_playlist_ref(self, playlist_uri: str, uri: str, ref_type: str, sequence: int):
         playlists_db.add_playlist_ref(self._connect(), playlist_uri, uri, ref_type, sequence)
@@ -592,34 +603,60 @@ class LocalStorageProvider:
         item_urls = list(map(to_url, items))
         return item_urls
 
-    def get_track_volume(self, track_uri: Uri):
-        volume_adjust = schema.get_volume_adjust(self._connect(), track_uri)
+    def get_track_volume(self, track_uri: Uri) -> int:
+        volume_adjust = schema.get_track_volume_adjust(self._connect(), track_uri)
         match volume_adjust:
             case None:
-                return "50%"
+                return 50
             case -5:
-                return "20%"
+                return 20
             case -4:
-                return "25%"
+                return 25
             case -3:
-                return "30%"
+                return 30
             case -2:
-                return "35%"
+                return 35
             case -1:
-                return "40%"
+                return 40
             case  0:
-                return "50%"
+                return 50
             case  1:
-                return "60%"
+                return 60
             case  2:
-                return "70%"
+                return 70
             case  3:
-                return "80%"
+                return 80
             case  4:
-                return "90%"
+                return 90
             case  5:
-                return "100%"
-        return "50%"
+                return 100
+        return 50
+
+    def adjust_album_volume_down(self, album_uri):
+        with self._connect() as c:
+            volume = schema.get_album_volume_adjust(c, album_uri)
+            self.set_album_meta_field(album_uri, "volumeAdjust", volume-1)
+
+    def uri_to_meta_path(self, uri) -> pathlib.Path:
+        path_string = schema.get_albums_path(self._connect(), (uri,))
+        path = pathlib.Path(path_string)
+        meta_file_path = path / "meta.eboplayer"
+        return meta_file_path
+
+    def set_album_meta_field(self, album_uri: str, field_name: str, value: typing.Union[int, str]):
+        meta_file_path = self.uri_to_meta_path(album_uri)
+        album_meta: AlbumMetaDict = {}
+        if meta_file_path.exists():
+            album_meta = typing.cast(AlbumMetaDict, json.loads(meta_file_path.read_text()))
+        meta_file_path.write_text(json.dumps(album_meta))
+        with self._connect() as c:
+            match field_name:
+                case "volumeAdjust":
+                    album_meta[field_name] = int(value)
+                    schema.update_album_volume_adjust(c, album_uri, album_meta["volumeAdjust"])
+                case "genre":
+                    album_meta[field_name] = str(value)
+                    schema.update_album_tracks_genre(c, album_uri, album_meta["genre"])
 
 def get_image_size(data: bytes, ext: str, data_source: str):
     width: int | None = None
