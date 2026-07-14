@@ -1,5 +1,3 @@
-##from __future__ import annotations
-#todo: remove the future annotation?
 import logging
 import os
 import urllib.parse
