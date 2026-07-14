@@ -20,7 +20,6 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         logger.info("eboplayer websocket initialized")
         self.config = config
         self.ioloop = tornado.ioloop.IOLoop.current()
-        logger.info(config)
 
     def check_origin(self, origin):
         return True #allows cross-domain requests
