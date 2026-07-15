@@ -8,14 +8,14 @@ import tornado.websocket
 from mopidy_eboback.file_scanners.audo_scanner import Scanner, ProgressReporter
 
 logger = logging.getLogger(__name__)
-active_clients = set() #todo: make class variable.
 
 
 def broadcast(message):
-    for client in active_clients:
+    for client in WebsocketHandler.active_clients:
         client.ioloop.add_callback(WebsocketHandler.write_message, client, message)
 
 class WebsocketHandler(tornado.websocket.WebSocketHandler):
+    active_clients = set()
 
     def initialize(self, config):
         logger.info("eboplayer websocket initialized")
@@ -26,17 +26,17 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         return True #allows cross-domain requests
 
     def open(self):
-        active_clients.add(self)
+        WebsocketHandler.active_clients.add(self)
 
     def on_message(self, message):
-        logger.info("eboplayer websocket message received: " + message)
+        logger.info("eboplayer websocket message received: " + str(message))
         obj = json.loads(message)
         if obj["method"] == "start_scan":
             self.scan()
             return
 
     def on_close(self):
-        active_clients.remove(self)
+        WebsocketHandler.active_clients.remove(self)
 
     def scan(self):
         from threading import Thread
