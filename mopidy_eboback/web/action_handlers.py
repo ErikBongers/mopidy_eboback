@@ -49,24 +49,9 @@ class DataHandler(tornado.web.RequestHandler):
         self.write("" + str(cnt))
 
     def post(self, data_path):
-        if data_path == "set_album_meta":
-            self.set_album_meta()
-            return
-        if data_path == "add_ref_to_playlist": #todo: wrap in function without params, so we can use a path list like with GET.
-            self.add_ref_to_playlist()
-            self.write(json.dumps({
-                "status": "ok"
-            }))
-            return
-        if data_path == "save_remember":
-            self.save_remember()
-            self.write(json.dumps({"status": "ok"}))
-            return
-        if data_path == "delete_remember":
-            self.delete_remember()
-            return
-        if data_path == "get_album_metas":
-            self.get_album_metas()
+        if data_path in ["add_ref_to_playlist", "save_remember", "delete_remember", "get_album_metas"]:
+            func = getattr(self, data_path)
+            func()
             return
 
         self.write("Oops...no valid data request: " + data_path)
@@ -98,13 +83,6 @@ class DataHandler(tornado.web.RequestHandler):
 
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(metas))
-
-    def set_album_meta(self): #todo: get rid of this as it was for testing only?
-        uri = self.get_argument("uri", "nada...")
-        meta_file_path = self.storage.uri_to_meta_path(uri)
-        meta_file_path.write_text(self.request.body.decode("utf-8"))
-        self.write("written:")
-        self.write(self.request.body)
 
     def set_album_genre(self):
         self.set_album_meta_field_from_params("genre")
@@ -141,6 +119,9 @@ class DataHandler(tornado.web.RequestHandler):
                 self.get_argument("ref_type"),
                 int(self.get_argument("sequence"))
             )
+        self.write(json.dumps({
+            "status": "ok"
+        }))
 
     def get_genre_replacements(self):
         with self._connect() as c:
@@ -182,6 +163,7 @@ class DataHandler(tornado.web.RequestHandler):
 
     def save_remember(self):
         self.storage.write_remember(self.request.body.decode("utf-8"))
+        self.write(json.dumps({"status": "ok"}))
 
     def delete_remember(self):
         self.storage.delete_remember(self.request.body.decode("utf-8"))
