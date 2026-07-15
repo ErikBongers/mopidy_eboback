@@ -9,6 +9,7 @@ from mopidy.models import Track
 
 from mopidy_eboback import translator
 from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.types import Uri
 
 logger = logging.getLogger(__name__)
 
