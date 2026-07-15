@@ -1,5 +1,6 @@
 import json
 import pathlib
+from typing import Literal
 
 import tornado.websocket
 import logging
@@ -42,30 +43,32 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         from threading import Thread
         logger.info("eboplayer websocket start_scan received")
         media_dir = pathlib.Path(self.config["eboback"]["media_dir"]).resolve()
-        the_event = {
-            "event": "scan_started",
-            "message": f"Scanning {str(media_dir)} ..."
-        }
-        broadcast(json.dumps(the_event))
+        broadcast_scan_event("scan_started", f"Scanning {str(media_dir)} ...", "progress")
 
         thread = Thread(target=threaded_scan, args=(self.config,))
         thread.start()
 
+ScanStatusType = Literal["progress", "details", "error"]
+ScanStatusEvent = Literal["scan_started", "scan_finished", "scan_status"]
+
+def broadcast_scan_event(event_type: ScanStatusEvent, message: str, status_type: ScanStatusType):
+    the_event = {
+        "event": event_type,
+        "message": message,
+        "type": status_type
+    }
+    broadcast(json.dumps(the_event))
 
 def threaded_scan(config):
-    def report(message) -> None:
-        the_event = {
-            "event": "scan_status",
-            "message": message
-        }
-        broadcast(json.dumps(the_event))
+    def progress(message) -> None:
+        broadcast_scan_event("scan_status", message, "progress")
+    def details(message) -> None:
+        broadcast_scan_event("scan_status", message, "details")
+    def error(message) -> None:
+        broadcast_scan_event("scan_status", message, "error")
 
-    reporter = ProgressReporter(report, report, report)
+
+    reporter = ProgressReporter(progress, details, error)
     scanner = Scanner(config, False, None, reporter)
     scanner.run()
-
-    the_end = {
-        "event": "scan_finished",
-        "message": "nada..."
-    }
-    broadcast(json.dumps(the_end))
+    broadcast_scan_event("scan_finished", "Scan finished.", "progress")

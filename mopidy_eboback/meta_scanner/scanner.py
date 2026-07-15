@@ -154,7 +154,6 @@ class Scanner:
         files, file_errors = mtimes.get_files_modtimes(
             self.media_dir, follow=self.config["eboback"]["scan_follow_symlinks"]
         )
-        self.reporter.details(f"Found {len(files)} files in {self.media_dir.as_uri()}")
 
         if file_errors:
             self.reporter.error(f"Encountered {len(file_errors)} errors while finding files in {self.media_dir.as_uri()}")
