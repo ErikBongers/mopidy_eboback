@@ -6,6 +6,7 @@ from mopidy.audio import scan
 from mopidy.internal import http
 
 from mopidy_eboback import storage
+from mopidy_eboback.edit_config import EboBackConfigEditor
 from mopidy_eboback.library import LocalLibraryProvider
 from mopidy_eboback.playback import LocalPlaybackProvider
 from mopidy_eboback.playlists import EbobackPlaylists
@@ -54,4 +55,9 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
 
     def set_volume_from_track(self, track_uri: str):
         self.storage.set_volume_from_track(track_uri)
+
+    def add_excluded_file_extension(self, ext: str):
+        config_editor = EboBackConfigEditor()
+        with config_editor:
+            config_editor.add_excluded_file_extension(ext)
 

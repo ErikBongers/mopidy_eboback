@@ -1,3 +1,12 @@
+* Add to settings:
+  - name of favorites playlist ("Favorites")
+  - name of audio mixer ("Master")
+  > can front/backend write to settings file?
+    > probably, after setting
+      : sudo chmod 660 /etc/mopidy/mopidy.conf
+
+
+
 Track audio adjustment
 ========================
 Not all sound cards expose a Master control.
