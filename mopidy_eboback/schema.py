@@ -8,7 +8,7 @@ from typing import TypedDict
 
 from mopidy.models import Album, Artist, Image, Ref, Track
 
-from mopidy_eboback.types import TrackRow
+from mopidy_eboback.types import TrackRow, GenreReplacementRow, GenreDefRow
 
 _IMAGE_SIZE_RE = re.compile(r".*-(\d+)x(\d+)\.(?:png|gif|jpeg)$")
 
@@ -729,8 +729,6 @@ def get_images(c, uri):
         )
     )""", (uri,uri,uri)).fetchall()
 
-GenreReplacementRow = TypedDict('GenreReplacementRow', {'genre': str, 'replacement': str})
-GenreDefRow = TypedDict('GenreDefRow', {'name': str, 'child': str, 'sequence': int, 'level': int})
 
 def get_genres(c) -> list[GenreReplacementRow]:
     rows = c.execute("""

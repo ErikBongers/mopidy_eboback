@@ -1,7 +1,5 @@
 from typing import TypedDict, NotRequired, Optional
 
-from mopidy_eboback.schema import GenreReplacementRow
-
 type Uri = str
 
 AlbumMetaDict = TypedDict('AlbumMetaDict', {
@@ -53,6 +51,7 @@ TrackRow = TypedDict('TrackRow', {
     "exclude_streamlines": str,
     "program_titles": str
     })
+GenreReplacementRow = TypedDict('GenreReplacementRow', {'genre': str, 'replacement': str})
 RootMetaDef = TypedDict( "RootMetaDef", {
     "//name": str,
     "name": str,
@@ -73,3 +72,4 @@ ImageDef = TypedDict("ImageDef", {
     "path": str,
     "embedded": bool
 })
+GenreDefRow = TypedDict('GenreDefRow', {'name': str, 'child': str, 'sequence': int, 'level': int})
