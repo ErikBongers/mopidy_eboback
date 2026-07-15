@@ -15,8 +15,6 @@ class ScanCommand(commands.Command):
     def __init__(self):
         super().__init__()
         self.storage: LocalStorageProvider
-        self.timeout = "1000" #todo: remove this?
-        self.media_dir = None #todo: remove this?
         self.add_argument(
             "--limit",
             action="store",
