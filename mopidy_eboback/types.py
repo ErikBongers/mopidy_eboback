@@ -1,4 +1,6 @@
-from typing import TypedDict, NotRequired
+from typing import TypedDict, NotRequired, Optional
+
+from mopidy_eboback.schema import GenreReplacementRow
 
 type Uri = str
 
@@ -51,3 +53,23 @@ TrackRow = TypedDict('TrackRow', {
     "exclude_streamlines": str,
     "program_titles": str
     })
+RootMetaDef = TypedDict( "RootMetaDef", {
+    "//name": str,
+    "name": str,
+    "//streams_folder": str,
+    "streams_folder": str,
+    "//favorites_playlist": str,
+    "favorites_playlist": str,
+    "//genre_replacements": str,
+    "genre_replacements": list[GenreReplacementRow],
+    "//saved_stream_lines": str,
+    "saved_stream_lines": list[str]
+    }
+)
+
+ImageDef = TypedDict("ImageDef", {
+    "width": Optional[int],
+    "height": Optional[int],
+    "path": str,
+    "embedded": bool
+})

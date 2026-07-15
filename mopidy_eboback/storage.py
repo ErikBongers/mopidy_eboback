@@ -21,8 +21,8 @@ from mopidy_eboback.alsa_proxy import AlsaProxy
 from . import Extension, schema, translator, ImageCache
 from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
-from .schema import GenreReplacementRow, ImageDict, AlbumKeyInfoRow
-from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, Uri
+from .schema import ImageDict, AlbumKeyInfoRow
+from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, Uri, RootMetaDef, ImageDef
 
 logger = logging.getLogger(__name__)
 
@@ -41,19 +41,6 @@ class GenreDefClass():
             sort_keys=True,
             indent=4)
 
-RootMetaDef = TypedDict( "RootMetaDef", { #todo: move to types.py
-    "//name": str,
-    "name": str,
-    "//streams_folder": str,
-    "streams_folder": str,
-    "//favorites_playlist": str,
-    "favorites_playlist": str,
-    "//genre_replacements": str,
-    "genre_replacements": list[GenreReplacementRow],
-    "//saved_stream_lines": str,
-    "saved_stream_lines": list[str]
-    }
-)
 
 empty_root_meta: RootMetaDef = {
     "//name": "A name for this media source",
@@ -68,12 +55,6 @@ empty_root_meta: RootMetaDef = {
     "saved_stream_lines": []
 }
 
-ImageDef = TypedDict("ImageDef", {
-    "width": int | None,
-    "height": int | None,
-    "path": str,
-    "embedded": bool
-})
 
 def check_dirs_and_files(config):
     if not pathlib.Path(config["eboback"]["media_dir"]).is_dir():
