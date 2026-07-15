@@ -137,6 +137,12 @@ class LocalStorageProvider:
         self._connection: Connection | None = None
         self.mixer = AlsaProxy("Master") #todo: don't hard-code this mixer name.
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        self.close()
+
     def create_or_update_db(self) -> int | None:
         with self._connect() as connection:
             version = schema.create_or_update_db(connection)
