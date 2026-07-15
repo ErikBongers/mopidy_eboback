@@ -17,10 +17,10 @@ STREAM_PREFIX = "eboback:stream:"
 
 class LocalPlaybackProvider(backend.PlaybackProvider):
 
-    def __init__(self, audio, ebo_backend: backend.Backend):
+    def __init__(self, audio, ebo_backend: backend.Backend, storage: LocalStorageProvider):
         from mopidy_eboback.backend import EbobackBackend
         super().__init__(audio, ebo_backend)
-        self.storage: LocalStorageProvider = typing.cast(EbobackBackend, ebo_backend).storage
+        self.storage: LocalStorageProvider = storage
 
     def translate_uri(self, uri):
         from mopidy_eboback.backend import EbobackBackend

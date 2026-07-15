@@ -34,9 +34,9 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
             ),
         )
 
-        self.storage = storage.LocalStorageProvider(config) #todo: this is dep for LocalPlaybackProvider, inject it.
+        self.storage = storage.LocalStorageProvider(config)
 
-        self.playback = LocalPlaybackProvider(audio=audio, ebo_backend=self)
+        self.playback = LocalPlaybackProvider(audio=audio, ebo_backend=self, storage=self.storage)
         self.library = LocalLibraryProvider(backend=self, config=config)
         self.playlists = EbobackPlaylists(backend=self, config=config)
 
