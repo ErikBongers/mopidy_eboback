@@ -1,12 +1,13 @@
 import time
 from pathlib import Path
-from typing import Callable
 
 from mopidy.audio import scan, tags
 from mopidy.models import Track
 
 from mopidy_eboback import storage, mtimes, translator
-from mopidy_eboback.meta_scanner.mutagen_and_wav import scan_mutagen_meta, scan_wavinfo, scan_mutagen_full
+from mopidy_eboback.file_scanners.meta_scanner import MetaScanner
+from mopidy_eboback.file_scanners.mutagen_and_wav import scan_mutagen_meta, scan_wavinfo, scan_mutagen_full
+from mopidy_eboback.file_scanners.progress_reporter import ProgressReporter
 from mopidy_eboback.types import Uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
@@ -18,12 +19,6 @@ class WplItem:
 class Wpl:
     name: str
     items: list[WplItem]
-
-class ProgressReporter:
-    def __init__(self, report_progress: Callable[[str], None], report_details: Callable[[str], None], report_error: Callable[[str], None]):
-        self.progress = report_progress
-        self.details = report_details
-        self.error = report_error
 
 class Scanner:
     def __init__(self, config, force: bool, limit: int | None, reporter: ProgressReporter):
@@ -81,10 +76,8 @@ class Scanner:
         return 0
 
     def run_update_meta_cmd(self):
-        from mopidy_eboback.commands import UpdateMetaCommand
-
-        update_meta_command = UpdateMetaCommand()
-        update_meta_command.just_run_it_with_storage(self.config, self.storage) #todo: move this function outside of UpdateMetaCommand()
+        meta_scanner = MetaScanner(self.config, self.storage, self.reporter)
+        return meta_scanner.run()
 
     def get_and_filter_new_files(self, files: dict[Path, int], files_in_library) -> tuple[set[Path], set[Path]]:
         new_files = set()

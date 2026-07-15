@@ -1,12 +1,11 @@
 import json
+import logging
 import pathlib
 from typing import Literal
 
 import tornado.websocket
-import logging
 
-from mopidy_eboback.commands import ScanCommand, UpdateMetaCommand
-from mopidy_eboback.meta_scanner.scanner import Scanner, ProgressReporter
+from mopidy_eboback.file_scanners.audo_scanner import Scanner, ProgressReporter
 
 logger = logging.getLogger(__name__)
 active_clients = set() #todo: make class variable.

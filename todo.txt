@@ -1,5 +1,3 @@
-* Test refactored scan command.
-
 Track audio adjustment
 ========================
 Not all sound cards expose a Master control.
