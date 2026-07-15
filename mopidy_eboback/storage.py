@@ -657,7 +657,7 @@ class LocalStorageProvider:
             return volume_adjust
 
     def uri_to_meta_path(self, uri) -> pathlib.Path:
-        path_string = schema.get_albums_path(self._connect(), (uri,))
+        path_string = schema.get_album_path(self._connect(), (uri,))
         path = pathlib.Path(path_string)
         meta_file_path = path / "meta.eboplayer"
         return meta_file_path

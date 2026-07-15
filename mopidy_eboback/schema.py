@@ -663,7 +663,7 @@ def count_albums(c):
     cnt, = res.fetchone()
     return cnt
 
-def get_albums_path(c, uri): #todo: rename get_album_path
+def get_album_path(c, uri):
     res = c.execute("select path from album where uri = ?", uri)
     path, = res.fetchone()
     return path
