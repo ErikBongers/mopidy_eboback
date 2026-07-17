@@ -633,7 +633,6 @@ class LocalStorageProvider:
     def adjust_album_volume(self, album_uri, plus_or_min_one: int):
         with self._connect() as c:
             volume_adjust = schema.get_album_volume_adjust(c, album_uri) or 0
-            logger.info(f"volume_adjust: {volume_adjust} plus_or_min_one: {plus_or_min_one}")
             volume_adjust = min(max(volume_adjust + plus_or_min_one, -5), 5)
             self.set_album_meta_field(album_uri, "volumeAdjust", volume_adjust)
             return volume_adjust
