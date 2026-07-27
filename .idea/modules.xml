@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/mopidy_eboback.iml" filepath="$PROJECT_DIR$/.idea/mopidy_eboback.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Mopidy-Eboback.iml" filepath="$PROJECT_DIR$/.idea/Mopidy-Eboback.iml" />
     </modules>
   </component>
 </project>

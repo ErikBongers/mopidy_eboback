@@ -1,17 +1,25 @@
 [build-system]
 requires = ["setuptools >= 30.3.0", "wheel"]
 
+[project]
+name = "Mopidy-Eboback"
+version = "4.0.0"
+description = "First version voor mopidy V4"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "Mopidy >= 4.0.0a1",
+    "Pykka >= 3.1.1",
+    "uritools >= 1.0",
+    "mutagen >= 1.47",
+    "jsons >= 1.6.3",
+    "wavinfo >= 4.0.0",
+    "pyalsaaudio >= 0.11.0",
+    "ConfigUpdater >= 3.2",
+]
 
-[tool.black]
-target-version = ["py39", "py310", "py311"]
-line-length = 80
+[project.entry-points."mopidy.ext"]
+eboback = "mopidy_eboback:Extension"
 
-
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
-known_tests = "tests"
-sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,TESTS,LOCALFOLDER"
+[tool.setuptools.packages.find]
+include = ["mopidy_eboback*"]
