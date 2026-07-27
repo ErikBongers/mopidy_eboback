@@ -9,7 +9,8 @@ class CompactJSONEncoder(json.JSONEncoder):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.indentation_level = 0
+        self.indentation_level: int = 0
+        self.indent: int = 2
 
     def encode(self, o):
         """Encode JSON object *o* with respect to single line lists."""

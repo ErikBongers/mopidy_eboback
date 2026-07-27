@@ -4,11 +4,11 @@ import typing
 import urllib
 
 from mopidy import backend, exceptions
-from mopidy.internal import http, playlists
 from mopidy.models import Track
 
-from mopidy_eboback import translator
+from mopidy_eboback import translator, http
 from mopidy_eboback.storage import LocalStorageProvider
+from mopidy_eboback.stream_parsers import parse_playlist
 from mopidy_eboback.types import Uri
 
 logger = logging.getLogger(__name__)
@@ -156,7 +156,7 @@ def _unwrap_stream(uri, timeout, scanner, requests_session):
             )
             return None, None
 
-        uris = playlists.parse(content)
+        uris = parse_playlist(content)
         if not uris:
             logger.info(
                 "Failed parsing URI (%s) as playlist; found potential stream.",

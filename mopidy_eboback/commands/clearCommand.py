@@ -1,5 +1,3 @@
-from mopidy import commands
-
 from mopidy_eboback import storage
 
 

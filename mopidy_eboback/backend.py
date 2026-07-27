@@ -1,11 +1,13 @@
 import logging
+from typing import ClassVar
 
 import pykka
-from mopidy import backend, stream, core
+from mopidy import backend, core
 from mopidy.audio import scan
-from mopidy.internal import http
+from mopidy.ext import Extension
+from mopidy.types import UriScheme
 
-from mopidy_eboback import storage
+from mopidy_eboback import storage, http
 from mopidy_eboback.edit_config import EboBackConfigEditor
 from mopidy_eboback.library import LocalLibraryProvider
 from mopidy_eboback.playback import LocalPlaybackProvider
@@ -15,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
-    uri_schemes = ["eboback"]
+    uri_schemes: ClassVar[list[UriScheme]] = [UriScheme("eboback")]
 
     def __init__(self, config, audio):
         super().__init__()
@@ -28,10 +30,10 @@ class EbobackBackend(pykka.ThreadingActor, backend.Backend, core.CoreListener):
             timeout="1000", proxy_config=config["proxy"]
         )
 
-        self.the_session = http.get_requests_session(
+        self._http_client = http.get_httpx_client(
             proxy_config=config["proxy"],
             user_agent=(
-                f"{stream.Extension.dist_name}/{stream.Extension.version}"
+                f"{Extension.dist_name}/{Extension.version}"
             ),
         )
 

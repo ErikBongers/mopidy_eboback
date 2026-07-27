@@ -1,12 +1,11 @@
 import pathlib
 from typing import TypedDict
 
-import pkg_resources
+from cyclopts import App
 
 from mopidy import config, ext
 
-__version__ = pkg_resources.get_distribution("mopidy-eboback").version
-
+from mopidy_eboback.commands import commands
 from mopidy_eboback.schema import ImageDict
 
 
@@ -14,9 +13,9 @@ class ImageCache(TypedDict):
     image_cache: list[ImageDict] | None
 
 class Extension(ext.Extension):
-    dist_name = "mopidy-eboback"
+    dist_name = "mopidy-eboback" #todo: are these still required? They are not mentioned in the Example command: https://docs.mopidy.com/latest/guides/extensiondev/#example-backend
     ext_name = "eboback"
-    version = __version__
+    version = "4.0.0"
 
     def get_default_config(self):
         return config.read(pathlib.Path(__file__).parent / "ext.conf")
@@ -46,10 +45,8 @@ class Extension(ext.Extension):
             "http:app", {"name": self.ext_name, "factory": self.webapp}
         )
 
-    def get_command(self):
-        from .commands import EbobackCommand
-
-        return EbobackCommand()
+    def get_command(self) -> App | None:
+        return commands.app
 
     def webapp(self, config, core):
         from mopidy_eboback.web.file_handlers import ImageHandler, IndexHandler, ImageByIdHandler

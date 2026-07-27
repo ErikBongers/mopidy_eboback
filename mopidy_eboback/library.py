@@ -1,10 +1,12 @@
 import logging
 import operator
 import sqlite3
+from typing import cast
 
 import uritools
 from mopidy import backend, models
 from mopidy.models import Ref, SearchResult, Image
+from mopidy.types import Uri
 
 from . import Extension, schema
 
@@ -13,20 +15,20 @@ logger = logging.getLogger(__name__)
 
 def date_ref(date):
     return Ref.directory(
-        uri=uritools.uricompose("eboback", None, "directory", {"date": date}),
+        uri=Uri(uritools.uricompose("eboback", None, "directory", {"date": date})),
         name=date,
     )
 
 
 def genre_ref(genre):
     return Ref.directory(
-        uri=uritools.uricompose("eboback", None, "directory", {"genre": genre}),
+        uri=Uri(uritools.uricompose("eboback", None, "directory", {"genre": genre})),
         name=genre,
     )
 
 
 class LocalLibraryProvider(backend.LibraryProvider):
-    ROOT_DIRECTORY_URI = "eboback:directory"
+    ROOT_DIRECTORY_URI = Uri("eboback:directory")
 
     root_directory = models.Ref.directory(
         uri=ROOT_DIRECTORY_URI, name="Eboplayer media"
@@ -125,7 +127,7 @@ class LocalLibraryProvider(backend.LibraryProvider):
                 timeout=self._config["timeout"],
                 check_same_thread=False,
             )
-        return self._connection
+        return cast(sqlite3.Connection, self._connection)
 
     def _browse_album(self, uri, order=("disc_no", "track_no", "name")):
         return schema.browse(self._connect(), Ref.TRACK, order, album=uri)
