@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 HashedRemember = TypedDict("HashedRemember", {"id": str, "text": str})
 
-class GenreDefClass():
+class GenreDefClass:
     __slots__ = ["genre", "replacement"]
     def __init__(self, genre: str, replacement: str):
         self.genre = genre

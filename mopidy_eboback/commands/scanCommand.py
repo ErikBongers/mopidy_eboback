@@ -1,6 +1,6 @@
 import logging
 
-from mopidy_eboback.file_scanners.audo_scanner import Scanner, ProgressReporter
+from mopidy_eboback.file_scanners.audio_scanner import Scanner, ProgressReporter
 from mopidy_eboback.storage import LocalStorageProvider
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.

@@ -5,7 +5,7 @@ from typing import Literal
 
 import tornado.websocket
 
-from mopidy_eboback.file_scanners.audo_scanner import Scanner, ProgressReporter
+from mopidy_eboback.file_scanners.audio_scanner import Scanner, ProgressReporter
 
 logger = logging.getLogger(__name__)
 

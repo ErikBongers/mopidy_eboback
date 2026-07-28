@@ -4,10 +4,9 @@ from typing import ClassVar
 import pykka
 from mopidy import backend, core
 from mopidy.audio import scan
-from mopidy.ext import Extension
 from mopidy.types import UriScheme
 
-from mopidy_eboback import storage, http
+from mopidy_eboback import storage, http, Extension
 from mopidy_eboback.edit_config import EboBackConfigEditor
 from mopidy_eboback.library import LocalLibraryProvider
 from mopidy_eboback.playback import LocalPlaybackProvider

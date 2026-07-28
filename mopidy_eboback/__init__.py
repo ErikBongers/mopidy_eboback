@@ -5,7 +5,6 @@ from cyclopts import App
 
 from mopidy import config, ext
 
-from mopidy_eboback.commands import commands
 from mopidy_eboback.schema import ImageDict
 
 
@@ -46,6 +45,7 @@ class Extension(ext.Extension):
         )
 
     def get_command(self) -> App | None:
+        from mopidy_eboback.commands import commands
         return commands.app
 
     def webapp(self, config, core):

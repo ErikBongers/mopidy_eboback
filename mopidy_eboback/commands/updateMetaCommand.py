@@ -1,6 +1,6 @@
 import logging
 
-from mopidy_eboback.file_scanners.audo_scanner import ProgressReporter
+from mopidy_eboback.file_scanners.audio_scanner import ProgressReporter
 from mopidy_eboback.file_scanners.meta_scanner import MetaScanner
 from mopidy_eboback.storage import LocalStorageProvider
 
