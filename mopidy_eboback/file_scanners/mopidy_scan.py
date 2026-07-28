@@ -308,18 +308,6 @@ def _process(  # noqa: C901, PLR0911, PLR0912, PLR0915
             break
 
         structure = msg.get_structure()
-        object_methods = [method_name for method_name in dir(structure)
-                          if callable(getattr(structure, method_name))]
-        print("structure:")
-        logger.error(structure)
-        # print(object_methods)
-        logger.error(structure)
-        print(f"Lenght: {len(structure)}")
-        if structure:
-            print("structure = true")
-        else:
-            print("structure = false")
-        print(f"structure_name = {_get_structure_name(structure)}")
 
         if msg.type == Gst.MessageType.ELEMENT:
             if GstPbutils.is_missing_plugin_message(msg):
