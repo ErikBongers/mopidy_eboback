@@ -1,10 +1,13 @@
 from mopidy_eboback import storage
 
 
-class ClearCommand(commands.Command):
+class ClearCommand:
     help = "Clear local media files from the eboplayer library."
+    def __init__(self):
+        pass
 
-    def run(self, args, config):
+    # noinspection method-may-be-static
+    def run(self, config):
         library = storage.LocalStorageProvider(config)
 
         prompt = "Are you sure you want to clear the library? [y/N] "

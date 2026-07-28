@@ -12,8 +12,10 @@ class ScanCommand:
     def __init__(self, force: bool = False, limit: int | None = None):
         super().__init__()
         self.storage: LocalStorageProvider
+        self.force = force
+        self.limit = limit
 
-    def run(self, args, config):
+    def run(self, config):
         def progress(msg: str) -> None:
             logger.info(f"*** SCAN STEP: {msg}")
 
@@ -25,5 +27,5 @@ class ScanCommand:
 
         reporter = ProgressReporter(progress, details, error)
 
-        scanner = Scanner(config, args.force, args.limit, reporter)
+        scanner = Scanner(config, self.force, self.limit, reporter)
         return scanner.run()
