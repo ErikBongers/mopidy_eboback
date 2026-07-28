@@ -74,6 +74,7 @@ class Scanner:
         Returns:
             Named tuple: `uri`, `tags`, `duration`, `seekable`, `mime`, `playable`.
         """
+        print(f"Scanning URI: {uri}")
         timeout = int(timeout or self._timeout_ms)
         pipeline, signals = _setup_pipeline(uri, self._proxy_config)
 
@@ -307,19 +308,31 @@ def _process(  # noqa: C901, PLR0911, PLR0912, PLR0915
             break
 
         structure = msg.get_structure()
+        object_methods = [method_name for method_name in dir(structure)
+                          if callable(getattr(structure, method_name))]
+        print("structure:")
+        logger.error(structure)
+        # print(object_methods)
+        logger.error(structure)
+        print(f"Lenght: {len(structure)}")
+        if structure:
+            print("structure = true")
+        else:
+            print("structure = false")
+        print(f"structure_name = {_get_structure_name(structure)}")
 
         if msg.type == Gst.MessageType.ELEMENT:
             if GstPbutils.is_missing_plugin_message(msg):
                 missing_message = msg
 
         elif msg.type == Gst.MessageType.APPLICATION:
-            if structure and _get_structure_name(structure) == "have-type":
+            if structure is not None and _get_structure_name(structure) == "have-type":
                 caps = cast(Gst.Structure | None, structure.get_value("caps"))
                 if caps:
                     mime = _get_structure_name(caps)
                     if mime.startswith("text/") or mime == "application/xml":
                         return tags, mime, have_audio, duration
-            elif structure and structure.get_name() == "have-audio":
+            elif structure is not None and structure.get_name() == "have-audio":
                 have_audio = True
 
         elif msg.type == Gst.MessageType.ERROR:
