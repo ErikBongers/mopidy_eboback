@@ -3,13 +3,13 @@ from pathlib import Path
 
 from mopidy.audio import tags
 from mopidy.models import Track
+from mopidy.types import Uri
 
 from mopidy_eboback import storage, mtimes, translator
 from mopidy_eboback.file_scanners import mopidy_scan
 from mopidy_eboback.file_scanners.meta_scanner import MetaScanner
 from mopidy_eboback.file_scanners.mutagen_and_wav import scan_mutagen_meta, scan_wavinfo, scan_mutagen_full
 from mopidy_eboback.file_scanners.progress_reporter import ProgressReporter
-from mopidy_eboback.types import Uri
 
 MIN_DURATION_MS = 100  # Shortest length of track to include.
 
@@ -177,7 +177,7 @@ class Scanner:
                 else:
                     local_uri = self.storage.playlist_item_to_uri(absolute_path)
                     mtime = file_mtimes.get(absolute_path)
-                    track: Track = tags.convert_tags_to_track(result.tags).replace(
+                    track: Track = tags.convert_tags_to_track(result.tags,
                         uri=local_uri,
                         length=result.duration,
                         last_modified=mtime,
@@ -185,8 +185,9 @@ class Scanner:
                     if absolute_path.suffix.lower() == ".wma":
                         track = scan_mutagen_meta(absolute_path, track)
 
-                    name = fix_encoding(track.name)
-                    track = track.replace(name=name)
+                    if track.name is not None:
+                        name = fix_encoding(track.name)
+                        track = track.replace(name=name)
 
                     self.storage.add_track(track, result.tags, result.duration)
                     self.reporter.details(f"Added {track.uri}")
@@ -259,7 +260,7 @@ def fix_encoding(title: str) -> str:
     return title
 
 class _ScanProgress:
-    def __init__(self, batch_size, total, reporter: ProgressReporter):
+    def __init__(self, batch_size, total: int, reporter: ProgressReporter):
         self.count = 0
         self.batch_size = batch_size
         self.total = total

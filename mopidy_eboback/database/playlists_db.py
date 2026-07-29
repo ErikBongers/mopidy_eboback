@@ -3,9 +3,10 @@ from pathlib import Path
 from sqlite3 import Connection
 
 from mopidy.models import Ref
+from mopidy.types import Uri
 
 from mopidy_eboback.schema import _insert_or_replace
-from mopidy_eboback.types import Uri, PlaylistRow
+from mopidy_eboback.types import PlaylistRow
 
 
 def get_playlists(c):

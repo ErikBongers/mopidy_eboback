@@ -11,18 +11,20 @@ import urllib
 from datetime import datetime, timezone
 from pathlib import Path
 from sqlite3 import Connection
-from typing import TypedDict, Union
+from typing import TypedDict, Union, cast
 from urllib.parse import urlparse
 
 from mopidy.audio import tags
 from mopidy.models import Track
+from mopidy.types import Uri
+
 from mopidy_eboback.alsa_proxy import AlsaProxy
 
 from . import Extension, schema, translator, ImageCache
 from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
 from .schema import ImageDict, AlbumKeyInfoRow
-from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, Uri, RootMetaDef, ImageDef
+from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, RootMetaDef, ImageDef
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +117,7 @@ class LocalStorageProvider:
         self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
         self.img_file_patterns = list(map(str, ext_config["album_art_files"])) #todo: also rename the config name: it's not files but patterns.
         self._dbpath = self._data_dir / "library.db"
+        print(self._dbpath)
         self._connection: Connection | None = None
         self.mixer = AlsaProxy("Master") #todo: don't hard-code this mixer name.
 
@@ -154,7 +157,7 @@ class LocalStorageProvider:
             image_strings = set([image["path"] for image in images.values()])
             schema.insert_track(self._connect(), track, image_strings, file_dir)
             for image_def in images.values():
-                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                image_id = schema.insert_image(self._connect(), image_def["path"], cast(int, image_def["width"]), cast(int, image_def["height"]), image_def["embedded"])
                 if track.album:
                     schema.add_album_image(self._connect(), track.album.uri, image_id)
                 else:
@@ -172,7 +175,7 @@ class LocalStorageProvider:
             images = self.get_image_files_from_folder(album_dir)
             for image_def in images.values():
                 logger.info("Adding image %s", image_def)
-                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], False)
+                image_id = schema.insert_image(self._connect(), image_def["path"], cast(int, image_def["width"]), cast(int, image_def["height"]), False)
                 logger.info("Added image %s", image_id)
                 schema.add_album_image(self._connect(), album_uri, image_id)
         schema.update_all_album_min_max_images(self._connect())
@@ -189,7 +192,7 @@ class LocalStorageProvider:
                 new_path = self._media_dir / image
 
                 image_def = self._get_or_create_image_file(new_path, None)
-                image_id = schema.insert_image(self._connect(), image_def["path"], image_def["width"], image_def["height"], image_def["embedded"])
+                image_id = schema.insert_image(self._connect(), image_def["path"], cast(int, image_def["width"]), cast(int, image_def["height"]), image_def["embedded"])
                 schema.add_track_image(self._connect(), track.uri, image_id)
         except Exception as e:
             logger.warning("Skipped %s: %s", track.uri, e)
@@ -536,7 +539,7 @@ class LocalStorageProvider:
     def playlist_item_to_uri(self, path: Union[str, bytes, Path]) -> Uri:
         if isinstance(path, str):
             if path.startswith("http"):
-                return f"eboback:stream:{path}"
+                return Uri(f"eboback:stream:{path}")
         ppath = Path(os.fsdecode(path))
         if ppath.is_absolute():
             absolute_path = ppath
@@ -545,9 +548,9 @@ class LocalStorageProvider:
             absolute_path = self._media_dir / ppath
         escaped_path = urllib.parse.quote(bytes(ppath))
         if not absolute_path.is_dir():
-            return f"eboback:track:{escaped_path}"
+            return Uri(f"eboback:track:{escaped_path}")
         else:
-            return self.get_album_uri_and_name(absolute_path)["uri"] #todo: it could be a relative path!
+            return Uri(self.get_album_uri_and_name(absolute_path)["uri"]) #todo: it could be a relative path!
 
     def toggle_favorite(self, item_uri: Uri) -> bool:
         favorites_name = "Favorites" #todo: defined in settings.
