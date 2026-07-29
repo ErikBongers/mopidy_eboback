@@ -10,3 +10,5 @@
 /docs/_build/
 /tests/data/
 .idea/workspace.xml
+.idea/dataSources/
+/.idea/dataSources.local.xml
