@@ -516,14 +516,16 @@ class LocalStorageProvider:
             for idx, item in enumerate(items):
                 if type(item) is str:
                     # file path or stream url
-                    playlists_db.add_playlist_file(c, playlist_uri, item)
+                    playlists_db.add_playlist_file(c, playlist_uri, cast(str, item))
                 elif item['type'] == 'stream':
-                    track = tags.convert_tags_to_track({}).replace(
+                    track = tags.convert_tags_to_track({}, uri=Uri("eboback:stream:" + item['uri'])).replace(
                         name=item['name'],
-                        uri="eboback:stream:" + item['uri'],
                         genre=item['genre']
                     )
-                    self.add_stream_track(track, item["image"], item['exclude_streamlines'], item["program_titles"])  # todo: this may already exist. Ok to overwrite?
+                    # todo: this may already exist. Ok to overwrite?
+                    self.add_stream_track(track, item["image"],
+                                          cast(list[str],item['exclude_streamlines']),
+                                          cast(list[str], item["program_titles"]))
                     self.add_playlist_ref(playlist_uri, track.uri, "track", idx)  # todo: streams are saved as tracks...
 
     def uri_to_playlist_item(self, uri: Uri) -> str:

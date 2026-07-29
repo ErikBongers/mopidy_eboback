@@ -318,12 +318,12 @@ select lvl3, lvl4 from genre_tree
 union
 select lvl3, lvl5 from genre_tree;
 
-create table playlist_file (
+create table playlist_files (
     playlist_uri TEXT not null,
     path TEXT not null
 );
 
-create index playlist_file_uri_idx on playlist_file (playlist_uri);
+create index playlist_file_uri_idx on playlist_files (playlist_uri);
 
 PRAGMA user_version = 8;  -- update schema version
 

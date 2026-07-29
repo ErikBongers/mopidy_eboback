@@ -1,3 +1,8 @@
+* Why does Les Pleurs have artists ["Soundtrack", "Jordi Savall"],
+  but gerne is registered as "Soundtrack" and artists to "Mr. De Sainte Collombe" ???
+
+* Add multipe artists
+  > see warning "Ignoring multiple artists"
 * Add to settings:
   - name of favorites playlist ("Favorites")
   - name of audio mixer ("Master")

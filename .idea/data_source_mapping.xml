@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/mopidy_eboback/sql/upgrade-v7.sql" value="4beaa6ef-6b63-4167-80cb-0514ec6cc33b" />
+  </component>
+</project>
