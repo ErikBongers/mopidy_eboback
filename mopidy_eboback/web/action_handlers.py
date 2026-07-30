@@ -45,7 +45,7 @@ class DataHandler(tornado.web.RequestHandler):
             func()
             return
 
-        cnt = schema.count_albums(self._connect())
+        cnt = schema.count_rows(self._connect(), "album")
         self.write("Oops...no valid data request: " + data_path)
         self.write("" + str(cnt))
 

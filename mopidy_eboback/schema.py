@@ -201,7 +201,7 @@ class Connection(sqlite3.Connection):
         self.row_factory = self.Row
 
 
-def create_or_update_db(c) -> int | None:
+def create_or_update_db(c: Connection) -> int | None:
     upgraded_to_version = None
     sql_dir = pathlib.Path(__file__).parent / "sql"
     user_version = c.execute("PRAGMA user_version").fetchone()[0]
@@ -218,6 +218,12 @@ def create_or_update_db(c) -> int | None:
         assert new_version != user_version
         user_version = new_version
         upgraded_to_version = new_version
+    # since upgrade-v7:
+    cnt = count_rows(c, "genre_defs")
+    if cnt == 0:
+        with open(sql_dir / "genres.sql") as fh:
+            c.executescript(fh.read())
+
     return upgraded_to_version
 
 
@@ -659,8 +665,8 @@ def _track(row):
         ]
     return Track(**kwargs)
 
-def count_albums(c):
-    res = c.execute("select count() as cnt from album")
+def count_rows(c: Connection, table_name: str) -> int:
+    res = c.execute(f"select count() as cnt from {table_name}")
     cnt, = res.fetchone()
     return cnt
 
