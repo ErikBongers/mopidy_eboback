@@ -3,7 +3,9 @@ import time
 import typing
 import urllib
 
+import httpx
 from mopidy import backend, exceptions
+from mopidy.audio import scan
 from mopidy.models import Track
 from mopidy.types import Uri
 
@@ -29,7 +31,7 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
                 stripped_uri,
                 timeout=5000,
                 scanner=typing.cast(EbobackBackend, self.backend).the_scanner,
-                requests_session=typing.cast(EbobackBackend, self.backend).the_session,
+                http_client=typing.cast(EbobackBackend, self.backend)._http_client
             )
 
 
@@ -81,7 +83,7 @@ class LocalPlaybackProvider(backend.PlaybackProvider):
         self.storage.set_volume_from_track(track_uri)
 
 
-def _unwrap_stream(uri, timeout, scanner, requests_session):
+def _unwrap_stream(uri, timeout, scanner, http_client: httpx.Client) -> tuple[Uri | None, scan._Result | None]:
     """
     Get a stream URI from a playlist URI, ``uri``.
 
@@ -143,7 +145,7 @@ def _unwrap_stream(uri, timeout, scanner, requests_session):
             )
             return None, None
         content = http.download(
-            requests_session, uri, timeout=download_timeout / 1000
+            http_client, uri, timeout=download_timeout / 1000
         )
 
         if content is None:
@@ -167,3 +169,5 @@ def _unwrap_stream(uri, timeout, scanner, requests_session):
         new_uri = uris[0]
         logger.info("Parsed playlist (%s) and found new URI: %s", uri, new_uri)
         uri = urllib.parse.urljoin(uri, new_uri)
+
+    return None, None
