@@ -6,13 +6,14 @@ import typing
 
 import tornado.web
 from mopidy.models import Ref
+from mopidy.types import Uri
 
 from mopidy_eboback import Extension, ImageCache
 from mopidy_eboback import schema
 from mopidy_eboback.database import playlists_db
 from mopidy_eboback.schema import AlbumKeyInfoRow
 from mopidy_eboback.storage import LocalStorageProvider
-from mopidy_eboback.types import PlaylistDict, Uri, GenreReplacementRow
+from mopidy_eboback.types import PlaylistDict, GenreReplacementRow
 
 logger = logging.getLogger(__name__)
 

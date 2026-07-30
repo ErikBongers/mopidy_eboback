@@ -523,6 +523,7 @@ def cleanup(c):
 
 
 def clear_except_history(c):
+    # noinspection SqlWithoutWhere
     c.executescript(
         """
     DELETE FROM track;
@@ -610,16 +611,16 @@ def _track(row):
     }
     if row.album_uri is not None:
         if row.albumartist_uri is not None:
-            albumartists = [
+            albumartists = frozenset([
                 Artist(
                     uri=row.albumartist_uri,
                     name=row.albumartist_name,
                     sortname=row.albumartist_sortname,
                     musicbrainz_id=row.albumartist_musicbrainz_id,
                 )
-            ]
+            ])
         else:
-            albumartists = None
+            albumartists = frozenset([])
         kwargs["album"] = Album(
             uri=row.album_uri,
             name=row.album_name,
@@ -791,6 +792,7 @@ def get_history(c, limit: int, offset: int):
 
 def update_album_dates(c: Connection):
     logger.info("Updating album dates")
+    # noinspection SqlWithoutWhere
     c.execute("""
             update album 
             set last_modified = (select max(track.last_modified) 

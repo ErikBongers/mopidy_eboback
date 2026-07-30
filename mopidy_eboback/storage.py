@@ -117,7 +117,6 @@ class LocalStorageProvider:
         self._base_uri = "/" + Extension.ext_name + "/" + IMG_URI_PREFIX + "/"
         self.img_file_patterns = list(map(str, ext_config["album_art_files"])) #todo: also rename the config name: it's not files but patterns.
         self._dbpath = self._data_dir / "library.db"
-        print(self._dbpath)
         self._connection: Connection | None = None
         self.mixer = AlsaProxy("Master") #todo: don't hard-code this mixer name.
 

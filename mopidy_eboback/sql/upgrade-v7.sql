@@ -298,25 +298,17 @@ select lvl0, lvl3 from genre_tree
 union
 select lvl0, lvl4 from genre_tree
 union
-select lvl0, lvl5 from genre_tree
-union
 select lvl1, lvl2 from genre_tree
 union
 select lvl1, lvl3 from genre_tree
 union
 select lvl1, lvl4 from genre_tree
 union
-select lvl1, lvl5 from genre_tree
-union
 select lvl2, lvl3 from genre_tree
 union
 select lvl2, lvl4 from genre_tree
 union
-select lvl2, lvl5 from genre_tree
-union
-select lvl3, lvl4 from genre_tree
-union
-select lvl3, lvl5 from genre_tree;
+select lvl3, lvl4 from genre_tree;
 
 create table playlist_files (
     playlist_uri TEXT not null,

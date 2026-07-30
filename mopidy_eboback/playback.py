@@ -5,11 +5,11 @@ import urllib
 
 from mopidy import backend, exceptions
 from mopidy.models import Track
+from mopidy.types import Uri
 
 from mopidy_eboback import translator, http
 from mopidy_eboback.storage import LocalStorageProvider
 from mopidy_eboback.stream_parsers import parse_playlist
-from mopidy_eboback.types import Uri
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ STREAM_PREFIX = "eboback:stream:"
 class LocalPlaybackProvider(backend.PlaybackProvider):
 
     def __init__(self, audio, ebo_backend: backend.Backend, storage: LocalStorageProvider):
-        from mopidy_eboback.backend import EbobackBackend
         super().__init__(audio, ebo_backend)
         self.storage: LocalStorageProvider = storage
 
