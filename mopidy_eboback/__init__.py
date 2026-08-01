@@ -34,7 +34,7 @@ class Extension(ext.Extension):
         schema["timeout"] = config.Integer(optional=True, minimum=1)
         schema["use_artist_sortname"] = config.Boolean()
         schema["album_art_files"] = config.List(optional=True)
-        schema["alsa_mixer"] = config.Path() #todo: Is there a String() option?
+        schema["alsa_mixer"] = config.String()
         return schema
 
     def setup(self, registry):
