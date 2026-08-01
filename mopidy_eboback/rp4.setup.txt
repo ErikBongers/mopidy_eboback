@@ -108,3 +108,8 @@ pip install maturin
 cd text_scanner_py
 maturin develop
 > This should install the lib as a dep in the venv.
+
+Setup for eboplayer
+--------------------
+sudo mkdir -p /var/lib/eboplayer
+sudo chmod 777 /var/lib/eboplayer

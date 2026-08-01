@@ -35,6 +35,7 @@ class Extension(ext.Extension):
         schema["use_artist_sortname"] = config.Boolean()
         schema["album_art_files"] = config.List(optional=True)
         schema["alsa_mixer"] = config.String()
+        schema["volume_adjust"] = config.List(optional=True)
         return schema
 
     def setup(self, registry):

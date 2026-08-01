@@ -25,6 +25,7 @@ from .database import playlists_db
 from .json_encoder import CompactJSONEncoder
 from .schema import ImageDict, AlbumKeyInfoRow
 from .types import AlbumMetaDict, empty_playlist_def, PlaylistDict, TrackRow, RootMetaDef, ImageDef
+from .www.volume_adjust_converter import VolumeAdjustConverter
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ class LocalStorageProvider:
         self._dbpath = self._data_dir / "library.db"
         self._connection: Connection | None = None
         self.mixer = AlsaProxy(self._config["alsa_mixer"])
+        self.volume_adjust_converter = VolumeAdjustConverter(self._config["volume_adjust"])
 
     def __enter__(self):
         return self
@@ -598,36 +600,9 @@ class LocalStorageProvider:
 
     def get_track_volume(self, track_uri: Uri) -> int:
         volume_adjust = schema.get_track_volume_adjust(self._connect(), track_uri)
-        return self.convert_volume_adjust_to_percentage(volume_adjust)
-
-    @staticmethod
-    def convert_volume_adjust_to_percentage(volume_adjust: int):
-        match volume_adjust:
-            case None:
-                return 50
-            case -5:
-                return 20
-            case -4:
-                return 25
-            case -3:
-                return 30
-            case -2:
-                return 35
-            case -1:
-                return 40
-            case  0:
-                return 50
-            case  1:
-                return 60
-            case  2:
-                return 70
-            case  3:
-                return 80
-            case  4:
-                return 90
-            case  5:
-                return 100
-        return 50
+        adjust = self.volume_adjust_converter.to_percentage(volume_adjust)
+        print(f"converted {volume_adjust} to {adjust}")
+        return adjust
 
     def set_volume_from_track(self, track_uri: Uri):
         track_volume = self.get_track_volume(track_uri)
