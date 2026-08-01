@@ -96,3 +96,15 @@ blkid /dev/sda1
 ls -l /dev/disk/by-uuid/
 > could be short: XXXX-XXXX
 > usbfnac:  0196-E1A9
+
+
+Create text_scanner lib file
+----------------------------------
+(in venv)
+git clone https://github.com/ErikBongers/TextScanner.git
+sudo apt  install rustup
+rustup default stable
+pip install maturin
+cd text_scanner_py
+maturin develop
+> This should install the lib as a dep in the venv.

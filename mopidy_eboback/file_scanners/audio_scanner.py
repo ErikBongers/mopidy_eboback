@@ -1,6 +1,7 @@
 import time
 from pathlib import Path
 
+import text_scanner_py
 from mopidy.audio import tags, scan
 from mopidy.models import Track
 from mopidy.types import Uri
@@ -222,7 +223,7 @@ class Scanner:
 
 
     def scan_eboplayer_files(self, playlist_files: set[Path]):
-        from mopidy_eboback.lib import text_scanner_py
+        # from mopidy_eboback.lib import text_scanner_py
 
         self.storage.delete_file_playlists()
         self.reporter.details("Number of playlist files found:" + str(len(playlist_files)))
