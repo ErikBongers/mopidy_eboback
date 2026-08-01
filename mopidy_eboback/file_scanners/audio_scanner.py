@@ -1,12 +1,11 @@
 import time
 from pathlib import Path
 
-from mopidy.audio import tags
+from mopidy.audio import tags, scan
 from mopidy.models import Track
 from mopidy.types import Uri
 
 from mopidy_eboback import storage, mtimes, translator
-from mopidy_eboback.file_scanners import mopidy_scan
 from mopidy_eboback.file_scanners.meta_scanner import MetaScanner
 from mopidy_eboback.file_scanners.mutagen_and_wav import scan_mutagen_meta, scan_wavinfo, scan_mutagen_full
 from mopidy_eboback.file_scanners.progress_reporter import ProgressReporter
@@ -160,7 +159,7 @@ class Scanner:
         files = sorted(files_to_scan)[:self.limit]
 
         self.reporter.details(f"Timeout: {self.timeout} ")
-        scanner = mopidy_scan.Scanner(self.timeout)
+        scanner = scan.Scanner(self.timeout)
         progress = _ScanProgress(self.flush_threshold, len(files), self.reporter)
 
         for absolute_path in files:

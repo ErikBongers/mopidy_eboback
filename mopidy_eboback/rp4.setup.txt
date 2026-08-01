@@ -1,0 +1,98 @@
+Increas mem for update/upgrades.
+----------------------------------------
+* Make and install image
+  > see AI help for: setup raspberry pi 4 headless via ethernet with ubuntu server
+  > see hostname and user below...
+* Wait LONG...(minutes)
+* Login with ssh erik@eboaudioserver
+* Create temp swap file:
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+Install mopidy
+----------------------
+sudo apt install -y python3-venv python3-pip python3-gi gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad gstreamer1.0-alsa gstreamer1.0-plugins-base gstreamer1.0-tools libgstreamer1.0-dev
+Before or after the VENV:
+sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-ugly
+sudo apt install gir1.2-gst-plugins-base-1.0 python3-gst-1.0 -y
+
+Enable the Pi's Onboard Audio Drivers (in a headless setup)
+------------------------------------------------------------
+> Not sure if all these commands are necessary.
+
+sudo apt install alsa-utils
+sudo alsa force-reload
+sudo /etc/init.d/alsa-utils reset
+sudo modprobe -r snd_bcm2835 && sudo modprobe snd_bcm2835
+sudo reboot
+>ssh back in.
+sudo usermod -a -G audio $USER
+cat /proc/asound/cards  --> should list sound cards
+newgrp audio  --> apply the new audio group.
+> Test:
+aplay -D hw:0,0 /usr/share/sounds/alsa/Front_Center.wav
+> If this works, mark Soundcard 0,0 as default (most likely the headphones.
+sudo nano /etc/asound.conf
+```
+pcm.!default {
+    type hw
+    card 0
+}
+
+ctl.!default {
+    type hw
+    card 0
+}
+```
+> Test aplay and:
+gst-play-1.0 --audiosink="alsasink device=hw:0,0" ~/mopidy-server/Music/Z/lespleurs.wma
+
+If this works, set the sink in mopidy:
+sudo nano /etc/mopidy/mopidy.conf
+```
+[audio]
+output = alsasink device=hw:0,0
+```
+
+
+Venv
+---------
+mkdir -p ~/mopidy-server && cd ~/mopidy-server
+python3 -m venv --system-site-packages venv
+
+git clone ...whatever mopidy version
+cd mopidy
+pip install .
+
+Install eboback
+------------------
+deactivate -->(to get out of venv)
+sudo apt update && sudo apt install -y libasound2-dev
+source ~/mopidy-server/venv/bin/activate
+git clone
+cd ...
+pip install .
+
+Mount and sync Music
+-----------------------
+Make Win11 user account (EboAudioShare/c1) with no MS account and just a pwd.
+On Pi:
+mkdir -p ~/win-share
+sudo mount -t cifs -o username=EboAudioShare //YOUR_WINDOWS_IP/Music ~/win-share
+rsync -av --progress ~/win-share/ ~/mopidy-server/Music
+
+--> Check Dance.../Leftism/Melt.mp3 lenght!
+
+Mount USB drive permanently (with removal)
+-------------------------------------------------
+Find name:
+lsblk
+> should list somthing like...sda1, use it as /dev/sda1
+Find UUID:
+blkid /dev/sda1
+...or
+ls -l /dev/disk/by-uuid/
+> could be short: XXXX-XXXX
+> usbfnac:  0196-E1A9

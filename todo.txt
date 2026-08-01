@@ -1,3 +1,7 @@
+* Scan lists all added tracks. Only do this for a verbose output.
+  > Perhaps add a report_verbose() to Reporter?
+* Reporter: add a running message type, or a message action 'replace'?
+  > This would allow for "Scanning: added 123 files..."
 * Why does Les Pleurs have artists ["Soundtrack", "Jordi Savall"],
   but gerne is registered as "Soundtrack" and artists to "Mr. De Sainte Collombe" ???
 
