@@ -8,7 +8,7 @@ sudo mkdir -p /opt/mopidy-dev && cd /opt/mopidy-dev || exit
 REAL_USER="${SUDO_USER:-$(whoami)}"
 sudo chown -R $REAL_USER:$REAL_USER /opt/mopidy-dev
 
-sudo apt install git
+sudo apt install -y git
 
 git clone https://github.com/ErikBongers/mopidy_eboback.git
 

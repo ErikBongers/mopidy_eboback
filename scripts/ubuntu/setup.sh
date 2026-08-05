@@ -59,7 +59,7 @@ fi
 apt update
 apt upgrade
 
-apt install alsa-utils              # > installs aplay, amixer, alsamixer,...
+apt install -y alsa-utils              # > installs aplay, amixer, alsamixer,...
 
 # Enable the Pi's Onboard Audio Drivers (in a headless setup)
 # ------------------------------------------------------------
