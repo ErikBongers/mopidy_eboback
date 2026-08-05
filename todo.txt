@@ -1,3 +1,16 @@
+* Make EboBackConfigEditor to run on it's own and update any key in the config file.
+  > This will allow to set the [audio] output in the config file.
+  > Let mopidy run before this, so it gets prefilled.
+    > Perhaps run this from the client side.
+      > Show a setup screen at initial startup.
+  > Always make a backup.
+
+* audio_adjust depends on alsamixer, which is installed with
+  : sudo apt install alsa-utils
+
+* audio_adjust
+  > allow for this to be pre-calculated. Needed when streaming via snapcast or icecast.
+
 * Scan lists all added tracks. Only do this for a verbose output.
   > Perhaps add a report_verbose() to Reporter?
 * Reporter: add a running message type, or a message action 'replace'?
@@ -9,7 +22,6 @@
   > see warning "Ignoring multiple artists"
 * Add to settings:
   - name of favorites playlist ("Favorites")
-  - name of audio mixer ("Master")
   > can front/backend write to settings file?
     > probably, after setting
       : sudo chmod 660 /etc/mopidy/mopidy.conf
