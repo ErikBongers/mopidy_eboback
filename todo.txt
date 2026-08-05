@@ -1,3 +1,7 @@
+* Setup scritps are under eboback project...which is installed via the setup scripts...
+  > Start with the git installs.
+    > requires the folders setup (/opt/mopidy-dev/...)
+
 * Make EboBackConfigEditor to run on it's own and update any key in the config file.
   > This will allow to set the [audio] output in the config file.
   > Let mopidy run before this, so it gets prefilled.
