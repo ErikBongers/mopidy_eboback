@@ -14,7 +14,7 @@ if ! [[ "$CARD_NUM" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-tee /etc/asound.conf << EOF
+cat << 'EOF' > /etc/asound.conf
 pcm.!default {
     type hw
     card $CARD_NUM
