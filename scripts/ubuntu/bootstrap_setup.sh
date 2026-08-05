@@ -10,3 +10,8 @@ chown -R $REAL_USER:$REAL_USER /opt/mopidy-dev
 
 apt install git
 
+git clone https://github.com/ErikBongers/mopidy_eboback.git
+
+cd /opt/mopidy-dev/eboback/
+
+find scripts -type f -exec chmod +x {} +
