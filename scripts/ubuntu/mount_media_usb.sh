@@ -30,7 +30,6 @@ mkdir -p "$MOUNT_PATH"
 GROUP_ID=$(getent group "media_grp" | cut -d: -f3)
 FSTAB_LINE="UUID=$UUID  $MOUNT_PATH  vfat  defaults,nofail,uid=1000,gid=$GROUP_ID,dmask=0002,fmask=0113  0  0"
 echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
-
 # STABLINE MASKS:
 # These masks DISABLE privs and are NOT AND-ed with the typical chmod 777 privs.
 # Where
@@ -40,3 +39,7 @@ echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
 # 1st digit = special privs
 # 2nd, 3rd and 4th digit are user, group and other
 # so 0113 means, 0 = ignore special privs, 1 = no execute for user, 1 = no execute for group and 3 = 1 + 2 = no execute and write for other.
+
+# mount all, including for systemd
+mount -a
+systemctl daemon-reload
