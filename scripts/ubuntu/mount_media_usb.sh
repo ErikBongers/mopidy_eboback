@@ -7,7 +7,7 @@ fi
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
-"./$SCRIPT_DIR/create_media_grp.sh"
+"$SCRIPT_DIR/create_media_grp.sh"
 
 # list drive names:
 lsblk
