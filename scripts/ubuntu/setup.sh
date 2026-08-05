@@ -25,10 +25,13 @@
 # Get-Content "$HOME\.ssh\id_ed25519.pub" | ssh erik@eboaudioserver "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 # On android, in termux, create a key and copy it with
 # ssh-copy-id erik@eboaudioserver
+# when all users have access (via passwordless ssh) disable password login.
+# sudo nano /etc/ssh/sshd_config.d/50-cloud-init.conf
 
-# Now run THIS script.
+# Now bootstrap this script (from the eboback repo. See instructions in bootstrap_setup.sh
+
+
 # This script must be called WITHOUT sudo privileges.
-
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # Force this script to be run as NOT sudo.
