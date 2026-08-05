@@ -1,23 +1,17 @@
 #!/bin/bash
 
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Error: Please run this script with sudo (e.g., sudo ./mount_media_usb.sh)"
+  echo "❌ Error: Please run this script with sudo"
   exit 1
 fi
 
 # list drive names:
 lsblk
-# > should list something like...sda1, use it as /dev/sda1
+
 read -p "👉 Type the partition name to mount (e.g., sda1, sdb1): " DISKNAME
-# Find UUID:
-blkid "/dev/$DISKNAME"
-#...or
-ls -l /dev/disk/by-uuid/ | grep "$DISKNAME"
-# > could be short: XXXX-XXXX
-# > usbfnac:  0196-E1A9
+
 EXTRACTED_UUID=$(blkid "/dev/$DISKNAME" | grep -oP 'UUID="\K[^"]+')
 if [ -n "$EXTRACTED_UUID" ]; then
-  echo "🎯 Success: Automatically extracted UUID: $EXTRACTED_UUID"
   UUID=$EXTRACTED_UUID
 else
   echo "⚠️ Warning: Could not automatically extract the UUID."
