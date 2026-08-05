@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Update package lists
-apt update
-
-# Install required python and gstreamer packages
-apt install -y \
+sudo apt install -y \
     gir1.2-gst-plugins-base-1.0 \
     gstreamer1.0-alsa \
     gstreamer1.0-libav \

@@ -7,7 +7,7 @@ fi
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
-"$SCRIPT_DIR/create_media_grp.sh"
+sudo "$SCRIPT_DIR/create_media_grp.sh"
 
 # list drive names:
 lsblk
@@ -24,12 +24,12 @@ fi
 
 read -p "👉 Enter a name for your mount folder (e.g., myusb): " MOUNTNAME
 MOUNT_PATH="/mnt/$MOUNTNAME"
-mkdir -p "$MOUNT_PATH"
+sudo mkdir -p "$MOUNT_PATH"
 
 #todo: media_grp is hardcoded.
 GROUP_ID=$(getent group "media_grp" | cut -d: -f3)
 FSTAB_LINE="UUID=$UUID  $MOUNT_PATH  vfat  defaults,nofail,uid=1000,gid=$GROUP_ID,dmask=0002,fmask=0113  0  0"
-echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
+sudo echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
 # STABLINE MASKS:
 # These masks DISABLE privs and are NOT AND-ed with the typical chmod 777 privs.
 # Where
@@ -41,5 +41,5 @@ echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
 # so 0113 means, 0 = ignore special privs, 1 = no execute for user, 1 = no execute for group and 3 = 1 + 2 = no execute and write for other.
 
 # mount all, including for systemd
-mount -a
-systemctl daemon-reload
+sudo mount -a
+sudo systemctl daemon-reload

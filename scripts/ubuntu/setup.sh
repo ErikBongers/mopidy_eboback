@@ -34,44 +34,25 @@
 # This script must be called WITHOUT sudo privileges.
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
-# Force this script to be run as NOT sudo.
-# todo: does that even make sense? Can't all the commands be run as sudo?
-# --------------------------------------------
-if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
-    ORIGINAL_USER="$SUDO_USER"
-elif [ "$(whoami)" != "root" ]; then
-    ORIGINAL_USER=$(whoami)
-else
-    echo "Error: This script must be initiated by a non-root user." >&2
-    exit 1
-fi
-
-if [ "$EUID" -ne 0 ]; then
-    # Re-run this exact script with sudo, passing the validated user through
-    exec sudo ORIGINAL_USER="$ORIGINAL_USER" "$0" "$@"
-fi
-
-#Code below this line runs safely with sudo privileges
-
-ENV_TYPE=$(./detect_env.sh)        # Get the environment ("RP4" or "WSL2")
+ENV_TYPE=$("$SCRIPT_DIR/detect_env.sh")        # Get the environment ("RP4" or "WSL2")
 
 if [ "$ENV_TYPE" = "RP4" ]; then
-   "$SCRIPT_DIR/create-swap_file.sh"           # Create swap file (in case of 1GB mem) and update the system
+   sudo "$SCRIPT_DIR/create_swap_file.sh"           # Create swap file (in case of 1GB mem) and update the system
 fi
 
-apt update
-apt upgrade
+sudo apt update
+sudo apt upgrade
 
-apt install -y alsa-utils              # > installs aplay, amixer, alsamixer,...
+sudo apt install -y alsa-utils              # > installs aplay, amixer, alsamixer,...
 
 # Enable the Pi's Onboard Audio Drivers (in a headless setup)
 # ------------------------------------------------------------
 if [ "$ENV_TYPE" = "RP4" ]; then
    "$SCRIPT_DIR/fix_audio_cards_indices.sh"
     # Grant an ssh or headless user access to audio
-    usermod -a -G audio "$ORIGINAL_USER" #add user erik to audio group
-    usermod -a -G audio mopidy #add user mopidy to audio group
-    newgrp audio #apply the new audio group.
+    sudo usermod -a -G audio "$ORIGINAL_USER" #add user erik to audio group
+    sudo usermod -a -G audio mopidy #add user mopidy to audio group
+    sudo newgrp audio #apply the new audio group.
    # "$SCRIPT_DIR/set_default_soundcard.sh" 3  #set the soundcard to index 3 (usb)
 fi
 
@@ -82,6 +63,8 @@ if [ "$ENV_TYPE" = "RP4" ]; then
 elif [ "$ENV_TYPE" = "WSL2" ]; then
     MOPIDY_AUDIO_OUTPUT="pulsesink"
 fi
+
+"$SCRIPT_DIR/mount_media_usb.sh"
 
 "$SCRIPT_DIR/set_mopidy_audio" "$MOPIDY_AUDIO_OUTPUT"
 

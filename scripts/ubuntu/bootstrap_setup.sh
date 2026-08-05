@@ -12,4 +12,5 @@ sudo apt install -y git
 
 git clone https://github.com/ErikBongers/mopidy_eboback.git
 
-cd /opt/mopidy-dev/mopidy_eboback/ || exit
+cd /opt/mopidy-dev/mopidy_eboback/scripts/ubuntu || exit
+
