@@ -26,10 +26,12 @@ source /opt/mopidy-dev/venv/bin/activate
 cd /opt/mopidy-dev/mopidy || exit
 pip install .
 
-cd /opt/mopidy-dev/mopidy-eboback || exit
+cd /opt/mopidy-dev/mopidy_eboback || exit
 # Required for eboback
 sudo apt install -y libasound2-dev
 pip install .
 
-cd /opt/mopidy-dev/mopidy_eboplayer || exit
+cd /opt/mopidy-dev/mopidy-eboplayer || exit
+sudo mkdir -p /var/lib/eboplayer
+sudo chmod 777 /var/lib/eboplayer
 pip install .

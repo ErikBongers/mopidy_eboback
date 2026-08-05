@@ -64,7 +64,7 @@ elif [ "$ENV_TYPE" = "WSL2" ]; then
     MOPIDY_AUDIO_OUTPUT="pulsesink"
 fi
 
-"$SCRIPT_DIR/mount_media_usb.sh"
+sudo "$SCRIPT_DIR/mount_media_usb.sh"
 
 "$SCRIPT_DIR/set_mopidy_audio" "$MOPIDY_AUDIO_OUTPUT"
 
@@ -72,25 +72,19 @@ fi
 
 "$SCRIPT_DIR/install_mopidy_dev.sh"
 
-Mount USB drive permanently (with removal)
--------------------------------------------------
-
-Create text_scanner lib file
-----------------------------------
-(in venv)
-git clone https://github.com/ErikBongers/TextScanner.git
-apt  install rustup
-rustup default stable
-pip install maturin
-cd text_scanner_py
-maturin develop
-> This should install the lib as a dep in the venv.
-
-Setup for eboplayer
---------------------
-mkdir -p /var/lib/eboplayer
-chmod 777 /var/lib/eboplayer
-
-
-# Fix internal soundcards to index 0, 1, 2 (and usb to 3)
------------------------------------------------------------
+# Create text_scanner lib file
+# ----------------------------------
+# (in venv)
+# git clone https://github.com/ErikBongers/TextScanner.git
+# apt  install rustup
+# rustup default stable
+# pip install maturin
+# cd text_scanner_py
+# maturin develop
+# > This should install the lib as a dep in the venv.
+#
+# Setup for eboplayer
+# --------------------
+# mkdir -p /var/lib/eboplayer
+# chmod 777 /var/lib/eboplayer
+#

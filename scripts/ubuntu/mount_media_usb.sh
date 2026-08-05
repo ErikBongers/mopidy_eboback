@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Error: Please run this script with sudo"
+  echo "Error: Please run this script with sudo"
   exit 1
 fi
 
@@ -12,17 +12,17 @@ sudo "$SCRIPT_DIR/create_media_grp.sh"
 # list drive names:
 lsblk
 
-read -p "👉 Type the partition name to mount (e.g., sda1, sdb1): " DISKNAME
+read -p "Type the partition name to mount (e.g., sda1, sdb1): " DISKNAME
 
 EXTRACTED_UUID=$(blkid "/dev/$DISKNAME" | grep -oP 'UUID="\K[^"]+')
 if [ -n "$EXTRACTED_UUID" ]; then
   UUID=$EXTRACTED_UUID
 else
-  echo "⚠️ Warning: Could not automatically extract the UUID."
-  read -p "👉 Please manually type or paste the UUID: " UUID
+  echo "Warning: Could not automatically extract the UUID."
+  read -p "Please manually type or paste the UUID: " UUID
 fi
 
-read -p "👉 Enter a name for your mount folder (e.g., myusb): " MOUNTNAME
+read -p "Enter a name for your mount folder (e.g., myusb): " MOUNTNAME
 MOUNT_PATH="/mnt/$MOUNTNAME"
 sudo mkdir -p "$MOUNT_PATH"
 

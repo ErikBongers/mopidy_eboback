@@ -14,3 +14,4 @@ git clone https://github.com/ErikBongers/mopidy_eboback.git
 
 cd /opt/mopidy-dev/mopidy_eboback/scripts/ubuntu || exit
 
+./setup.sh

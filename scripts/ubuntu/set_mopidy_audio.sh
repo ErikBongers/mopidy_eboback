@@ -9,7 +9,8 @@ if [ -z "$MOPIDY_AUDIO_OUTPUT" ]; then
 fi
 
 #todo: erik is hardcoded!!!
-tee /home/erik/.config/mopidy/mopidy.conf << EOF
+tee /opt/mopidy-dev/.config/mopidy/mopidy.conf << EOF
 [audio]
 output=$MOPIDY_AUDIO_OUTPUT
 EOF
+sudo chmod 777 /opt/mopidy-dev/.config/mopidy/mopidy.conf
