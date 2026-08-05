@@ -19,10 +19,10 @@ if [ -n "$EXTRACTED_UUID" ]; then
   UUID=$EXTRACTED_UUID
 else
   echo "Warning: Could not automatically extract the UUID."
-  read -p "Please manually type or paste the UUID: " UUID
+  read -p "Please manually type or paste the UUID: " UUID  < /dev/tty
 fi
 
-read -p "Enter a name for your mount folder (e.g., myusb): " MOUNTNAME
+read -p "Enter a name for your mount folder (e.g., myusb): " MOUNTNAME  < /dev/tty
 MOUNT_PATH="/mnt/$MOUNTNAME"
 sudo mkdir -p "$MOUNT_PATH"
 

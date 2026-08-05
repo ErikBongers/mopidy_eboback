@@ -48,7 +48,7 @@ sudo apt install -y alsa-utils              # > installs aplay, amixer, alsamixe
 # Enable the Pi's Onboard Audio Drivers (in a headless setup)
 # ------------------------------------------------------------
 if [ "$ENV_TYPE" = "RP4" ]; then
-   "$SCRIPT_DIR/fix_audio_cards_indices.sh"
+   sudo "$SCRIPT_DIR/fix_audio_cards_indices.sh"
     # Grant an ssh or headless user access to audio
     sudo usermod -a -G audio "$SUDO_USER" #add user erik to audio group
     sudo usermod -a -G audio mopidy #add user mopidy to audio group
@@ -66,7 +66,7 @@ fi
 
 sudo "$SCRIPT_DIR/mount_media_usb.sh"
 
-"$SCRIPT_DIR/set_mopidy_audio" "$MOPIDY_AUDIO_OUTPUT"
+"$SCRIPT_DIR/set_mopidy_audio.sh" "$MOPIDY_AUDIO_OUTPUT"
 
 "$SCRIPT_DIR/install_mopidy_deps.sh"
 
