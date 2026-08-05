@@ -1,7 +1,7 @@
 Test setup
 ----------------
-OK bootstrap_setup.sh
-OK create_media_grp.sh
+bootstrap_setup.sh
+create_media_grp.sh
 create_mopidy_user.sh
 create_swap_file.sh
 detect_env.sh
@@ -9,7 +9,7 @@ fix_audio_cards_indices.sh
 install_mopidy_deps.sh
 install_mopidy_dev.sh
 mount_media_usb.sh
-set_default_soundcard.sh
+SKIP set_default_soundcard.sh
 set_mopidy_audio.sh
 setup.sh
 varia.txt
