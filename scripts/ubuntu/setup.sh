@@ -5,7 +5,7 @@
 # * Make and install image
 #   > see AI help for: setup raspberry pi 4 headless via ethernet with ubuntu server
 #   > see hostname and user below...
-# Open the user-data file on image and add section
+# Open the user-data file on image and add section: (this makes ethernet mandatory and waits longer for it)
 #               write_files:
 #                 - path: /etc/netplan/99-ethernet-wait.yaml
 #                   permissions: '0600'
