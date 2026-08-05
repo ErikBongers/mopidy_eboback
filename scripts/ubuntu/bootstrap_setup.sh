@@ -12,6 +12,6 @@ apt install git
 
 git clone https://github.com/ErikBongers/mopidy_eboback.git
 
-cd /opt/mopidy-dev/eboback/
+cd /opt/mopidy-dev/eboback/ || exit
 
 find scripts -type f -exec chmod +x {} +
