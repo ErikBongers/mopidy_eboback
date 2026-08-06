@@ -9,8 +9,8 @@ if [ -z "$MOPIDY_AUDIO_OUTPUT" ]; then
 fi
 
 mkdir /opt/mopidy-def/.config
-cat  << 'EOF' > /opt/mopidy-dev/.config/mopidy/mopidy.conf
+cat  << 'EOF' > /opt/mopidy-dev/.config/mopidy.conf
 [audio]
 output=$MOPIDY_AUDIO_OUTPUT
 EOF
-sudo chmod 777 /opt/mopidy-dev/.config/mopidy/mopidy.conf
+sudo chmod 777 /opt/mopidy-dev/.config/mopidy.conf
