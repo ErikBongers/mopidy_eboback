@@ -65,9 +65,11 @@ def threaded_scan(config):
         broadcast_scan_event("scan_status", message, "details")
     def error(message) -> None:
         broadcast_scan_event("scan_status", message, "error")
+    def debug(message) -> None:
+        pass
 
 
-    reporter = ProgressReporter(progress, details, error)
+    reporter = ProgressReporter(progress, details, error, debug)
     scanner = Scanner(config, False, None, reporter)
     scanner.run()
     broadcast_scan_event("scan_finished", "Scan finished.", "progress")
