@@ -44,4 +44,3 @@ sudo echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
 # mount all, including for systemd
 sudo mount -a
 sudo systemctl daemon-reload
-echo $MOUNT_PATH

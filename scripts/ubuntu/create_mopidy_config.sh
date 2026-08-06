@@ -28,6 +28,7 @@ echo "MIXER_NAME: " "$MIXER_NAME"
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
 
 mkdir -p /opt/mopidy-dev/.config
+source /opt/mopidy-dev/venv/bin/activate
 # this creates the default config file, displays it on screen but does NOT start mopidy.
 mopidy --config /opt/mopidy-dev/.config/mopidy.conf config
 sudo chmod 777 /opt/mopidy-dev/.config/mopidy.conf
