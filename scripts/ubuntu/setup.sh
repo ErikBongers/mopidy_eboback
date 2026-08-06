@@ -66,9 +66,6 @@ elif [ "$ENV_TYPE" = "WSL2" ]; then
 fi
 
 echo "---------------------------------------------------------------"
-echo "Installing mopidy with params " "$MOPIDY_AUDIO_OUTPUT" "$MEDIA_DIR" "$MIXER"
-echo "---------------------------------------------------------------"
-echo "---------------------------------------------------------------"
 echo "STEP: Install mopidy deps"
 echo "---------------------------------------------------------------"
 "$SCRIPT_DIR/install_mopidy_deps.sh"
@@ -78,5 +75,6 @@ echo "---------------------------------------------------------------"
 "$SCRIPT_DIR/install_mopidy_dev.sh"
 echo "---------------------------------------------------------------"
 echo "STEP: Create mopidy config"
+echo "   mopidy params " "$MOPIDY_AUDIO_OUTPUT" "$MEDIA_DIR" "$MIXER"
 echo "---------------------------------------------------------------"
 "$SCRIPT_DIR/create_mopidy_config.sh" "$MOPIDY_AUDIO_OUTPUT" "$MEDIA_DIR" "$MIXER"
