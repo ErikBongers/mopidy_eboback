@@ -21,6 +21,10 @@ if [ -z "$MIXER_NAME" ]; then
     read -p "Enter the mopidy [eboback.alsa_mixer] value: " MIXER_NAME  < /dev/tty
 fi
 
+echo "MOPIDY_AUDIO_OUTPUT: " "$MOPIDY_AUDIO_OUTPUT"
+echo "MEDIA_DIR: " "$MEDIA_DIR"
+echo "MIXER_NAME: " "$MIXER_NAME"
+
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
 
 mkdir -p /opt/mopidy-dev/.config

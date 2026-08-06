@@ -57,7 +57,8 @@ fi
 if [ "$ENV_TYPE" = "RP4" ]; then
     MOPIDY_AUDIO_OUTPUT="alsasink device=hw:3,0"
     MIXER="PCM"
-    MEDIA_DIR=$(sudo "$SCRIPT_DIR/mount_media_usb.sh")
+    source "$SCRIPT_DIR/mount_media_usb.sh"
+    MEDIA_DIR=$MOUNT_PATH
 elif [ "$ENV_TYPE" = "WSL2" ]; then
     MOPIDY_AUDIO_OUTPUT="pulsesink"
     MIXER="Master"
