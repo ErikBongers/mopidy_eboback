@@ -24,6 +24,8 @@ git checkout GstStructureNotNone
 #install the pip packages
 source /opt/mopidy-dev/venv/bin/activate
 cd /opt/mopidy-dev/mopidy || exit
+git remote add upstream https://github.com/mopidy/mopidy.git
+git fetch upstream --tags
 pip install .
 
 cd /opt/mopidy-dev/mopidy_eboback || exit
