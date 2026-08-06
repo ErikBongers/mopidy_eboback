@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [ "$EUID" -ne 0 ]; then
-  echo "Error: Please run this script with sudo"
-  exit 1
-fi
-
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 sudo "$SCRIPT_DIR/create_media_grp.sh"
