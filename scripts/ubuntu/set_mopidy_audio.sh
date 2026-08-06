@@ -8,6 +8,7 @@ if [ -z "$MOPIDY_AUDIO_OUTPUT" ]; then
     read -p "Enter the mopidy [audio.output] value: " MOPIDY_AUDIO_OUTPUT  < /dev/tty
 fi
 
+mkdir /opt/mopidy-def/.config
 cat  << 'EOF' > /opt/mopidy-dev/.config/mopidy/mopidy.conf
 [audio]
 output=$MOPIDY_AUDIO_OUTPUT
