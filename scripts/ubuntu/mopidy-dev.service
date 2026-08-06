@@ -1,0 +1,13 @@
+[Unit]
+Description=Mopidy Music Server (Development Instance)
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=erik
+# ExecStart points directly to the python executable inside the venv
+# This automatically simulates activating the virtual environment
+ExecStart=/opt/mopidy-dev/venv/bin/mopidy --config /opt/mopidy-dev/.config/mopidy.conf
+
+[Install]
+WantedBy=multi-user.target

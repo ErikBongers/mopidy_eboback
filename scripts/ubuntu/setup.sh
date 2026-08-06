@@ -32,6 +32,9 @@
 #      mopidy --config /opt/mopidy-dev/.config/mopidy.conf eboback scan
 # 7. Start mopidy
 #      mopidy --config /opt/mopidy-dev/.config/mopidy.conf
+# 8. Start service
+#    sudo systemctl start mopidy-dev
+
 
 # This script must be called WITHOUT sudo privileges.
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -78,3 +81,7 @@ echo "STEP: Create mopidy config"
 echo "   mopidy params " "$MOPIDY_AUDIO_OUTPUT" "$MEDIA_DIR" "$MIXER"
 echo "---------------------------------------------------------------"
 "$SCRIPT_DIR/create_mopidy_config.sh" "$MOPIDY_AUDIO_OUTPUT" "$MEDIA_DIR" "$MIXER"
+echo "---------------------------------------------------------------"
+echo "STEP: Install mopidy service"
+echo "---------------------------------------------------------------"
+"$SCRIPT_DIR/create_mopidy_service.sh"
