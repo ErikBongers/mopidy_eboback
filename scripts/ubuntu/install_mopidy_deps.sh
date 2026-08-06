@@ -13,4 +13,5 @@ sudo apt install -y \
     python3-gi \
     python3-gst-1.0 \
     python3-pip \
-    python3-venv
+    python3-venv \
+    gstreamer1.0-plugins-base-apps
