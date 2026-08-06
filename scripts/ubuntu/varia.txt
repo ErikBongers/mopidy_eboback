@@ -1,23 +1,6 @@
 # test audio with:
 # ------------------
-# if [ "$ENV_TYPE" = "RP4" ]; then
-#    "$SCRIPT_DIR/fix_audio_cards_indices.sh
-#     # aplay -l                        # on WSL2,this would probably return "no soundcard found".
-#     # aplay -D hw:0,0 /usr/share/sounds/alsa/Front_Center.wav
-#     reboot
-# elif [ "$ENV_TYPE" = "WSL2" ]; then
-#     # aplay -D default /usr/share/sounds/alsa/Front_Center.wav
-# fi
-# > Test aplay and:
-# gst-play-1.0 --audiosink="alsasink device=hw:0,0" ~/mopidy-server/Music/Z/lespleurs.wma
+# gst-play-1.0 --audiosink="alsasink device=hw:3,0" /mnt/usbfnac/Music/Z/lespleurs.wma
 # > use this version to use the defaults, which should work on both WSL2 and RP4, if on the RP4 the soundcard is set as default.
 # > Nope. Not true. On WSL2 the mopidy config should be set to `output = pulsesink`.
-# gst-play-1.0 --audiosink="alsasink" ~/mopidy-server/Music/Z/lespleurs.wma
-
-
-# ???
-# ------
-# alsa force-reload
-# /etc/init.d/alsa-utils reset
-# > RP4 only: Remove and reinstall the bcm2835 driver for the headphones chip.
-# modprobe -r snd_bcm2835 && modprobe snd_bcm2835
+# gst-play-1.0 --audiosink="alsasink" /mnt/usbfnac/Music/Z/lespleurs.wma

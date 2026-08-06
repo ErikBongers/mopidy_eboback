@@ -50,7 +50,7 @@ sudo apt install -y alsa-utils              # > installs aplay, amixer, alsamixe
 if [ "$ENV_TYPE" = "RP4" ]; then
    sudo "$SCRIPT_DIR/fix_audio_cards_indices.sh"
     # Grant an ssh or headless user access to audio
-    sudo usermod -a -G audio "$SUDO_USER" #add user erik to audio group
+    sudo usermod -a -G audio "$USER" #add user erik to audio group
     sudo usermod -a -G audio mopidy #add user mopidy to audio group
     sudo newgrp audio #apply the new audio group.
    # "$SCRIPT_DIR/set_default_soundcard.sh" 3  #set the soundcard to index 3 (usb)
