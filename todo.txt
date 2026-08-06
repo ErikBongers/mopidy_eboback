@@ -1,9 +1,6 @@
-* Make EboBackConfigEditor to run on it's own and update any key in the config file.
-  > This will allow to set the [audio] output in the config file.
-  > Let mopidy run before this, so it gets prefilled.
-    > Perhaps run this from the client side.
-      > Show a setup screen at initial startup.
-  > Always make a backup.
+* Use EboBackConfigEditor to
+  > Set the [audio] output in the config file.
+    > Always make a backup.
 
 * audio_adjust
   > allow for this to be pre-calculated. Needed when streaming via snapcast or icecast.
