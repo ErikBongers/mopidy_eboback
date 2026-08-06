@@ -14,7 +14,6 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # fill the folders:
 cd /opt/mopidy-dev  || exit
-python3 -m venv --system-site-packages venv
 git clone https://github.com/ErikBongers/mopidy.git
 git clone https://github.com/ErikBongers/mopidy-eboplayer.git
 
