@@ -29,7 +29,6 @@ read -p "Enter a name for your mount folder (e.g., myusb): " MOUNTNAME  < /dev/t
 MOUNT_PATH="/mnt/$MOUNTNAME"
 sudo mkdir -p "$MOUNT_PATH"
 
-#todo: media_grp is hardcoded.
 GROUP_ID=$(getent group "media_grp" | cut -d: -f3)
 FSTAB_LINE="UUID=$UUID  $MOUNT_PATH  vfat  defaults,nofail,uid=1000,gid=$GROUP_ID,dmask=0002,fmask=0113  0  0"
 sudo echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
