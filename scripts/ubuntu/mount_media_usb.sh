@@ -11,9 +11,12 @@ sudo "$SCRIPT_DIR/create_media_grp.sh"
 
 # list drive names:
 lsblk
+lsblk
+lsblk
 
 echo ""
-read -p "Type the partition name to mount (e.g., sda1, sdb1): " DISKNAME < /dev/tty
+lsblk
+read -p "Type the partition name to mount (find with lsblk) e.g., sda1, sdb1: " DISKNAME < /dev/tty
 
 EXTRACTED_UUID=$(blkid "/dev/$DISKNAME" | grep -oP 'UUID="\K[^"]+')
 if [ -n "$EXTRACTED_UUID" ]; then
