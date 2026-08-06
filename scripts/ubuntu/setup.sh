@@ -6,16 +6,16 @@
 #   > see AI help for: setup raspberry pi 4 headless via ethernet with ubuntu server
 #   > see hostname and user below...
 # 2. Open the user-data file on image and add section: (this makes ethernet mandatory and waits longer for it)
-#               write_files:
-#                 - path: /etc/netplan/99-ethernet-wait.yaml
-#                   permissions: '0600'
-#                   content: |
-#                     network:
-#                       version: 2
-#                       ethernets:
-#                         eth0:
-#                           dhcp4: true
-#                           optional: false
+#      write_files:
+#        - path: /etc/netplan/99-ethernet-wait.yaml
+#          permissions: '0600'
+#          content: |
+#            network:
+#              version: 2
+#              ethernets:
+#                eth0:
+#                  dhcp4: true
+#                  optional: false
 # 3. Boot and wait 5 minutes
 #   > Login with ssh erik@eboaudioserver
 # 4. Create or use ssh passwordless login key pair.
