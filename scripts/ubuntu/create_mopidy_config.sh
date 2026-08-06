@@ -40,4 +40,5 @@ sed -i -e "/^#output = autoaudiosink$/c\output = $MOPIDY_AUDIO_OUTPUT" \
     -e "/^#base_dir =   ; Unexpanded '$...' in path '.xdg_music_dir'$/c\base_dir = $MEDIA_DIR" \
     -e "/^#alsa_mixer = Master$/c\alsa_mixer = $MIXER_NAME" \
     -e "/^#hostname = 127.0.0.1.*$/c\hostname = $IP_ADDRESS" \
+    -e "/^#restore_state = false.*$/c\restore_state = true" \
   /opt/mopidy-dev/.config/mopidy.conf
