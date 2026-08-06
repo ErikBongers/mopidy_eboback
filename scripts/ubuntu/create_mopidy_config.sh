@@ -18,6 +18,8 @@ if [ -z "$MIXER_NAME" ]; then
     read -p "Enter the mopidy [eboback.alsa_mixer] value: " MIXER_NAME  < /dev/tty
 fi
 
+IP_ADDRESS=$(hostname -I | awk '{print $1}')
+
 mkdir -p /opt/mopidy-dev/.config
 # this creates the default config file, displays it on screen but does NOT start mopidy.
 mopidy --config /opt/mopidy-dev/.config/mopidy.conf config
@@ -29,4 +31,5 @@ sed -i -e "/^#output = autoaudiosink$/c\output = $MOPIDY_AUDIO_OUTPUT" \
     -e "/^#media_dirs =.*$/c\media_dirs = $MEDIA_DIR" \
     -e "/^#base_dir =   ; Unexpanded '$...' in path '.xdg_music_dir'$/c\base_dir = $MEDIA_DIR" \
     -e "/^#alsa_mixer = Master$/c\alsa_mixer = $MIXER_NAME" \
+    -e "/^#hostname = 127.0.0.1.*$/c\hostname = $IP_ADDRESS" \
   /opt/mopidy-dev/.config/mopidy.conf

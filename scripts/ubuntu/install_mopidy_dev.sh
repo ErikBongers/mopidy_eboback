@@ -10,6 +10,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 #     mopidy
 #     eboplayer
 #     eboback
+#     TextScanner
 
 # fill the folders:
 cd /opt/mopidy-dev  || exit
@@ -27,6 +28,8 @@ cd /opt/mopidy-dev/mopidy || exit
 git remote add upstream https://github.com/mopidy/mopidy.git
 git fetch upstream --tags
 pip install .
+
+"$SCRIPT_DIR/install_text_scanner.sh"
 
 cd /opt/mopidy-dev/mopidy_eboback || exit
 # Required for eboback
