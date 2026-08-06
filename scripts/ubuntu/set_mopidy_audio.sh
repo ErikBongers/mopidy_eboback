@@ -24,7 +24,7 @@ mopidy --config /opt/mopidy-dev/.config/mopidy.conf config
 sudo chmod 777 /opt/mopidy-dev/.config/mopidy.conf
 
 # change the config file
-sed -e "/^#output = autoaudiosink$/c\output = $MOPIDY_AUDIO_OUTPUT" \
+sed -i -e "/^#output = autoaudiosink$/c\output = $MOPIDY_AUDIO_OUTPUT" \
     -e "/^#media_dir = please_specify_a_media_dir_in_the_config_file$/c\media_dir = $MEDIA_DIR" \
     -e "/^#media_dirs =$/c\media_dirs = $MEDIA_DIR" \
     -e "/^#alsa_mixer = Master$/c\alsa_mixer = $MIXER_NAME" \
