@@ -12,16 +12,19 @@ sudo "$SCRIPT_DIR/create_media_grp.sh"
 # list drive names:
 lsblk
 
+echo ""
 read -p "Type the partition name to mount (e.g., sda1, sdb1): " DISKNAME < /dev/tty
 
 EXTRACTED_UUID=$(blkid "/dev/$DISKNAME" | grep -oP 'UUID="\K[^"]+')
 if [ -n "$EXTRACTED_UUID" ]; then
   UUID=$EXTRACTED_UUID
 else
+  echo ""
   echo "Warning: Could not automatically extract the UUID."
   read -p "Please manually type or paste the UUID: " UUID  < /dev/tty
 fi
 
+echo ""
 read -p "Enter a name for your mount folder (e.g., myusb): " MOUNTNAME  < /dev/tty
 MOUNT_PATH="/mnt/$MOUNTNAME"
 sudo mkdir -p "$MOUNT_PATH"

@@ -5,6 +5,7 @@ CARD_NUM=$1
 # If no parameter was provided, prompt the user interactively
 if [ -z "$CARD_NUM" ]; then
     # shellcheck disable=SC2162
+    echo ""
     read -p "Enter the ALSA card number you want to set as default: " CARD_NUM  < /dev/tty
 fi
 

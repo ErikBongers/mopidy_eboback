@@ -7,14 +7,17 @@ MIXER_NAME=$3
 # If no parameter was provided, prompt the user interactively
 if [ -z "$MOPIDY_AUDIO_OUTPUT" ]; then
     # shellcheck disable=SC2162
+    echo ""
     read -p "Enter the mopidy [audio.output] value: " MOPIDY_AUDIO_OUTPUT  < /dev/tty
 fi
 if [ -z "$MEDIA_DIR" ]; then
     # shellcheck disable=SC2162
+    echo ""
     read -p "Enter the mopidy [eboback.media_dir] value: " MEDIA_DIR  < /dev/tty
 fi
 if [ -z "$MIXER_NAME" ]; then
     # shellcheck disable=SC2162
+    echo ""
     read -p "Enter the mopidy [eboback.alsa_mixer] value: " MIXER_NAME  < /dev/tty
 fi
 
