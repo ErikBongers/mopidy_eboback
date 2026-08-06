@@ -26,7 +26,8 @@
 #   - when all users have access (via passwordless ssh) disable password login.
 #       todo: make this part of the setup, with a prompt yes/no?
 #       sudo nano /etc/ssh/sshd_config.d/50-cloud-init.conf
-# 5. Bootstrap this script (from the eboback repo. See instructions in bootstrap_setup.sh
+# 5. Bootstrap this script (from the eboback repo.
+#      curl -sSL https://raw.githubusercontent.com/ErikBongers/mopidy_eboback/refs/heads/master/scripts/ubuntu/bootstrap_setup.sh | bash
 # 6. Then scan mopidy:
 #      mopidy --config /opt/mopidy-dev/.config/mopidy.conf eboback scan
 # 7. Start mopidy
