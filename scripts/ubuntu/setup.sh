@@ -43,7 +43,7 @@ if [ "$ENV_TYPE" = "RP4" ]; then
 fi
 
 sudo apt update
-sudo apt upgrade
+#sudo apt upgrade
 sudo apt install -y alsa-utils              # > installs aplay, amixer, alsamixer,...
 
 if [ "$ENV_TYPE" = "RP4" ]; then
