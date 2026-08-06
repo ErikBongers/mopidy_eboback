@@ -8,9 +8,10 @@ if [ -z "$MOPIDY_AUDIO_OUTPUT" ]; then
     read -p "Enter the mopidy [audio.output] value: " MOPIDY_AUDIO_OUTPUT  < /dev/tty
 fi
 
-mkdir /opt/mopidy-dev/.config
-cat  << 'EOF' > /opt/mopidy-dev/.config/mopidy.conf
-[audio]
-output=$MOPIDY_AUDIO_OUTPUT
-EOF
+mkdir -p /opt/mopidy-dev/.config
+# this creates the default config file, displays it on screen but does NOT start mopidy.
+mopidy --config /opt/mopidy-dev/.config/mopidy.conf config
 sudo chmod 777 /opt/mopidy-dev/.config/mopidy.conf
+
+# change the config file
+sed -i "/^#output = autoaudiosink$/c\output = $MOPIDY_AUDIO_OUTPUT" /opt/mopidy-dev/.config/mopidy.conf
