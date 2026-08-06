@@ -25,7 +25,7 @@ sudo mkdir -p "$MOUNT_PATH"
 
 GROUP_ID=$(getent group "media_grp" | cut -d: -f3)
 FSTAB_LINE="UUID=$UUID  $MOUNT_PATH  vfat  defaults,nofail,uid=1000,gid=$GROUP_ID,dmask=0002,fmask=0113  0  0"
-sudo echo "$FSTAB_LINE" | tee -a /etc/fstab > /dev/null
+echo "$FSTAB_LINE" | sudo tee -a /etc/fstab > /dev/null
 # STABLINE MASKS:
 # These masks DISABLE privs and are NOT AND-ed with the typical chmod 777 privs.
 # Where
