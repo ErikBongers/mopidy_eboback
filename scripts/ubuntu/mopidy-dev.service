@@ -8,6 +8,10 @@ User=erik
 # ExecStart points directly to the python executable inside the venv
 # This automatically simulates activating the virtual environment
 ExecStart=/opt/mopidy-dev/venv/bin/mopidy --config /opt/mopidy-dev/.config/mopidy.conf
+Restart=on-failure
+RestartSec=2s
+# Optional: only restart for this code, or treat it as success but still restart
+SuccessExitStatus=5
 
 [Install]
 WantedBy=multi-user.target

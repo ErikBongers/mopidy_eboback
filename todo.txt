@@ -2,6 +2,10 @@
   > Set the [audio] output in the config file.
     > Always make a backup.
 
+* Change config from within.
+  > The service file (not installed yet) is updated to restart on exit(5).
+    > restart with sys.exit(5)
+
 * audio_adjust
   > allow for this to be pre-calculated. Needed when streaming via snapcast or icecast.
 
