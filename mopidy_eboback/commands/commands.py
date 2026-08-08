@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import cyclopts
+from mopidy import core
 from mopidy.config import Config
+from mopidy_eboback import Inspector2, ResponseTypeAdapter
 
 from mopidy_eboback.commands.clearCommand import ClearCommand
 from mopidy_eboback.commands.scanCommand import ScanCommand
@@ -39,3 +43,30 @@ def update_meta():
     update_meta_command = UpdateMetaCommand()
     config = Config.get_global()
     update_meta_command.run(config)
+
+@app.command()
+def describe(input_path: Path | None = None):
+    """
+    Describe the mopidy api.
+    """
+    inspector = Inspector2(
+        objects={
+            "core.get_uri_schemes": core.Core.get_uri_schemes,
+            "core.get_version": core.Core.get_version,
+            "core.history": core.HistoryController,
+            "core.library": core.LibraryController,
+            "core.mixer": core.MixerController,
+            "core.playback": core.PlaybackController,
+            "core.playlists": core.PlaylistsController,
+            "core.tracklist": core.TracklistController,
+        },
+    )
+    dscr = inspector.describe()
+
+    the_bytes = ResponseTypeAdapter.dump_json(dscr, by_alias=True, indent=2)
+    the_string = the_bytes.decode("utf-8")
+    if input_path is None:
+        print(the_string)
+    else:
+        with open(input_path, "w") as f:
+            f.write(the_string)
