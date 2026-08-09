@@ -3,11 +3,11 @@ from pathlib import Path
 import cyclopts
 from mopidy import core
 from mopidy.config import Config
-from mopidy_eboback import Inspector2, ResponseTypeAdapter
 
 from mopidy_eboback.commands.clearCommand import ClearCommand
 from mopidy_eboback.commands.scanCommand import ScanCommand
 from mopidy_eboback.commands.updateMetaCommand import UpdateMetaCommand
+from mopidy_eboback.inspector2 import Inspector2, ResponseTypeAdapter
 
 app = cyclopts.App(help="TODO: Some text that will show up in --help")
 
