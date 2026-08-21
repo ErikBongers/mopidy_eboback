@@ -1664,7 +1664,7 @@ insert into genre_defs (name, child, sequence, level) values
 ('music for stage and screen', 'music hall songs', 1662, 3),
 ('music for stage and screen', 'showtunes', 1663, 3),
 ('Other', 'Patriotic music', 1664, 1),
-('Patriotic music', 'military music,', 1665, 2),
+('Patriotic music', 'military music', 1665, 2),
 ('Patriotic music', 'marches', 1666, 2),
 ('Patriotic music', 'national anthems', 1667, 2),
 ('Patriotic music', 'War songs', 1668, 2),

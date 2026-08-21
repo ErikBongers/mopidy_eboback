@@ -1680,7 +1680,7 @@
             music hall songs
             showtunes
     Patriotic music 
-        military music, 
+        military music 
         marches
         national anthems
         War songs
