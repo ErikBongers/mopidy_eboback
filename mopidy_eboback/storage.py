@@ -119,7 +119,7 @@ class LocalStorageProvider:
         self.img_file_patterns = list(map(str, ext_config["album_art_files"])) #todo: also rename the config name: it's not files but patterns.
         self._dbpath = self._data_dir / "library.db"
         self._connection: Connection | None = None
-        self.mixer = AlsaProxy(self._config["alsa_mixer"])
+        self.mixer = AlsaProxy(self._config["alsa_mixer"], self._config["alsa_card"])
         self.volume_adjust_converter = VolumeAdjustConverter(self._config["volume_adjust"])
 
     def __enter__(self):
