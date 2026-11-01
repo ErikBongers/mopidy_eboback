@@ -10,4 +10,5 @@ class AlsaProxy:
         self.mixer = alsaaudio.Mixer(mixer_name, cardindex=card_number)
 
     def setvolume(self, volume_percentage: int):
+        logger.info(f"Setting volume to {volume_percentage}%")
         self.mixer.setvolume(volume_percentage)
