@@ -451,6 +451,10 @@ class LocalStorageProvider:
         with self._connect() as c:
             return schema.get_all_refs(c)
 
+    def get_tracks_no_album(self):
+        with self._connect() as c:
+            return schema.get_tracks_no_album(c)
+
     def update_all_album_images(self):
         with self._connect() as c:
             schema.update_all_album_min_max_images(self._connect())

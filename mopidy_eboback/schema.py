@@ -813,6 +813,16 @@ def get_all_refs(c: Connection):
     rows = c.execute("select ref_type, uri, name, last_modified, id_min_image, id_max_image from all_refs")
     return list(map(to_ref, rows))
 
+def get_tracks_no_album(c: Connection):
+    def to_ref(row):
+        return {'refType': row[0], 'uri': row[1], 'name': row[2], 'lastModified': row[3], 'idMinImage': row[4], 'idMaxImage': row[5]}
+    rows = c.execute("""
+        select ref_type, ar.uri, ar.name, ar.last_modified, ar.id_min_image, id_max_image 
+        from all_refs ar
+        inner join track tr on tr.uri = ar.uri
+        where tr.album is null
+        """)
+    return list(map(to_ref, rows))
 
 def update_all_album_min_max_images(c: Connection):
     c.execute("""
